@@ -1,9 +1,21 @@
 using TekrarlayanIsProgrami.Components;
+using Radzen;
+using TekrarlayanIsProgrami.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents();
+builder.Services.AddRazorComponents()
+     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<ThemeService>();
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<ContextMenuService>();
+builder.Services.AddScoped<TooltipService>();
+builder.Services.AddAuthorization();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 
 var app = builder.Build();
 
@@ -20,6 +32,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
-app.MapRazorComponents<App>();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();

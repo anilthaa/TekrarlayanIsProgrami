@@ -1,0 +1,31 @@
+﻿@page "/GirisYap"
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+@using TekrarlayanIsProgrami.Services
+<RadzenCard Style="max-width:400px; margin:auto; margin-top:100px">
+	<RadzenLogin @ref="girisYap" 
+		Login="@OnLogin" 
+		Visible="true" 
+		Style="width:100%"
+
+	/>
+</RadzenCard>
+@code {
+
+	RadzenLogin girisYap;
+
+	async Task OnLogin(LoginArgs args)
+	{
+		if (args.Username == "admin" && args.Password == "123")
+		{
+			(AuthProvider as CustomAuthenticationStateProvider)?.GirisYap(args.Username);
+			Navigation.NavigateTo("/");
+		}
+		else
+		{
+			NotificationService.Notify(NotificationSeverity.Error,"Giriş Hatası","Kullanıcı Adı veya şifre yanlış!")
+		}
+	}
+
+}
