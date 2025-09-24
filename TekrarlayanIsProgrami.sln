@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36511.14 d17.14
+VisualStudioVersion = 17.14.36511.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TekrarlayanIsProgrami", "TekrarlayanIsProgrami\TekrarlayanIsProgrami.csproj", "{EFD31111-1249-4D69-B74A-01F36A4391AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UygulamaServisleri", "UygulamaServisleri\UygulamaServisleri.csproj", "{06F3D70C-0AAC-448D-B588-064A9027706F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VeriKatmani", "VeriKatmani\VeriKatmani.csproj", "{E73D89F7-2262-49E4-8924-18FB81AC90B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{EFD31111-1249-4D69-B74A-01F36A4391AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EFD31111-1249-4D69-B74A-01F36A4391AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EFD31111-1249-4D69-B74A-01F36A4391AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06F3D70C-0AAC-448D-B588-064A9027706F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06F3D70C-0AAC-448D-B588-064A9027706F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06F3D70C-0AAC-448D-B588-064A9027706F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06F3D70C-0AAC-448D-B588-064A9027706F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E73D89F7-2262-49E4-8924-18FB81AC90B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E73D89F7-2262-49E4-8924-18FB81AC90B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E73D89F7-2262-49E4-8924-18FB81AC90B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E73D89F7-2262-49E4-8924-18FB81AC90B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
