@@ -1,9 +1,18 @@
-using TekrarlayanIsProgrami.Components;
+﻿using TekrarlayanIsProgrami.Components;
 using Radzen;
 using TekrarlayanIsProgrami.Services;
 using Microsoft.AspNetCore.Components.Authorization;
+using TekrarlayanIsProgrami.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+var jwtService= new JwtService(); //JwtServive nesnesi oluştur.
+string token = jwtService.GenerateToken("User1"); //token oluştur.
+Console.WriteLine("Oluşturulan Token:");//Console ekranında oluşturulan token i yazcak.
+Console.WriteLine(token);
+
+bool Valid=jwtService.ValidateToken(token); //Token i doğrula.
+Console.WriteLine("\n Token geçerli mi?" +Valid);
+
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -16,8 +25,9 @@ builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<TooltipService>(); 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
-
+ builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

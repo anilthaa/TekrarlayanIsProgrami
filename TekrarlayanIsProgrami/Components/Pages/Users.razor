@@ -1,0 +1,32 @@
+﻿@page "/kullanicilar"
+
+@inject UserRepository userRepo
+
+<h3>Reyonlar</h3>
+
+@if (users == null)
+{
+    <p>Yükleniyor...</p>
+}
+else if (!users.Any())
+{
+    <p>Hiç reyon yok.</p>
+}
+else
+{
+    <ul>
+        @foreach (var u in users)
+        {
+            <li>@u.Adi - @u.Soyadi - @u.EPosta - @u.KullaniciTip_ID - @u.Sifre - @u.Aktif</li>
+        }
+    </ul>
+}
+@code {
+    private List<User>? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await userRepo.GetAll();
+    }
+}
+
