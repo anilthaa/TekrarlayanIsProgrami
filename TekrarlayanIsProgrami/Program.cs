@@ -25,7 +25,8 @@ builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<TooltipService>(); 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
- builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
+builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
+builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 
 var app = builder.Build();
 
