@@ -1,5 +1,5 @@
 ﻿@page "/GirisYap"
-@inject AuthenticationStateProvider AuthProvider
+@inject CustomAuthenticationStateProvider AuthProvider
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
 @using TekrarlayanIsProgrami.Services
@@ -17,11 +17,9 @@
 
 	async Task OnLogin(LoginArgs args)
 	{
-		if (args.Username == "admin" && args.Password == "123")
-		{
-			(AuthProvider as CustomAuthenticationStateProvider)?.GirisYap(args.Username);
+		bool basarili = await AuthProvider.GirisYapAsync(args.Username, args.Password);
+		if (basarili)
 			Navigation.NavigateTo("/");
-		}
 		else
 		{
 			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", "Kullanıcı Adı veya şifre yanlış!");

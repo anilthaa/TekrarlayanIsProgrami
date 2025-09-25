@@ -1,0 +1,38 @@
+﻿@page "/KayitOl"
+@using TekrarlayanIsProgrami.Services
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject NotificationService notificationService
+
+<RadzenTemplateForm Data="@newUser" Submit="@(async(VeriKatmani.Models.User u)=> await OnSubmit(u))">
+    <ChildContent>
+        <RadzenTextBox @bind-Value="newUser.Adi" Placeholder="Adınız" Style="width:100%" />
+        <RadzenTextBox @bind-Value="newUser.Soyadi" Placeholder="Soyadınız" Style="width:100%" />
+        <RadzenTextBox @bind-Value="newUser.EPosta" Placeholder="E-posta" Style="width:100%" />
+        <RadzenPassword @bind-Value="newUser.Sifre" Placeholder="Şifre" Style="width:100%" />
+        <RadzenButton Text="Kayıt Ol" ButtonType="ButtonType.Submit" Style="width:100%" />
+    </ChildContent>
+</RadzenTemplateForm>
+
+@code {
+    VeriKatmani.Models.User newUser = new VeriKatmani.Models.User
+    {
+        CreUser = 1,
+        CreDate = DateTime.Now
+    };
+
+    private async Task OnSubmit(VeriKatmani.Models.User user)
+    {
+        
+        bool ok = await AuthProvider.KayitOlAsync(user);
+        if (ok)
+        {
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt tamamlandı!");
+            Navigation.NavigateTo("/GirisYap");
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Kayıt yapılamadı!");
+        }
+    }
+}
