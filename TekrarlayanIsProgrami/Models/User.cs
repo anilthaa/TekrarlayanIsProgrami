@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VeriKatmani.Models
+﻿namespace TekrarlayanIsProgrami.Models
 {
-    //Postgresql deki kullanici tablosuna karşılık gelir.
     public class User
     {
         public int ID { get; set; }
-        public string? Adi { get; set; } 
-        public string? Soyadi { get;set;}
+        public string? Adi { get; set; }
+        public string? Soyadi { get; set; }
         public string? EPosta { get; set; }
         public int KullaniciTip_ID { get; set; }
-        public string Sifre { get; set; }
+        public string? Sifre { get; set; }
         public bool Aktif { get; set; }
         public int CreUser { get; set; }
         public DateTime CreDate { get; set; }
@@ -22,8 +15,5 @@ namespace VeriKatmani.Models
         public DateTime UpdDate { get; set; }
         public int DelUser { get; set; }
         public DateTime DelDate { get; set; }
-
-
-
     }
 }
