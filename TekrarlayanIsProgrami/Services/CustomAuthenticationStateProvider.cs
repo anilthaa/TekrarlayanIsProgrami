@@ -22,22 +22,34 @@ namespace TekrarlayanIsProgrami.Services
             return Task.FromResult(new AuthenticationState(_user ?? anonymous));
         }
 
-        public async Task<bool> GirisYapAsync(string eposta, string sifre)
+        public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
         {
             var user=await _userRepository.GirisYapAsync(eposta, sifre);
             if (user != null)
             {
-                var identity = new ClaimsIdentity(new[]
+                return new AuthResult
                 {
-                    new Claim(ClaimTypes.Name, user.Adi ?? user.EPosta)
-                }, "apiauth_type");
+                    Success = true,
+                    Message = $"Hoşgeldiniz {user.Adi}!"
+                };
 
-                _user = new ClaimsPrincipal(identity);
-                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-                return true;
+                
+                //var identity = new ClaimsIdentity(new[]
+                //{
+                //    new Claim(ClaimTypes.Name, user.Adi ?? user.EPosta)
+                //}, "apiauth_type");
+
+                //_user = new ClaimsPrincipal(identity);
+                //NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+                //return true;
             }
+            return new AuthResult
+            {
+                Success = false,
+                Message = "E-posta veya şifre hatalı!"
+            };
 
-            return false;
+
 
             //var cmd = new NpgsqlCommand("Select * from kullanici where eposta=@eposta and sifre=@sifre and aktif=true", conn);
 
@@ -58,10 +70,49 @@ namespace TekrarlayanIsProgrami.Services
             //return false;
         }
 
-        public async Task<bool> KayitOlAsync(User user)
+        public async Task<AuthResult> KayitOlAsync(User user)
         {
+            // Şifre minimum 8 karakter kontrolü
+            if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
+            {
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = "Şifre en az 8 karakter olmalıdır."
+                };
+            }
 
-            return await _userRepository.KayitOlAsync(user);
+            try
+            {
+                bool kayitBasarili = await _userRepository.KayitOlAsync(user);
+
+                if (kayitBasarili)
+                {
+                    return new AuthResult
+                    {
+                        Success = true,
+                        Message = "Kayıt Başarıyla Tamamlandı!"
+                    };
+                }
+                else
+                {
+                    return new AuthResult
+                    {
+                        Success = false,
+                        Message = "Kayıt sırasında bir hata oluştu."
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new AuthResult
+                {
+                    Success = false,
+                    Message = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
+                };
+            }
+        }
+
             //using var conn= _dbContext.CreateConnection();
             //await conn.OpenAsync(); 
 
@@ -78,7 +129,7 @@ namespace TekrarlayanIsProgrami.Services
             
             //var result = await cmd.ExecuteNonQueryAsync();
             //return result > 0;
-        }
+       
 
         public void CikisYap()
         {

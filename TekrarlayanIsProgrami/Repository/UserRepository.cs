@@ -63,12 +63,6 @@ namespace TekrarlayanIsProgrami.Repository
                 CreDate = DateTime.Now
 
             }); 
-
-            if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
-            {
-                throw new Exception("Şifre en az 8 karakter olmalı!");
-            }
-
             return result > 0;
         }
     }
