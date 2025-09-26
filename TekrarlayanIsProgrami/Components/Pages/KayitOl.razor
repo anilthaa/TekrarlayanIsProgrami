@@ -37,15 +37,15 @@
 
     private async Task OnSubmit()
     {
-        bool ok = await AuthProvider.KayitOlAsync(newUser);
-        if (ok)
+        var result = await AuthProvider.KayitOlAsync(newUser);
+        if (result.Success)
         {
-            notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt tamamlandı!");
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Message);
             Navigation.NavigateTo("/GirisYap");
         }
         else
         {
-            notificationService.Notify(NotificationSeverity.Error, "Hata", "Kayıt yapılamadı!");
+            notificationService.Notify(NotificationSeverity.Error, "Hata", result.Message);
         }
     }
 }
