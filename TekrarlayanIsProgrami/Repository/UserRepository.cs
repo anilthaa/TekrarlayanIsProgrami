@@ -48,13 +48,14 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task<bool> KayitOlAsync(User user)
         {
             using var conn = GetConnection();
-            var sql = @"Insert Into ""Kullanici"" (""Adi"", ""Soyadi"",""EPosta"",""Sifre"",""Aktif"",CreUser"",""CreDate"") values (@Adi, @Soyadi,@EPosta, @Sifre, @Aktif, @CreUser, @CreDate)";
+            var sql = @"Insert Into ""Kullanici"" (""Adi"", ""Soyadi"",""KullaniciTip_ID"",""EPosta"",""Sifre"",""Aktif"",""CreUser"",""CreDate"") values (@Adi, @Soyadi,@KullaniciTip_ID,@EPosta, @Sifre, @Aktif, @CreUser, @CreDate)";
 
             var result = await conn.ExecuteAsync(sql, new
             {
 
                 user.Adi,
                 user.Soyadi,
+                KullaniciTip_ID = 0,
                 user.EPosta,
                 user.Sifre,
                 user.Aktif,

@@ -20,7 +20,8 @@
 		bool basarili = await AuthProvider.GirisYapAsync(args.Username, args.Password);
 		if (basarili)
 			Navigation.NavigateTo("/");
-		else
+			
+	else
 		{
 			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", "Kullanıcı Adı veya şifre yanlış!");
 		}
