@@ -3,27 +3,68 @@
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
 @using TekrarlayanIsProgrami.Services
-<RadzenCard Style="max-width:400px; margin:auto; margin-top:100px">
-	<RadzenLogin @ref="girisYap" 
-		Login="@OnLogin" 
-		Visible="true" 
-		Style="width:100%"
 
-	/>
+
+
+<RadzenCard Style="max-width:400px; margin:auto; margin-top:80px; padding:25px;">
+	<h3 style="text-align:center; margin-bottom:20px;">🔑 Giriş Yap</h3>
+	
+
+	<RadzenTemplateForm TItem="LoginModel" Data="@loginModel" Submit="@OnLogin">
+		<ChildContent>
+			<RadzenLabel Text="E-posta" Component="Email" Style="font-weight:bold;"></RadzenLabel>
+			<RadzenTextBox @bind-Value="loginModel.Email" Name="Email" Placeholder="E-posta adresinizi giriniz" Style="width:100%; margin-bottom:20px;"></RadzenTextBox>
+			<RadzenLabel Text="Şifre" Component="Password" Style="font-weight:bold;"></RadzenLabel>
+			<RadzenPassword @bind-Value="loginModel.Password" Name="Password" Placeholder="Şifrenizi Giriniz" Style="width:100%; margin-bottom:20px;"></RadzenPassword>
+			
+			
+			<div style="text-align:center; margin-bottom:20px;">
+				<a href="/SifreUnuttum" style="color:#e74c3c; text-decoration:none; font-size:0.9em;">Şifremi Unuttum</a>
+			</div>
+
+			<RadzenButton Text="Giriş Yap" ButtonType="ButtonType.Submit" Icon="login" Style="width:100%; background:#3498db; color:white;border:none; border-radius:8px; padding:10px;"></RadzenButton>
+
+			<div style="text-align:center; margin-top:15px;">
+				<a href="/KayitOl" style="color:#3498db; text-decoration:none; font-size:0.9em;">Hesabınız yok mu? Kayıt ol</a>
+			</div>
+		</ChildContent>
+	</RadzenTemplateForm>
 </RadzenCard>
 @code {
+	private LoginModel loginModel = new LoginModel();
 
-	RadzenLogin girisYap;
+	// RadzenLogin girisYap;
 
-	async Task OnLogin(LoginArgs args)
+	async Task OnLogin(LoginModel model)
 	{
-		bool basarili = await AuthProvider.GirisYapAsync(args.Username, args.Password);
-		if (basarili)
+
+		var result = await AuthProvider.GirisYapAsync(model.Email, model.Password);
+
+		if (result.Success)
+		{
+			NotificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Message);
 			Navigation.NavigateTo("/");
+		}
 		else
 		{
-			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", "Kullanıcı Adı veya şifre yanlış!");
+			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Message);
 		}
+		// 	bool basarili = await AuthProvider.GirisYapAsync(args.Username, args.Password);
+		// 	if (basarili)
+		// 		Navigation.NavigateTo("/");
+
+		// else
+		// 	{
+		// 		NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", "Kullanıcı Adı veya şifre yanlış!");
+		// 	}
+
+
+	}
+
+	public class LoginModel
+	{
+		public string Email { get; set; }
+		public string Password { get; set; }
 	}
 
 }
