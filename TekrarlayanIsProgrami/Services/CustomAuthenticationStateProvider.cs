@@ -1,19 +1,21 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Npgsql;
-using VeriKatmani.Models;
+
 using System.Security.Claims;
 using System.Threading.Tasks;
+using TekrarlayanIsProgrami.Models;
+using TekrarlayanIsProgrami.Repository;
 namespace TekrarlayanIsProgrami.Services
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
         private ClaimsPrincipal anonymous=new ClaimsPrincipal(new ClaimsIdentity());
         private ClaimsPrincipal _user;
-        private readonly VeriKatmani.DbContext _dbContext;
+        private readonly UserRepository _userRepository;
 
-        public CustomAuthenticationStateProvider(VeriKatmani.DbContext dbContext)
+        public CustomAuthenticationStateProvider(UserRepository dbContext)
         {
-            _dbContext = dbContext;
+            _userRepository = dbContext;
         }
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
@@ -22,46 +24,60 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<bool> GirisYapAsync(string eposta, string sifre)
         {
-            using var conn = _dbContext.CreateConnection();
-            await conn.OpenAsync();
-
-            var cmd = new NpgsqlCommand("Select * from kullanici where eposta=@eposta and sifre=@sifre and aktif=true", conn);
-
-            cmd.Parameters.AddWithValue("eposta", eposta);
-            cmd.Parameters.AddWithValue("sifre", sifre);
-
-            var reader = await cmd.ExecuteReaderAsync();
-
-            if (await reader.ReadAsync()) {
+            var user=await _userRepository.GirisYapAsync(eposta, sifre);
+            if (user != null)
+            {
                 var identity = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.Name, reader["adi"].ToString())
+                    new Claim(ClaimTypes.Name, user.Adi ?? user.EPosta)
                 }, "apiauth_type");
+
                 _user = new ClaimsPrincipal(identity);
                 NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
                 return true;
             }
+
             return false;
+
+            //var cmd = new NpgsqlCommand("Select * from kullanici where eposta=@eposta and sifre=@sifre and aktif=true", conn);
+
+            //cmd.Parameters.AddWithValue("eposta", eposta);
+            //cmd.Parameters.AddWithValue("sifre", sifre);
+
+            //var reader = await cmd.ExecuteReaderAsync();
+
+            //if (await reader.ReadAsync()) {
+            //    var identity = new ClaimsIdentity(new[]
+            //    {
+            //        new Claim(ClaimTypes.Name, reader["adi"].ToString())
+            //    }, "apiauth_type");
+            //    _user = new ClaimsPrincipal(identity);
+            //    NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            //    return true;
+            //}
+            //return false;
         }
 
-        public async Task<bool> KayitOlAsync(VeriKatmani.Models.User user)
+        public async Task<bool> KayitOlAsync(User user)
         {
-            using var conn= _dbContext.CreateConnection();
-            await conn.OpenAsync(); 
 
-            var cmd = new NpgsqlCommand(@"insert into kullanici 
-                                       (adi,soyadi,eposta,sifre,aktif,creuser,credate)
-                                       values (@adi, @soyadi, @eposta, @sifre, true, @creuser, @credate", conn);
+            return await _userRepository.KayitOlAsync(user);
+            //using var conn= _dbContext.CreateConnection();
+            //await conn.OpenAsync(); 
 
-            cmd.Parameters.AddWithValue("adi", user.Adi ?? "");
-            cmd.Parameters.AddWithValue("soyadi", user.Soyadi ?? "");
-            cmd.Parameters.AddWithValue("eposta", user.EPosta ?? "");
-            cmd.Parameters.AddWithValue("sifre", user.Sifre ?? "");
-            cmd.Parameters.AddWithValue("creuser", user.CreUser);
-            cmd.Parameters.AddWithValue("credate", DateTime.Now);
+            //var cmd = new NpgsqlCommand(@"insert into kullanici 
+            //                           (adi,soyadi,eposta,sifre,aktif,creuser,credate)
+            //                           values (@adi, @soyadi, @eposta, @sifre, true, @creuser, @credate", conn);
+
+            //cmd.Parameters.AddWithValue("adi", user.Adi ?? "");
+            //cmd.Parameters.AddWithValue("soyadi", user.Soyadi ?? "");
+            //cmd.Parameters.AddWithValue("eposta", user.EPosta ?? "");
+            //cmd.Parameters.AddWithValue("sifre", user.Sifre ?? "");
+            //cmd.Parameters.AddWithValue("creuser", user.CreUser);
+            //cmd.Parameters.AddWithValue("credate", DateTime.Now);
             
-            var result = await cmd.ExecuteNonQueryAsync();
-            return result > 0;
+            //var result = await cmd.ExecuteNonQueryAsync();
+            //return result > 0;
         }
 
         public void CikisYap()

@@ -7,17 +7,63 @@ namespace TekrarlayanIsProgrami.Repository
 {
     public class UserRepository
     {
-        private readonly NpgsqlConnection _connection;
+        //private readonly NpgsqlConnection _connection;
+        //public UserRepository(IConfiguration configuration)
+        //{
+        //    _connection = new NpgsqlConnection(configuration.GetConnectionString("PostgreSqlConnection"));
+        //}
+        //public async Task<List<User>> GetAll()
+        //{
+        //    var sql = @"SELECT * FROM ""Kullanici""";   // Bizim tablo adı
+        //    var result = await _connection.QueryAsync<User>(sql);
+        //    return result.ToList();
+        //}
+
+        private readonly string _connectionString;
+
         public UserRepository(IConfiguration configuration)
         {
-            _connection = new NpgsqlConnection(configuration.GetConnectionString("PostgreSqlConnection"));
+            _connectionString = configuration.GetConnectionString("PostgreSqlConnection");
         }
-        public async Task<List<User>> GetAll()
+        private NpgsqlConnection GetConnection()
         {
-            var sql = @"SELECT * FROM ""Kullanici""";   // Bizim tablo adı
-            var result = await _connection.QueryAsync<User>(sql);
+            return new NpgsqlConnection(_connectionString);
+        }
+
+        public async Task<List<User>> GetAllAsync()
+        {
+            using var conn=GetConnection();
+            var sql = @"Select * From ""Kullanici""";
+            var result=await conn.QueryAsync<User>(sql);
             return result.ToList();
         }
-    
+
+        public async Task<User?> GirisYapAsync(string eposta, string sifre)
+        {
+            using var conn=GetConnection();
+            var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true";
+            return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
+        }
+
+        public async Task<bool> KayitOlAsync(User user)
+        {
+            using var conn = GetConnection();
+            var sql = @"Insert Into ""Kullanici"" (""Adi"", ""Soyadi"",""EPosta"",""Sifre"",""Aktif"",CreUser"",""CreDate"") values (@Adi, @Soyadi,@EPosta, @Sifre, @Aktif, @CreUser, @CreDate)";
+
+            var result = await conn.ExecuteAsync(sql, new
+            {
+
+                user.Adi,
+                user.Soyadi,
+                user.EPosta,
+                user.Sifre,
+                user.Aktif,
+                user.CreUser,
+                CreDate = DateTime.Now
+
+            });
+
+            return result > 0;
+        }
     }
 }
