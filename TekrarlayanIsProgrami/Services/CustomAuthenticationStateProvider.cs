@@ -21,7 +21,6 @@ namespace TekrarlayanIsProgrami.Services
         {
             return Task.FromResult(new AuthenticationState(_user ?? anonymous));
         }
-
         public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
         {
             var user=await _userRepository.GirisYapAsync(eposta, sifre);

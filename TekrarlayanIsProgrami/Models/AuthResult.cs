@@ -2,7 +2,7 @@
 {
     public class AuthResult
     {
-        public bool Success { get; set; }
-        public string Message { get; set; }
+        public bool Success { get; set; } //İşlemin başarılı olmadığını belirtir.
+        public string? Message { get; set; } //İşlemin sonucu hakkında bilgi verir.
     }
 }

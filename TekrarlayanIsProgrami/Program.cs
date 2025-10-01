@@ -6,7 +6,7 @@ using TekrarlayanIsProgrami.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtService= new JwtService(); //JwtServive nesnesi oluştur.
-string token = jwtService.GenerateToken("User1"); //token oluştur.
+string token = jwtService.GenerateToken("Kullanici1"); //token oluştur.
 Console.WriteLine("Oluşturulan Token:");//Console ekranında oluşturulan token i yazcak.
 Console.WriteLine(token);
 

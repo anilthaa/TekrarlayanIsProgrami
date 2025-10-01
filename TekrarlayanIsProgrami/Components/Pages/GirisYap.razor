@@ -12,7 +12,7 @@
 
 	<RadzenTemplateForm TItem="LoginModel" Data="@loginModel" Submit="@OnLogin">
 		<ChildContent>
-			<RadzenLabel Text="E-posta" Component="Email" Style="font-weight:bold;"></RadzenLabel>
+			<RadzenLabel Text="Email" Component="Email" Style="font-weight:bold;"></RadzenLabel>
 			<RadzenTextBox @bind-Value="loginModel.Email" Name="Email" Placeholder="E-posta adresinizi giriniz" Style="width:100%; margin-bottom:20px;"></RadzenTextBox>
 			<RadzenLabel Text="Şifre" Component="Password" Style="font-weight:bold;"></RadzenLabel>
 			<RadzenPassword @bind-Value="loginModel.Password" Name="Password" Placeholder="Şifrenizi Giriniz" Style="width:100%; margin-bottom:20px;"></RadzenPassword>

@@ -26,6 +26,31 @@ namespace TekrarlayanIsProgrami.Repository
             return result.ToList();
         }
 
+        public async Task UpdateAsync(User user)
+        {
+            using var conn = GetConnection();
+            var sql = @"UPDATE ""Kullanici"" SET 
+                        Adi=@Adi, 
+                        Soyadi=@Soyadi,
+                        EPosta=@EPosta,
+                        KullaniciTip_ID=1,
+                        Sifre=@Sifre,
+                        Aktif=@Aktif,
+                        UpdUser=ID,
+                        UpdDate=NOW()
+                    WHERE ID=@ID";
+            await conn.ExecuteAsync(sql, user);
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+           using var conn = GetConnection();
+            await conn.ExecuteAsync(@"DELETE FROM ""Kullanici""
+                                   DelUser=ID,
+                                     DelDate=Now()
+                                     WHERE ID=@ID", new { ID = id });
+        }
+
         public async Task<User?> GirisYapAsync(string eposta, string sifre)
         {
             using var conn=GetConnection();
