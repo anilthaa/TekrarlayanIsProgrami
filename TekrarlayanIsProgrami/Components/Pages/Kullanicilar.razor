@@ -1,32 +1,32 @@
 ﻿@page "/kullanicilar"
 
-@inject UserRepository userRepo
+@inject KullaniciRepository kullaniciRepo
 
 <h3>Reyonlar</h3>
 
-@if (users == null)
+@if (kullanicilar == null)
 {
     <p>Yükleniyor...</p>
 }
-else if (!users.Any())
+else if (!kullanicilar.Any())
 {
     <p>Hiç reyon yok.</p>
 }
 else
 {
     <ul>
-        @foreach (var u in users)
+        @foreach (var u in kullanicilar)
         {
             <li>@u.Adi - @u.Soyadi - @u.EPosta - @u.KullaniciTip_ID - @u.Sifre - @u.Aktif</li>
         }
     </ul>
 }
 @code {
-    private List<User>? users;
+    private List<Kullanici>? kullanicilar;
 
     protected override async Task OnInitializedAsync()
     {
-        users = await userRepo.GetAllAsync();
+        kullanicilar = await kullaniciRepo.GetAllAsync();
     }
 }
 
