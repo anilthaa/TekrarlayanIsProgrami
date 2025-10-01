@@ -5,11 +5,11 @@ using Dapper;
 
 namespace TekrarlayanIsProgrami.Repository
 {
-    public class KullaniciRepository
+    public class UserRepository
     {
         private readonly string _connectionString;
 
-        public KullaniciRepository(IConfiguration configuration)
+        public UserRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("PostgreSqlConnection");
         }
@@ -17,16 +17,16 @@ namespace TekrarlayanIsProgrami.Repository
         {
             return new NpgsqlConnection(_connectionString);
         }
-        //Kullanici tablosunu listeledik.
-        public async Task<List<ItemKullanici>> GetAllAsync()
+
+        public async Task<List<User>> GetAllAsync()
         {
             using var conn=GetConnection();
             var sql = @"Select * From ""Kullanici""";
-            var result=await conn.QueryAsync<ItemKullanici>(sql);
+            var result=await conn.QueryAsync<User>(sql);
             return result.ToList();
         }
-        //Kullanici tablosu güncellemek için.
-        public async Task UpdateAsync(ItemKullanici user)
+
+        public async Task UpdateAsync(User user)
         {
             using var conn = GetConnection();
             var sql = @"UPDATE ""Kullanici"" SET 
@@ -42,8 +42,6 @@ namespace TekrarlayanIsProgrami.Repository
             await conn.ExecuteAsync(sql, user);
         }
 
-        //Kullanici tablosundan silme işlemi.
-
         public async Task DeleteAsync(int id)
         {
            using var conn = GetConnection();
@@ -53,15 +51,14 @@ namespace TekrarlayanIsProgrami.Repository
                                      WHERE ID=@ID", new { ID = id });
         }
 
-        public async Task<ItemKullanici?> GirisYapAsync(string eposta, string sifre)
+        public async Task<User?> GirisYapAsync(string eposta, string sifre)
         {
             using var conn=GetConnection();
             var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true";
-            return await conn.QueryFirstOrDefaultAsync<ItemKullanici>(sql, new {EPosta=eposta, Sifre=sifre});
+            return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
         }
-        //Kullanıcı ekleme.
 
-        public async Task<bool> KayitOlAsync(ItemKullanici user)
+        public async Task<bool> KayitOlAsync(User user)
         {
             using var conn = GetConnection();
             var sql = @"Insert Into ""Kullanici"" (""Adi"", ""Soyadi"",""KullaniciTip_ID"",""EPosta"",""Sifre"",""Aktif"",""CreUser"",""CreDate"") values (@Adi, @Soyadi,@KullaniciTip_ID,@EPosta, @Sifre, @Aktif, @CreUser, @CreDate)";

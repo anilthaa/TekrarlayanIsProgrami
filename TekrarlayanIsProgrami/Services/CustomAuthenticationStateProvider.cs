@@ -11,11 +11,11 @@ namespace TekrarlayanIsProgrami.Services
     {
         private ClaimsPrincipal anonymous=new ClaimsPrincipal(new ClaimsIdentity());
         private ClaimsPrincipal _user;
-        private readonly KullaniciRepository _kullaniciRepository;
+        private readonly UserRepository _userRepository;
 
-        public CustomAuthenticationStateProvider(KullaniciRepository dbContext)
+        public CustomAuthenticationStateProvider(UserRepository dbContext)
         {
-            _kullaniciRepository = dbContext;
+            _userRepository = dbContext;
         }
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
@@ -24,7 +24,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
         {
-            var user=await _kullaniciRepository.GirisYapAsync(eposta, sifre);
+            var user=await _userRepository.GirisYapAsync(eposta, sifre);
             if (user != null)
             {
                 return new AuthResult
@@ -44,7 +44,7 @@ namespace TekrarlayanIsProgrami.Services
 
         }
 
-        public async Task<AuthResult> KayitOlAsync(ItemKullanici user)
+        public async Task<AuthResult> KayitOlAsync(User user)
         {
             // Şifre minimum 8 karakter kontrolü
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
@@ -58,7 +58,7 @@ namespace TekrarlayanIsProgrami.Services
 
             try
             {
-                bool kayitBasarili = await _kullaniciRepository.KayitOlAsync(user);
+                bool kayitBasarili = await _userRepository.KayitOlAsync(user);
 
                 if (kayitBasarili)
                 {

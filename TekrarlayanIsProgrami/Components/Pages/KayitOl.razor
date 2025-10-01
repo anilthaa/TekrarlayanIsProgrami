@@ -4,13 +4,13 @@
 @using Radzen
 @using Radzen.Blazor
 
-@inject CustomAuthenticationStateProvider kimlikDogrulama
+@inject CustomAuthenticationStateProvider AuthProvider
 @inject NavigationManager Navigation
 @inject NotificationService notificationService
 
 
 <RadzenCard Style="max-width:600px; margin:auto; margin-top:40px">
-    <RadzenTemplateForm TItem="ItemKullanici" Data="@newUser" Submit="@OnSubmit">
+    <RadzenTemplateForm TItem="User" Data="@newUser" Submit="@OnSubmit">
         <ChildContent>
             <RadzenTextBox @bind-Value="newUser.Adi" Placeholder="Adınız" Style="width:100%" Name="Adi" />
             <RadzenTextBox @bind-Value="newUser.Soyadi" Placeholder="Soyadınız" Style="width:100%; margin-top:10px" Name="Soyadi" />
@@ -23,7 +23,7 @@
 
 
 @code {
-    private ItemKullanici newUser = new ItemKullanici
+    private User newUser = new User
     {
         CreUser = 1,
         CreDate = DateTime.Now,
@@ -32,7 +32,7 @@
 
     private async Task OnSubmit()
     {
-        var result = await kimlikDogrulama.KayitOlAsync(newUser);
+        var result = await AuthProvider.KayitOlAsync(newUser);
         if (result.Success)
         {
             notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Message);

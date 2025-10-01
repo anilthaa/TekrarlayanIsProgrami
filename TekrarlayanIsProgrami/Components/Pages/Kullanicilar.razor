@@ -1,6 +1,6 @@
 ﻿@page "/kullanicilar"
 
-@inject KullaniciRepository kullaniciRepo
+@inject UserRepository kullaniciRepo
 
 <h3>Reyonlar</h3>
 
@@ -22,7 +22,7 @@ else
     </ul>
 }
 @code {
-    private List<ItemKullanici>? kullanicilar;
+    private List<User>? kullanicilar;
 
     protected override async Task OnInitializedAsync()
     {
