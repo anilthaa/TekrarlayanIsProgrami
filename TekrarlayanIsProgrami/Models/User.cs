@@ -2,7 +2,7 @@
 
 namespace TekrarlayanIsProgrami.Models
 {
-    public class ItemKullanici
+    public class User
     {
         public int ID { get; set; }
         public string? Adi { get; set; }
