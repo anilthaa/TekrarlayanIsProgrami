@@ -4,18 +4,18 @@
 @using Radzen
 @using Radzen.Blazor
 
-@inject CustomAuthenticationStateProvider AuthProvider
+@inject CustomAuthenticationStateProvider kimlikDogrulama
 @inject NavigationManager Navigation
 @inject NotificationService notificationService
 
 
 <RadzenCard Style="max-width:600px; margin:auto; margin-top:40px">
-    <RadzenTemplateForm TItem="Kullanici" Data="@newKullanici" Submit="@OnSubmit">
+    <RadzenTemplateForm TItem="ItemKullanici" Data="@newUser" Submit="@OnSubmit">
         <ChildContent>
-            <RadzenTextBox @bind-Value="newKullanici.Adi" Placeholder="Adınız" Style="width:100%" Name="Adi" />
-            <RadzenTextBox @bind-Value="newKullanici.Soyadi" Placeholder="Soyadınız" Style="width:100%; margin-top:10px" Name="Soyadi" />
-            <RadzenTextBox @bind-Value="newKullanici.EPosta" Placeholder="E-posta" Style="width:100%; margin-top:10px" Name="EPosta" />
-            <RadzenPassword @bind-Value="newKullanici.Sifre" Placeholder="Şifre" Style="width:100%; margin-top:10px;" Name="Sifre" />
+            <RadzenTextBox @bind-Value="newUser.Adi" Placeholder="Adınız" Style="width:100%" Name="Adi" />
+            <RadzenTextBox @bind-Value="newUser.Soyadi" Placeholder="Soyadınız" Style="width:100%; margin-top:10px" Name="Soyadi" />
+            <RadzenTextBox @bind-Value="newUser.EPosta" Placeholder="E-posta" Style="width:100%; margin-top:10px" Name="EPosta" />
+            <RadzenPassword @bind-Value="newUser.Sifre" Placeholder="Şifre" Style="width:100%; margin-top:10px;" Name="Sifre" />
             <RadzenButton Text="Kayıt Ol" ButtonType="ButtonType.Submit" Style="width:100%; margin-top:15px;" />
         </ChildContent>
     </RadzenTemplateForm>
@@ -23,7 +23,7 @@
 
 
 @code {
-    private ItemKullanici newKullanici = new ItemKullanici
+    private ItemKullanici newUser = new ItemKullanici
     {
         CreUser = 1,
         CreDate = DateTime.Now,
@@ -32,15 +32,15 @@
 
     private async Task OnSubmit()
     {
-        var result = await AuthProvider.KayitOlAsync(newKullanici);
-        if (result.Basarili)
+        var result = await kimlikDogrulama.KayitOlAsync(newUser);
+        if (result.Success)
         {
-            notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Message);
             Navigation.NavigateTo("/GirisYap");
         }
         else
         {
-            notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
+            notificationService.Notify(NotificationSeverity.Error, "Hata", result.Message);
         }
     }
 }
