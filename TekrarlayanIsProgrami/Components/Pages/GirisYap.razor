@@ -1,5 +1,5 @@
 ﻿@page "/GirisYap"
-@inject KimlikDogrulama AuthProvider
+@inject CustomAuthenticationStateProvider AuthProvider
 @inject NavigationManager Navigation
 @inject NotificationService NotificationService
 @using TekrarlayanIsProgrami.Services
@@ -10,12 +10,12 @@
 	<h3 style="text-align:center; margin-bottom:20px;">🔑 Giriş Yap</h3>
 	
 
-	<RadzenTemplateForm TItem="LoginModel" Data="@GirisModeli" Submit="@OnLogin">
+	<RadzenTemplateForm TItem="LoginModel" Data="@loginModel" Submit="@OnLogin">
 		<ChildContent>
-			<RadzenLabel Text="E-posta" Component="Email" Style="font-weight:bold;"></RadzenLabel>
-			<RadzenTextBox @bind-Value="GirisModeli.E_Posta" Name="E_Posta" Placeholder="E-posta adresinizi giriniz" Style="width:100%; margin-bottom:20px;"></RadzenTextBox>
+			<RadzenLabel Text="Email" Component="Email" Style="font-weight:bold;"></RadzenLabel>
+			<RadzenTextBox @bind-Value="loginModel.Email" Name="Email" Placeholder="E-posta adresinizi giriniz" Style="width:100%; margin-bottom:20px;"></RadzenTextBox>
 			<RadzenLabel Text="Şifre" Component="Password" Style="font-weight:bold;"></RadzenLabel>
-			<RadzenPassword @bind-Value="GirisModeli.Sifre" Name="Sifre" Placeholder="Şifrenizi Giriniz" Style="width:100%; margin-bottom:20px;"></RadzenPassword>
+			<RadzenPassword @bind-Value="loginModel.Password" Name="Password" Placeholder="Şifrenizi Giriniz" Style="width:100%; margin-bottom:20px;"></RadzenPassword>
 			
 			
 			<div style="text-align:center; margin-bottom:20px;">
@@ -31,23 +31,23 @@
 	</RadzenTemplateForm>
 </RadzenCard>
 @code {
-	private LoginModel GirisModeli = new LoginModel();
+	private LoginModel loginModel = new LoginModel();
 
 	// RadzenLogin girisYap;
 
 	async Task OnLogin(LoginModel model)
 	{
 
-		var result = await AuthProvider.GirisYapAsync(model.E_Posta, model.Sifre);
+		var result = await AuthProvider.GirisYapAsync(model.Email, model.Password);
 
-		if (result.Basarili)
+		if (result.Success)
 		{
-			NotificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+			NotificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Message);
 			Navigation.NavigateTo("/");
 		}
 		else
 		{
-			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
+			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Message);
 		}
 
 
@@ -55,8 +55,8 @@
 
 	public class LoginModel
 	{
-		public string? E_Posta { get; set; }
-		public string? Sifre { get; set; }
+		public string Email { get; set; }
+		public string Password { get; set; }
 	}
 
 }
