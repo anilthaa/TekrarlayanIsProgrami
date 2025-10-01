@@ -21,7 +21,6 @@ namespace TekrarlayanIsProgrami.Services
         {
             return Task.FromResult(new AuthenticationState(_user ?? anonymous));
         }
-
         public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
         {
             var user=await _userRepository.GirisYapAsync(eposta, sifre);
@@ -32,16 +31,12 @@ namespace TekrarlayanIsProgrami.Services
                     Success = true,
                     Message = $"Hoşgeldiniz {user.Adi}!"
                 };
-
-               
             }
             return new AuthResult
             {
                 Success = false,
                 Message = "E-posta veya şifre hatalı!"
             };
-
-
         }
 
         public async Task<AuthResult> KayitOlAsync(User user)
@@ -86,7 +81,6 @@ namespace TekrarlayanIsProgrami.Services
                 };
             }
         }
-
         public void CikisYap()
         {
             _user=anonymous;

@@ -33,7 +33,6 @@
 @code {
 	private LoginModel loginModel = new LoginModel();
 
-
 	async Task OnLogin(LoginModel model)
 	{
 
@@ -48,8 +47,6 @@
 		{
 			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Message);
 		}
-
-
 	}
 
 	public class LoginModel
