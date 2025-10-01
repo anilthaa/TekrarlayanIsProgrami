@@ -6,7 +6,7 @@ using TekrarlayanIsProgrami.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtService= new JwtService(); //JwtServive nesnesi oluştur.
-string token = jwtService.GenerateToken("User1"); //token oluştur.
+string token = jwtService.GenerateToken("Kullanici1"); //token oluştur.
 Console.WriteLine("Oluşturulan Token:");//Console ekranında oluşturulan token i yazcak.
 Console.WriteLine(token);
 
@@ -24,9 +24,9 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<TooltipService>(); 
 builder.Services.AddAuthorization();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
-builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
-builder.Services.AddScoped<CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider, KimlikDogrulamaService>();
+builder.Services.AddScoped<KullaniciRepository>();//UserRrepository servisini çağırdık.
+builder.Services.AddScoped<KimlikDogrulamaService>();
 
 var app = builder.Build();
 
