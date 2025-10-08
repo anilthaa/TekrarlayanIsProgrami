@@ -8,23 +8,25 @@ using TekrarlayanIsProgrami.Repository;
 using static Dapper.SqlMapper;
 namespace TekrarlayanIsProgrami.Services
 {
-    public class CustomAuthenticationStateProvider : AuthenticationStateProvider
+    public class CustomAuthenticationStateOrovider : AuthenticationStateProvider
     {
         private User _currentUser;
         private ClaimsPrincipal anonymous = new ClaimsPrincipal(new ClaimsIdentity());
         private ClaimsPrincipal _user;
-        private readonly UserRepository _repo;
+        private readonly KullaniciRepository _kullaniciRepo;
+        private readonly CustomAuthenticationStateOrovider _girisSaglayici;
 
-        public CustomAuthenticationStateProvider(UserRepository dbContext)
+        public CustomAuthenticationStateOrovider(KullaniciRepository dbContext, CustomAuthenticationStateOrovider girisSaglayici)
         {
-            _repo = dbContext;
+            _kullaniciRepo = dbContext;
+            _girisSaglayici = girisSaglayici;
         }
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            ClaimsIdentity identity;
+            ClaimsIdentity kimlik;
             if (_currentUser != null)
             {
-                identity = new ClaimsIdentity(new[]
+                kimlik = new ClaimsIdentity(new[]
                 {
                 new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
                 new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
@@ -33,21 +35,21 @@ namespace TekrarlayanIsProgrami.Services
             }
             else
             {
-                identity = new ClaimsIdentity();
+                kimlik = new ClaimsIdentity();
             }
 
-            var user = new ClaimsPrincipal(identity);
+            var user = new ClaimsPrincipal(kimlik);
             return Task.FromResult(new AuthenticationState(user));
         }
-        public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
+        public async Task<GirisSonucu> GirisYapAsync(string eposta, string sifre)
         {
-            var Kullanici = await _repo.GetByEmailAsync(eposta);
+            var Kullanici = await _kullaniciRepo.GetByEmailAndPasswordAsync(eposta,sifre);
             if (Kullanici != null)
             {
-                return new AuthResult
+                return new GirisSonucu
                 {
-                    Success = true,
-                    Message = $"Hoşgeldiniz {Kullanici.Adi}!"
+                    Basarili = true,
+                    Mesaj = $"Hoşgeldiniz {Kullanici.Adi}!"
                 };
             }
             var kimlik = new ClaimsIdentity(new[]
@@ -60,54 +62,73 @@ namespace TekrarlayanIsProgrami.Services
             var kullaniciPrincipal = new ClaimsPrincipal(kimlik);
 
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(kullaniciPrincipal)));
-            return new AuthResult
+            return new GirisSonucu
             {
-                Success = false,
-                Message = "E-posta veya şifre hatalı!"
+                Basarili = false,
+                Mesaj = "E-posta veya şifre hatalı!"
             };
         }
 
-        public async Task<AuthResult> KayitOlAsync(User user)
+        public async Task<GirisSonucu> KayitOlAsync(User user)
         {
             // Şifre minimum 8 karakter kontrolü
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
-                return new AuthResult
+                return new GirisSonucu
                 {
-                    Success = false,
-                    Message = "Şifre en az 8 karakter olmalıdır."
+                    Basarili = false,
+                    Mesaj = "Şifre en az 8 karakter olmalıdır."
                 };
             }
 
             try
             {
-                bool kayitBasarili = await _repo.KayitOlAsync(user);
+                bool kayitBasarili = await _kullaniciRepo.KayitOlAsync(user);
 
                 if (kayitBasarili)
                 {
-                    return new AuthResult
+                    return new GirisSonucu
                     {
-                        Success = true,
-                        Message = "Kayıt Başarıyla Tamamlandı!"
+                        Basarili = true,
+                        Mesaj = "Kayıt Başarıyla Tamamlandı!"
                     };
                 }
                 else
                 {
-                    return new AuthResult
+                    return new GirisSonucu
                     {
-                        Success = false,
-                        Message = "Kayıt sırasında bir hata oluştu."
+                        Basarili = false,
+                        Mesaj = "Kayıt sırasında bir hata oluştu."
                     };
                 }
             }
             catch (Exception ex)
             {
-                return new AuthResult
+                return new GirisSonucu
                 {
-                    Success = false,
-                    Message = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
+                    Basarili = false,
+                    Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
                 };
             }
+        }
+        public async Task<GirisSonucu> UpdateAsync(string E_Posta,string Sifre)
+        {
+            var kullanici = await _kullaniciRepo.GetByEmailAndPasswordAsync(E_Posta ,Sifre);
+            if (kullanici == null) { }
+
+            // Yeni ClaimsIdentity oluştur
+            var identity = new ClaimsIdentity(new[]
+            {
+            new Claim(ClaimTypes.NameIdentifier, kullanici.ID.ToString()),
+            new Claim(ClaimTypes.Name, kullanici.Adi + " " + kullanici.Soyadi),
+            new Claim(ClaimTypes.Email, kullanici.EPosta)
+        }, "apiauth");
+
+            var userPrincipal = new ClaimsPrincipal(identity);
+
+            // Authentication state’i güncelle
+            _girisSaglayici.NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(userPrincipal)));
+            return new GirisSonucu { Basarili = true, Mesaj = "Giriş başarılı" };
         }
         public Task CikisYapAsync()
         {
@@ -116,6 +137,7 @@ namespace TekrarlayanIsProgrami.Services
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
             return Task.CompletedTask;
         }
+
 
         //public Task GuncelleAsync(ClaimsPrincipal user)
         //   {

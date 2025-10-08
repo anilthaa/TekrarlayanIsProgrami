@@ -1,7 +1,5 @@
 ﻿@page "/kullanicilar/edit/{id:int}"
 
-@inject NavigationManager NavigationManager
-@inject CustomAuthenticationStateProvider AuthProvider
 <html>
 <head>
     <link href="css/site.css" rel="stylesheet" />
@@ -80,24 +78,24 @@ else
     async Task OnLogin(LoginModel model)
     {
 
-        // var result = await AuthProvider.UpdateAsync(model.E_Posta, model.Sifre);
+         var result = await girisSaglayici.UpdateAsync(model.E_Posta, model.Sifre);
 
-        // if (result.Success) //Eğer sonuç başarılı ise.
-        // {
-        //     NotificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Message);
-        //     NavigationManager.NavigateTo("/kullanicilar");
-        // }
-        // else
-        // {
-        //     NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Message);
-        // }
+         if (result.Basarili) //Eğer sonuç başarılı ise.
+         {
+            bildirimServisi.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+             NavigationManager.NavigateTo("/kullanicilar");
+         }
+         else
+         {
+             bildirimServisi.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
+         }
     }
 
     private async Task Kaydet()
     {
         kullanici.UpdUser = kullanici.ID;
         kullanici.UpdDate = DateTime.Now;
-        await _repo.UpdateAsync(kullanici);
+        await _kullaniciRepo.UpdateAsync(kullanici);
         //  Kayıt tamamlandıktan sonra kullanıcılar sayfasına dön
         NavigationManager.NavigateTo(geriUrl);
     }

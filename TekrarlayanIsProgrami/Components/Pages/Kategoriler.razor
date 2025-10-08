@@ -69,7 +69,7 @@
         if (onay == true)
         {
             await KategoriRepo.DeleteAsync(kategori.ID, 1);
-            NotificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori silindi!");
+            bildirimServisi.Notify(NotificationSeverity.Success, "Başarılı", "Kategori silindi!");
             kategoriler = await KategoriRepo.GetAllAsync();
             await grid.Reload();
         }
