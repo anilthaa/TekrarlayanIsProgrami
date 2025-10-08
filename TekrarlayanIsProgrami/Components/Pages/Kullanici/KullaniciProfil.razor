@@ -1,0 +1,50 @@
+﻿@page "/Profil"
+@inject AuthenticationStateProvider AuthProvider
+
+<html>
+    <head>
+    <link href="css/site.css" rel="stylesheet" />
+    </head>
+<body>
+
+    @if (kullanici != null)
+    {
+     <div class="profile-card">
+     <h2>Profil</h2>
+    <h3>@kullanici.Adi @kullanici.Soyadi</h3>
+    <p>@kullanici.EPosta</p>
+    <RadzenButton @onclick="CikisYap" class="radzenprofile-but" Text="Çıkış Yap"></RadzenButton>
+    </div>
+    }
+    else
+    {
+        <p>Kullanıcı bilgileri yükleniyor veya bulunamadı...</p>
+    }
+</body>
+</html>
+@code {
+    private User? kullanici;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var testUser = await _repo.GetByEmailAsync("ahmet@example.com");
+        Console.WriteLine(testUser != null ? "Kullanıcı bulundu" : "Kullanıcı yok");
+        // var authState = await AuthProvider.GetAuthenticationStateAsync();
+        // var userClaims = authState.User;
+
+        // if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
+        // {
+        //     var eposta = userClaims.FindFirst("eposta")?.Value;
+
+        //     if (!string.IsNullOrEmpty(eposta))
+        //     {
+        //         kullanici = await _repo.GetByEmailAsync(eposta);
+        //     }
+            
+        // }
+    }
+    private void CikisYap()
+    {
+        NavigationManager.NavigateTo("/GirisYap", true);
+    }
+}
