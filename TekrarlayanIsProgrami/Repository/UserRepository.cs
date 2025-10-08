@@ -25,6 +25,19 @@ namespace TekrarlayanIsProgrami.Repository
             var result=await conn.QueryAsync<User>(sql);
             return result.ToList();
         }
+        public async Task<User?> GetByIDAsync(int id)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""ID"" = @ID";
+            var kullanici = await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID= id });
+            return kullanici;
+        }
+        public async Task<User?> GetByEmailAsync(string eposta)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { eposta });
+        }
 
         public async Task UpdateAsync(User user)
         {
@@ -33,9 +46,7 @@ namespace TekrarlayanIsProgrami.Repository
                         Adi=@Adi, 
                         Soyadi=@Soyadi,
                         EPosta=@EPosta,
-                        KullaniciTip_ID=1,
                         Sifre=@Sifre,
-                        Aktif=@Aktif,
                         UpdUser=ID,
                         UpdDate=NOW()
                     WHERE ID=@ID";
@@ -44,11 +55,9 @@ namespace TekrarlayanIsProgrami.Repository
 
         public async Task DeleteAsync(int id)
         {
-           using var conn = GetConnection();
-            await conn.ExecuteAsync(@"DELETE FROM ""Kullanici""
-                                   DelUser=ID,
-                                     DelDate=Now()
-                                     WHERE ID=@ID", new { ID = id });
+            using var conn = GetConnection();
+            var sql = @"DELETE FROM ""Kullanici"" WHERE ""ID""=@ID";
+            await conn.ExecuteAsync(sql, new { ID = id });
         }
 
         public async Task<User?> GirisYapAsync(string eposta, string sifre)
