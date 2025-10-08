@@ -1,0 +1,110 @@
+﻿@page "/GirisYap"
+@page "/"   
+@layout MainLayout
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject NotificationService NotificationService
+<html>
+<head>
+    <link href="css/site.css" rel="stylesheet" />
+</head>
+<body>
+	@* class="bodyAnasayfa" *@
+	<div class="login-container @(isRegisterActive ? "slide-active" : "")">
+
+    <!-- Giriş Formu -->
+    <div class="form login-form">
+       <EditForm Model="@loginModel" OnValidSubmit="()=>OnLogin(loginModel)">
+				<h3>🔐Giriş Yap</h3>
+            <p>Lütfen bilgilerinizi girin</p>
+
+				<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="✉E-posta" />
+				<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%;" Placeholder="🔑Şifre" />
+				<RadzenLabel style="margin-left:5px;">🔁 Şifrenizi unuttunuz mu?</RadzenLabel>
+
+            <RadzenButton Click="()=>OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
+        </EditForm></div>
+		<!-- Kayıt Formu -->
+    <div class="form register-form">
+        <EditForm Model="@newUser" OnValidSubmit="OnSubmit">
+            <h3>Hesap Oluştur</h3>
+            <p>Lütfen bilgilerinizi girin</p>
+			<RadzenLabel Text="Ad" class="radzen-labell"></RadzenLabel>
+				<RadzenTextBox @bind-Value="newUser.Adi" style="width:100%" Placeholder="Adınız" /><br />
+				<RadzenLabel Text="Soyad" class="radzen-labell"></RadzenLabel><br />
+				<RadzenTextBox @bind-Value="newUser.Soyadi" style="width:100%" Placeholder="Soyadınız" /><br />
+				<RadzenLabel Text="E-posta" class="radzen-labell"></RadzenLabel>
+				<RadzenTextBox @bind-Value="newUser.EPosta" style="width:100%" Placeholder="E-posta"   /><br />
+				<RadzenLabel Text="Sifre" class="radzen-labell"></RadzenLabel>
+				<RadzenTextBox @bind-Value="newUser.Sifre" style="width:100%" Placeholder="Şifre"></RadzenTextBox><br />
+				<RadzenLabel Text="Tekrar Şifre" class="radzen-labell"></RadzenLabel>
+				<RadzenTextBox style="width:100%" Placeholder="Tekrar Şifre"></RadzenTextBox><br />
+				<RadzenButton Click="@OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info"></RadzenButton>
+               </EditForm>
+            </div>
+			<!-- Slider Panel -->
+			<div class="slider-panel">
+				<div class="slider-content">
+					@if (!isRegisterActive)
+					{
+						<h2>Merhabalar!</h2>
+						<p>Tüm site özelliklerini kullanmak için kişisel bilgilerinizle kayıt olun.</p>
+						<RadzenButton Click="@(() => isRegisterActive = true)" Text="KAYIT OL" Style="background-color: white; color: #2196f3; margin-top:10px;" />
+					}
+					else
+					{
+						<h2>Tekrar Hoş Geldiniz!</h2>
+						<p>Zaten hesabınız var mı? Giriş yapın.</p>
+						<RadzenButton Click="@(() => isRegisterActive = false)" Text="GİRİŞ YAP" Style="background-color: white; color: #2196f3; margin-top:10px;" />
+					}
+
+				</div>
+			</div>
+</div>
+</body> 
+</html>
+@code {
+	bool isRegisterActive = false;
+	private LoginModel loginModel = new LoginModel();
+
+	async Task OnLogin(LoginModel model)
+	{
+		var result = await AuthProvider.GirisYapAsync(model.E_Posta, model.Sifre);
+
+		if (result.Success) //Eğer sonuç başarılı ise.
+		{
+			NotificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Message);
+			Navigation.NavigateTo("/Dashboard");
+		}
+		else
+		{
+			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Message);
+		}
+	}
+
+	public class LoginModel
+	{
+		public string E_Posta { get; set; }
+		public string Sifre { get; set; }
+	}
+	private User newUser = new User
+	{
+		CreUser = 1,
+		CreDate = DateTime.Now,
+		Aktif = true
+	};
+
+	private async Task OnSubmit()
+	{
+		var result = await AuthProvider.KayitOlAsync(newUser);
+		if (result.Success)
+		{
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Message);
+			Navigation.NavigateTo("/GirisYap");
+		}
+		else
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Message);
+		}
+	}
+}

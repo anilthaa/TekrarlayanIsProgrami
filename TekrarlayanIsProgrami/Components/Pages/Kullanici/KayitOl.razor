@@ -1,0 +1,71 @@
+﻿@page "/kullanicilar/KayitOl"
+
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+
+
+<!-- Arka plan ve sayfa ortalama -->
+<div class="container">
+    
+        <div class="klogin-left">
+        <!-- Başlık -->
+        <h2 style="text-align:center; margin-bottom:25px; color:#333;">Kayıt Ol</h2>
+
+        <!-- Form -->
+        <EditForm Model="@newUser" OnValidSubmit="OnSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Adınız</label>
+                <RadzenTextBox @bind-Value="newUser.Adi" placeholder="Adınız" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Soyadınız</label>
+                <InputText @bind-Value="newUser.Soyadi" placeholder="Soyadınız" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">E-posta</label>
+                <InputText @bind-Value="newUser.EPosta" placeholder="E-posta" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <label style="display:block; margin-bottom:5px; font-weight:bold;">Şifre</label>
+                <InputText @bind-Value="newUser.Sifre" type="password" placeholder="Şifre" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
+            </div>
+
+            <button type="submit" style="width:100%; padding:12px; background:#5563DE; color:white; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition:0.3s;">
+                Kayıt Ol
+            </button>
+        </EditForm>
+
+        <div style="text-align:center; margin-top:15px; font-size:0.9em;">
+            <a href="/GirisYap" style="color:#5563DE; text-decoration:none;">Zaten hesabınız var mı? Giriş Yap</a>
+        </div>
+
+    </div>
+</div>
+@code {
+    private User newUser = new User
+    {
+        CreUser = 1,
+        CreDate = DateTime.Now,
+        Aktif = true
+    };
+
+    private async Task OnSubmit()
+    {
+        var result = await AuthProvider.KayitOlAsync(newUser);
+        if (result.Success)
+        {
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Message);
+            Navigation.NavigateTo("/GirisYap");
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", result.Message);
+        }
+    }
+}

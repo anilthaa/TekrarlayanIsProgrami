@@ -15,3 +15,13 @@
 @using TekrarlayanIsProgrami.Models
 @using TekrarlayanIsProgrami.Repository
 @using TekrarlayanIsProgrami.Services
+@using Microsoft.AspNetCore.Mvc;
+@using Microsoft.AspNetCore.Mvc.RazorPages;
+@using Microsoft.AspNetCore.WebUtilities
+@using TekrarlayanIsProgrami.Components.Layout
+@using static TekrarlayanIsProgrami.Components.Pages.Kullanici.GirisYap
+@inject NotificationService notificationService
+@inject UserRepository kullaniciRepo
+@inject UserRepository _repo
+@inject NavigationManager NavigationManager
+@inject IJSRuntime Js
