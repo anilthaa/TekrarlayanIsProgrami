@@ -15,6 +15,7 @@
 @using TekrarlayanIsProgrami.Models
 @using TekrarlayanIsProgrami.Repository
 @using TekrarlayanIsProgrami.Services
+
 @using Microsoft.AspNetCore.Mvc;
 @using Microsoft.AspNetCore.Mvc.RazorPages;
 @using Microsoft.AspNetCore.WebUtilities
@@ -25,3 +26,9 @@
 @inject UserRepository _repo
 @inject NavigationManager NavigationManager
 @inject IJSRuntime Js
+
+@using TekrarlayanIsProgrami.Services
+@inject CustomAuthenticationStateProvider AuthProvider
+@inject KategoriRepository KategoriRepo
+@inject DialogService DialogService
+@inject GorevRepository GorevRepo
