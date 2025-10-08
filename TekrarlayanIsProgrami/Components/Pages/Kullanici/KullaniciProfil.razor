@@ -1,5 +1,4 @@
 ﻿@page "/Profil"
-@inject AuthenticationStateProvider AuthProvider
 
 <html>
     <head>
@@ -27,21 +26,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var testUser = await _repo.GetByEmailAsync("ahmet@example.com");
-        Console.WriteLine(testUser != null ? "Kullanıcı bulundu" : "Kullanıcı yok");
-        // var authState = await AuthProvider.GetAuthenticationStateAsync();
-        // var userClaims = authState.User;
+         var girisDurumu = await girisSaglayici.GetAuthenticationStateAsync();
+         var kullaniciBilgi = girisDurumu.User;
 
-        // if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
-        // {
-        //     var eposta = userClaims.FindFirst("eposta")?.Value;
+        if (kullaniciBilgi.Identity != null && kullaniciBilgi.Identity.IsAuthenticated)
+         {
+            var eposta = kullaniciBilgi.FindFirst("eposta")?.Value;
 
-        //     if (!string.IsNullOrEmpty(eposta))
-        //     {
-        //         kullanici = await _repo.GetByEmailAsync(eposta);
-        //     }
+             if (!string.IsNullOrEmpty(eposta))
+             {
+                 kullanici = await _kullaniciRepo.GetByEmailAsync(eposta);
+             }
             
-        // }
+         }
     }
     private void CikisYap()
     {

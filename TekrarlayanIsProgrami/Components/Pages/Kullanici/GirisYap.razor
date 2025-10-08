@@ -1,9 +1,8 @@
 ﻿@page "/GirisYap"
 @page "/"   
 @layout MainLayout
-@inject CustomAuthenticationStateProvider AuthProvider
-@inject NavigationManager Navigation
-@inject NotificationService NotificationService
+
+
 <html>
 <head>
     <link href="css/site.css" rel="stylesheet" />
@@ -69,16 +68,16 @@
 
 	async Task OnLogin(LoginModel model)
 	{
-		var result = await AuthProvider.GirisYapAsync(model.E_Posta, model.Sifre);
+		var result = await girisSaglayici.GirisYapAsync(model.E_Posta, model.Sifre);
 
-		if (result.Success) //Eğer sonuç başarılı ise.
+		if (result.Basarili) //Eğer sonuç başarılı ise.
 		{
-			NotificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Message);
-			Navigation.NavigateTo("/Dashboard");
+			bildirimServisi.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+			NavigationManager.NavigateTo("/Dashboard");
 		}
 		else
 		{
-			NotificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Message);
+			bildirimServisi.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
 		}
 	}
 
@@ -96,15 +95,15 @@
 
 	private async Task OnSubmit()
 	{
-		var result = await AuthProvider.KayitOlAsync(newUser);
-		if (result.Success)
+		var result = await girisSaglayici.KayitOlAsync(newUser);
+		if (result.Basarili)
 		{
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Message);
-			Navigation.NavigateTo("/GirisYap");
+			bildirimServisi.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
+			NavigationManager.NavigateTo("/GirisYap");
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Message);
+			bildirimServisi.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
 		}
 	}
 }
