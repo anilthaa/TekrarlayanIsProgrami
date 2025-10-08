@@ -5,11 +5,11 @@ using Dapper;
 
 namespace TekrarlayanIsProgrami.Repository
 {
-    public class UserRepository
+    public class KullaniciRepository
     {
         private readonly string _connectionString;
 
-        public UserRepository(IConfiguration configuration)
+        public KullaniciRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("PostgreSqlConnection");
         }
@@ -36,6 +36,12 @@ namespace TekrarlayanIsProgrami.Repository
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { eposta });
+        }
+        public async Task<User?> GetByEmailAndPasswordAsync(string eposta, string sifre)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { eposta });
         }
 

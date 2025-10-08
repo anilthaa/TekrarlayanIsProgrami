@@ -1,6 +1,5 @@
 ﻿@page "/kullanicilar"
 
-@inject NavigationManager NavigationManager
 <div class="container mt-4">
     <h2 class="text-center mb-4">Kullanıcılar Listesi</h2>
 
@@ -64,7 +63,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        kullanicilar = await kullaniciRepo.GetAllAsync();
+        kullanicilar = await _kullaniciRepo.GetAllAsync();
     }
 
     private void Duzenle(int id)
@@ -80,8 +79,8 @@
 
         if (await Js.InvokeAsync<bool>("confirm", $"'{kullanici.Adi}' silinsin mi?"))
         {
-            await _repo.DeleteAsync(kullanici.ID);
-            kullanicilar = await _repo.GetAllAsync();
+            await _kullaniciRepo.DeleteAsync(kullanici.ID);
+            kullanicilar = await _kullaniciRepo.GetAllAsync();
         }
     }
 
@@ -92,5 +91,3 @@
     }
 
 }
-
-
