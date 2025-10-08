@@ -1,0 +1,82 @@
+﻿@page "/Kategori"
+
+<RadzenCard Style="margin:20px;">
+    <h3>📂 Kategori Yönetimi</h3>
+
+    <RadzenButton Text="Yeni Kategori" Icon="add_circle"
+                  Style="margin-bottom:15px; background:#3498db; color:white"
+                  Click="@Ekle" />
+
+    <RadzenDataGrid TItem="ItemKategori" Data="@kategoriler" @ref="grid"
+                    RowDoubleClick="@OnRowDoubleClick"
+                    AllowPaging="true" PageSize="10"
+                    AllowSorting="true" AllowFiltering="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="70px" />
+            <RadzenDataGridColumn TItem="ItemKategori" Property="Adi" Title="Kategori Adı" />
+            <RadzenDataGridColumn TItem="ItemKategori" Title="İşlemler" Width="150px">
+                <Template Context="data">
+                    <RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:5px"
+                                  Click="@(() => Duzenle(data))" />
+                    <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+                                  Click="@(() => Sil(data))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenCard>
+
+@code {
+    private List<ItemKategori> kategoriler = new();
+    private RadzenDataGrid<ItemKategori> grid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        kategoriler = await KategoriRepo.GetAllAsync();
+    }
+
+    private async Task Ekle()
+    {
+        var result = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Ekle",
+            new Dictionary<string, object> { { "Kategori", new ItemKategori() } },
+            new DialogOptions { Width = "500px", Height = "300px" });
+
+        if (result is bool b && b)
+        {
+            kategoriler = await KategoriRepo.GetAllAsync();
+            await grid.Reload();
+        }
+    }
+
+    private async Task Duzenle(ItemKategori kategori)
+    {
+        var result = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Düzenle",
+            new Dictionary<string, object> { { "Kategori", kategori } },
+            new DialogOptions { Width = "500px", Height = "300px" });
+
+        if (result is bool b && b)
+        {
+            kategoriler = await KategoriRepo.GetAllAsync();
+            await grid.Reload();
+        }
+    }
+
+    private async Task Sil(ItemKategori kategori)
+    {
+        bool? onay = await DialogService.Confirm("Silmek istediğinize emin misiniz?",
+            "Onay", new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" });
+
+        if (onay == true)
+        {
+            await KategoriRepo.DeleteAsync(kategori.ID, 1);
+            NotificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori silindi!");
+            kategoriler = await KategoriRepo.GetAllAsync();
+            await grid.Reload();
+        }
+    }
+
+    private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<ItemKategori> args)
+    {
+        await Duzenle(args.Data);
+    }
+}
