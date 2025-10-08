@@ -1,6 +1,6 @@
 ﻿@page "/kullanicilar/KayitOl"
 
-@inject CustomAuthenticationStateOrovider AuthProvider
+@inject CustomAuthenticationStateProvider AuthProvider
 @inject NavigationManager Navigation
 
 
@@ -60,12 +60,12 @@
         var result = await AuthProvider.KayitOlAsync(newUser);
         if (result.Basarili )
         {
-            bildirimServisi.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
             Navigation.NavigateTo("/GirisYap");
         }
         else
         {
-            bildirimServisi.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
+            notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
         }
     }
 }

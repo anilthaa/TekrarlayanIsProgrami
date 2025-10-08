@@ -1,5 +1,6 @@
 ﻿@page "/Profil"
 
+@inject AuthenticationStateProvider AuthProvider
 <html>
     <head>
     <link href="css/site.css" rel="stylesheet" />
@@ -26,19 +27,19 @@
 
     protected override async Task OnInitializedAsync()
     {
-         var girisDurumu = await girisSaglayici.GetAuthenticationStateAsync();
-         var kullaniciBilgi = girisDurumu.User;
+        var girisDurumu = await AuthProvider.GetAuthenticationStateAsync();
+         var userClaims = girisDurumu.User;
 
-        if (kullaniciBilgi.Identity != null && kullaniciBilgi.Identity.IsAuthenticated)
-         {
-            var eposta = kullaniciBilgi.FindFirst("eposta")?.Value;
+        // if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
+        //  {
+        //     var eposta = userClaims.FindFirst("eposta")?.Value;
 
-             if (!string.IsNullOrEmpty(eposta))
-             {
-                 kullanici = await _kullaniciRepo.GetByEmailAsync(eposta);
-             }
+        //      if (!string.IsNullOrEmpty(eposta))
+        //      {
+        //          kullanici = await _kullaniciRepo.GetByEmailAsync(eposta);
+        //      }
             
-         }
+        //  }
     }
     private void CikisYap()
     {

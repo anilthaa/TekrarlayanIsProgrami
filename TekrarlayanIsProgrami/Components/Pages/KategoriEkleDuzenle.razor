@@ -20,12 +20,12 @@
 		if (Kategori.ID==0)
 		{
 			await KategoriRepo.AddAsync(Kategori);
-			bildirimServisi.Notify(NotificationSeverity.Success, "Başarılı", "Kategori Eklendi!");
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori Eklendi!");
 		}
 		else
 		{
 			await KategoriRepo.UpdateAsync(Kategori);
-			bildirimServisi.Notify(NotificationSeverity.Success, "Başarılı", "Kategori Güncellendi");
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori Güncellendi");
 		}
 
 		 DialogService.Close(true);

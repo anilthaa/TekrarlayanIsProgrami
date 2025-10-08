@@ -7,13 +7,13 @@ namespace TekrarlayanIsProgrami.Services
 {
     public class JwtService
     {
-        private readonly string _gizliAnahtar = "BuJwtTokenCokGizliBirAnahtar123!"; //Secret key en az 32 karakter olmalı.
-        private readonly string _yetkiVeren = "NotiTask";        // Token’ı veren
-        private readonly string _hedefKitle = "Users"; // Token’ı kullanacak olan// 1️⃣ Token oluşturma metodu
+        private readonly string _secretKey = "BuJwtTokenCokGizliBirAnahtar123!"; //Secret key en az 32 karakter olmalı.
+        private readonly string _issuer = "NotiTask";        // Token’ı veren
+        private readonly string _audience = "Users"; // Token’ı kullanacak olan// 1️⃣ Token oluşturma metodu
         public string GenerateToken(string username)
         {
-            var GuvenlikAnahtari = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_gizliAnahtar));
-            var KimlikBilgi = new SigningCredentials(GuvenlikAnahtari, SecurityAlgorithms.HmacSha256);
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
@@ -22,11 +22,11 @@ namespace TekrarlayanIsProgrami.Services
             };
 
             var token = new JwtSecurityToken(
-                issuer: _yetkiVeren,
-                audience: _hedefKitle,
+                issuer: _issuer,
+                audience: _audience,
                 claims: claims,
                 expires: DateTime.Now.AddHours(1),
-                signingCredentials: KimlikBilgi
+                signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
@@ -35,20 +35,20 @@ namespace TekrarlayanIsProgrami.Services
         // 2️⃣ Token doğrulama metodu
         public bool ValidateToken(string token)
         {
-            var tokenİsleyici = new JwtSecurityTokenHandler();
-            var anahtar = Encoding.UTF8.GetBytes(_gizliAnahtar);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var Key = Encoding.UTF8.GetBytes(_secretKey);
 
             try
             {
-                tokenİsleyici.ValidateToken(token, new TokenValidationParameters
+                tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = _yetkiVeren,
-                    ValidAudience = _hedefKitle,
-                    IssuerSigningKey = new SymmetricSecurityKey(anahtar)
+                    ValidIssuer = _issuer,
+                    ValidAudience = _audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Key)
                 }, out _);
 
                 return true;
