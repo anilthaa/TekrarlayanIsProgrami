@@ -222,32 +222,32 @@
 	{
 		if (Gorev.BitisTarihi < Gorev.BaslangicTarihi)
 		{
-			bildirimServisi.Notify(NotificationSeverity.Error, "Hata", "Bitiş tarihi başlangıç tarihinden küçük olamaz!");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Bitiş tarihi başlangıç tarihinden küçük olamaz!");
 			return;
 		}
 
 		if (Gorev.Kilitli && Gorev.Kullanici_ID==0)
 		{
-			bildirimServisi.Notify(NotificationSeverity.Error, "Hata", "Kilitli görev için kullanıcı seçmeniz gerekiyor!");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Kilitli görev için kullanıcı seçmeniz gerekiyor!");
 			return;
 		}
 
 
 		if (Gorev.TekrarlamaTipi=="Günlük"&& !Gorev.TekrarAraligi.HasValue)
 		{
-			bildirimServisi.Notify(NotificationSeverity.Error, "Hata", "Günlük tekrar için aralık girmeniz gerekiyor!");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Günlük tekrar için aralık girmeniz gerekiyor!");
 			return;
 		}
 
 		if (Gorev.TekrarlamaTipi=="Haftalık" && string.IsNullOrEmpty(Gorev.HaftaninGunu))
 		{
-			bildirimServisi.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için gün seçmeniz gerekiyor!");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için gün seçmeniz gerekiyor!");
 			return;
 		}
 
 		if (Gorev.TekrarlamaTipi=="Aylık"&& !Gorev.AyinGunu.HasValue)
 		{
-			bildirimServisi.Notify(NotificationSeverity.Error, "Hata", "Aylık tekrar için gün girmeniz gerekiyor!");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Aylık tekrar için gün girmeniz gerekiyor!");
 			return;
 		}
 
@@ -257,13 +257,13 @@
 		{
 			Gorev.CreUser = 1;
 			await GorevRepo.InsertAsync(Gorev);
-			bildirimServisi.Notify(NotificationSeverity.Success, "Başarılı", "Görev Eklendi!");
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev Eklendi!");
 		}
 		else
 		{
 			Gorev.UpdUser = 1;
 			await GorevRepo.UpdateAsync(Gorev);
-			bildirimServisi.Notify(NotificationSeverity.Success, "Başarılı", "Görev Güncellendi!");
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev Güncellendi!");
 		}
 		DialogService.Close(true);
 	}

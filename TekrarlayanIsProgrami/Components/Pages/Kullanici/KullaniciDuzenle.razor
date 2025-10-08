@@ -1,5 +1,7 @@
 ﻿@page "/kullanicilar/edit/{id:int}"
 
+@inject NavigationManager NavigationManager
+@inject CustomAuthenticationStateProvider AuthProvider
 <html>
 <head>
     <link href="css/site.css" rel="stylesheet" />
@@ -66,7 +68,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // kullanici = await _repo.GetByIDAsync(id);
+        // kullanici = await _kullaniciRepo.GetByIDAsync(id);
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
         if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("geri", out var geri))
         {
@@ -78,17 +80,17 @@ else
     async Task OnLogin(LoginModel model)
     {
 
-         var result = await girisSaglayici.UpdateAsync(model.E_Posta, model.Sifre);
+        //var result = await AuthProvider.UpdateAsync(model.E_Posta);
 
-         if (result.Basarili) //Eğer sonuç başarılı ise.
-         {
-            bildirimServisi.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
-             NavigationManager.NavigateTo("/kullanicilar");
-         }
-         else
-         {
-             bildirimServisi.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
-         }
+         // if (result.Basarili) //Eğer sonuç başarılı ise.
+         // {
+         //    bildirimServisi.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+         //     NavigationManager.NavigateTo("/kullanicilar");
+         // }
+         // else
+         // {
+         //     bildirimServisi.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
+         // }
     }
 
     private async Task Kaydet()

@@ -20,10 +20,10 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using TekrarlayanIsProgrami.Components.Layout
 @using static TekrarlayanIsProgrami.Components.Pages.Kullanici.GirisYap
-@inject NotificationService bildirimServisi
-@inject KullaniciRepository _kullaniciRepo
+@inject NotificationService notificationService
+@inject UserRepository _kullaniciRepo
 @inject NavigationManager NavigationManager
-@inject CustomAuthenticationStateOrovider girisSaglayici
+@inject CustomAuthenticationStateProvider girisSaglayici
 @inject KategoriRepository KategoriRepo
 @inject DialogService DialogService
 @inject GorevRepository GorevRepo
