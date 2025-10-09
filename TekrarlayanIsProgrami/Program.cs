@@ -1,4 +1,4 @@
-﻿//using TekrarlayanIsProgrami.Components;
+﻿using TekrarlayanIsProgrami.Components;
 using Radzen;
 using TekrarlayanIsProgrami.Services;
 using Microsoft.AspNetCore.Components.Authorization;
