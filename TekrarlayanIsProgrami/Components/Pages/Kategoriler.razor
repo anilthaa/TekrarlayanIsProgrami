@@ -7,58 +7,145 @@
 				  Style="margin-bottom:15px; background:#3498db; color:white"
 				  Click="@Ekle" />
 
-	<RadzenDataGrid TItem="ItemKategori" Data="@DataList" @ref="GrdData"
-					RowDoubleClick="@OnRowDoubleClick"
-					AllowPaging="true" PageSize="20"
-					AllowSorting="true" AllowFiltering="true">
-		<Columns>
-			<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="70px" />
-			<RadzenDataGridColumn TItem="ItemKategori" Property="Adi" Title="Kategori Adı" />
-			<RadzenDataGridColumn TItem="ItemKategori" Title="İşlemler" Width="150px">
-				<Template Context="data">
-					<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:5px"
-								  Click="@(() => Duzenle(data))" />
-					<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
-								  Click="@(() => Sil(data))" />
-				</Template>
-			</RadzenDataGridColumn>
-		</Columns>
-	</RadzenDataGrid>
+	<RadzenButton Text="Test" Click="Deneme"></RadzenButton>
+	@if (DataList == null || !DataList.Any())
+	{
+		<p>Veri yükleniyor... veya veri bulunamadı.</p>
+	}
+	else
+	{
+		<RadzenDataGrid TItem="ItemKategori" Data="@DataList" @ref="GrdData"
+						RowDoubleClick="@OnRowDoubleClick"
+						AllowPaging="true" PageSize="20"
+						AllowSorting="true" AllowFiltering="true">
+			<Columns>
+				<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="70px" />
+				<RadzenDataGridColumn TItem="ItemKategori" Property="Adi" Title="Kategori Adı" />
+				<RadzenDataGridColumn TItem="ItemKategori" Title="İşlemler" Width="150px">
+					<Template Context="data">
+						<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:5px"
+									  Click="@(() => Duzenle(data))" />
+						<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+									  Click="@(() => Sil(data))" />
+					</Template>
+				</RadzenDataGridColumn>
+			</Columns>
+		</RadzenDataGrid>
+	}
+
+
 </RadzenCard>
 
 @code {
 	private List<ItemKategori> DataList = new();
-	private RadzenDataGrid<ItemKategori> GrdData;
+	private RadzenDataGrid<ItemKategori>? GrdData;
 
 	protected override async Task OnInitializedAsync()
 	{
-		DataList = (await DataService.GetKategori()).ToList();
+		await YukleDataAsync();
+
+	}
+
+	private async Task Deneme()
+	{
+		try
+		{
+			await DialogService.OpenAsync<Radzen.Blazor.RadzenLabel>("Test", new Dictionary<string, object>(), new DialogOptions { Width = "300px" });
+		}
+		catch (Exception ex) { Console.WriteLine($"Test Dialog Hatası: {ex}"); }
+	}
+	private async Task YukleDataAsync()
+	{
+		try
+		{
+			DataList = (await DataService.GetKategori()).ToList();
+			Console.WriteLine($"Veri yüklendi: {DataList.Count} kategori.");
+
+			StateHasChanged();
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Veri yükleme hatası: {ex.Message}");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", $"Veri yüklenemedi: {ex.Message}");
+			DataList = new();
+		}
 	}
 
 	private async Task Ekle()
 	{
-		ItemKategori newItem = new(){CreUser=1};
-		ItemKategori result = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Ekle",
-			new Dictionary<string, object> { { "Kategori", newItem } },
-			new DialogOptions { Width = "500px", Height = "300px" });
-
-		if (result != null)
+		try
 		{
-			DataList.Insert(0, result);// Son Eklenenin sayfayı yenilemeden en başa gelmesi için
-			await GrdData.Reload();
-			StateHasChanged();
+			Console.WriteLine("Ekle butonu tıklandı - Dialog açılıyor...");
+
+			if (DialogService==null)
+			{
+				throw new InvalidOperationException("DialogService inject edilemedi");
+			}
+			var newItem = new ItemKategori 
+			{ 
+				ID=0,
+				CreUser = 1 ,
+				UpdUser=0,
+				DelUser=0
+			};
+			var dialogResult = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Ekle",
+				new Dictionary<string, object> { { "ItemData", newItem } }, new DialogOptions { Width = "500px", Height = "300px" });
+
+
+			if (dialogResult is ItemKategori result && result != null)
+			{
+				DataList.Insert(0, result);
+				if (GrdData!=null)
+				{
+					await GrdData.Reload();
+				}
+					
+				StateHasChanged();
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori eklendi!");
+
+			}
+			else
+
+			{
+				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "İşlem iptal edildi.");
+			}
 		}
+		catch (Exception ex)
+
+		{
+			Console.WriteLine($"Ekleme hatası: {ex.Message}");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", $"Ekleme sırasında hata: {ex.Message}");
+		}
+
+		// ItemKategori newItem = new(){CreUser=1};
+		// ItemKategori result = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Ekle",
+		// 	new Dictionary<string, object> { { "Kategori", newItem } },
+		// 	new DialogOptions { Width = "500px", Height = "300px" });
+
+		// if (result != null)
+		// {
+		// 	DataList.Insert(0, result);// Son Eklenenin sayfayı yenilemeden en başa gelmesi için
+		// 	await GrdData.Reload();
+		// 	StateHasChanged();
+		// }
 	}
 
 	private async Task Duzenle(ItemKategori item)
 	{
 		item.UpdUser = 1;//Daha sonra giriş yapmış kullanıcının ıd si basılacak
 		ItemKategori result = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Düzenle",
-			new Dictionary<string, object> { { "Kategori", item } },
+			new Dictionary<string, object> { { "ItemData", item } },
 			new DialogOptions { Width = "500px", Height = "300px" });
 		if (result != null)
 		{
-			GrdData.Reload();
+			var index = DataList.FindIndex(x => x.ID == result.ID);
+			if (index >= 0)
+			{
+				DataList[index] = result;
+			}
+			await GrdData.Reload();
+			StateHasChanged();
+
 		}
 	}
 
@@ -70,12 +157,13 @@
 		if (onay == true)
 		{
 			item.DelUser = 1;// kullanıcı ıd gelecek
-			var wsCvp = DataService.SetKategori(item);
-			if (wsCvp.SonucKodu == 0)
+			var wsCvp = await Task.FromResult(DataService.SetKategori(item));
+			if (wsCvp.Data > 0)
 			{
 				DataList.Remove(item);
-				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori silindi!");
 				await GrdData.Reload();
+				StateHasChanged();
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori silindi!");
 			}
 		}
 	}

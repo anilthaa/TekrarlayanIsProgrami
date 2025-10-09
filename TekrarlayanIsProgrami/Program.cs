@@ -20,6 +20,7 @@ var connectionString = builder.Configuration.GetConnectionString("PostgreSqlConn
 builder.Services.AddRazorComponents()
      .AddInteractiveServerComponents();
 
+
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
@@ -31,7 +32,9 @@ builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağı
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<GorevRepository>();
 builder.Services.AddScoped<GorevLoglariRepository>();
-builder.Services.AddScoped<DataService>();
+builder.Services.AddScoped<DataService>(serviceProvider =>
+    new DataService(builder.Configuration.GetConnectionString("PostgreSqlConnection")));
+
 
 
 var app = builder.Build();
