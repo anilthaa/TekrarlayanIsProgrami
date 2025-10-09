@@ -1,6 +1,4 @@
-﻿@page "/GorevEkle"
-
-<RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
+﻿<RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
 	<h3 style="text-align:center; margin-bottom:20px;">Görev Ekle / Düzenle</h3>
 	<RadzenTemplateForm Data="@Gorev" TItem="ItemGorev" Submit="@OnSubmit">
 	<ChildContent>
@@ -66,7 +64,7 @@
 		<div class="row" style="margin-top:15px;">
 			<div class="col-md-6">
 				<RadzenLabel Text="Kategori" Component="Kategori"></RadzenLabel>
-				<RadzenDropDown @bind-Value="Gorev.Kategori_ID" Data="@kategoriler" TextProperty="Adi" ValueProperty="ID" Style="width:100%" Placeholder="Kategori Seçin"></RadzenDropDown>
+				<RadzenDropDown @bind-Value="Gorev.Kategori_ID" Data="@DataKategoriList" TextProperty="Adi" ValueProperty="ID" Style="width:100%" Placeholder="Kategori Seçin"></RadzenDropDown>
 			</div>
 			<div class="col-md-6">
 				<RadzenCheckBox @bind-Value="Gorev.Kilitli" TValue="bool"></RadzenCheckBox>
@@ -93,17 +91,17 @@
 
 
 @code {
-	[Parameter] public ItemGorev Gorev { get; set; } = new();
+		[Parameter] public ItemGorev Gorev { get; set; } = new();
 
 	private List<string> onemDereceleri = new() { "Düşük", "Orta", "Yüksek" };
 	private List<string> tekrarTipleri = new() { "Yok", "Günlük", "Haftalık", "Aylık" };
 	private List<string> haftaninGunleri = new() { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
-	private List<ItemKategori> kategoriler = new();
+	private List<ItemKategori> DataKategoriList = new();
 	private List<User> kullanicilar = new();
 
 	protected override async Task OnInitializedAsync()
 	{
-		kategoriler = await KategoriRepo.GetAllAsync();
+		DataKategoriList = (await DataService.GetKategori()).ToList();
 		kullanicilar = await _kullaniciRepo.GetAllAsync();
 
 		if (Gorev.ID==0)

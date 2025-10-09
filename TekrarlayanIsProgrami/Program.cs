@@ -1,4 +1,4 @@
-﻿using TekrarlayanIsProgrami.Components;
+﻿//using TekrarlayanIsProgrami.Components;
 using Radzen;
 using TekrarlayanIsProgrami.Services;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -14,6 +14,7 @@ Console.WriteLine(token);
 bool Valid=jwtService.ValidateToken(token); //Token i doğrula.
 Console.WriteLine("\n Token geçerli mi?" +Valid);
 
+var connectionString = builder.Configuration.GetConnectionString("PostgreSqlConnection"); // ConnectionString.
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -28,9 +29,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
-builder.Services.AddScoped<KategoriRepository>();
 builder.Services.AddScoped<GorevRepository>();
 builder.Services.AddScoped<GorevLoglariRepository>();
+builder.Services.AddScoped<DataService>();
+
 
 var app = builder.Build();
 
