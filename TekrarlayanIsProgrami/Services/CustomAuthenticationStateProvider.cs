@@ -69,7 +69,6 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<AuthResult> KayitOlAsync(User user)
         {
-            // Şifre minimum 8 karakter kontrolü
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult
@@ -81,9 +80,10 @@ namespace TekrarlayanIsProgrami.Services
 
             try
             {
-                bool kayitBasarili = await _kullaniciRepo.KayitOlAsync(user);
+                // Repo metodunu User döndürecek şekilde değiştir
+                User kayitliUser = await _kullaniciRepo.KayitOlAsync(user.EPosta, user.Sifre, user.Adi, user.Soyadi);
 
-                if (kayitBasarili)
+                if (kayitliUser != null)
                 {
                     return new AuthResult
                     {
@@ -109,6 +109,46 @@ namespace TekrarlayanIsProgrami.Services
                 };
             }
         }
+            //// Şifre minimum 8 karakter kontrolü
+            //if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
+            //{
+            //    return new AuthResult
+            //    {
+            //        Basarili = false,
+            //        Mesaj = "Şifre en az 8 karakter olmalıdır."
+            //    };
+            //}
+
+            //try
+            //{
+            //    bool kayitBasarili = await _kullaniciRepo.KayitOlAsync(user);
+
+            //    if (kayitBasarili)
+            //    {
+            //        return new AuthResult
+            //        {
+            //            Basarili = true,
+            //            Mesaj = "Kayıt Başarıyla Tamamlandı!"
+            //        };
+            //    }
+            //    else
+            //    {
+            //        return new AuthResult
+            //        {
+            //            Basarili = false,
+            //            Mesaj = "Kayıt sırasında bir hata oluştu."
+            //        };
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    return new AuthResult
+            //    {
+            //        Basarili = false,
+            //        Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
+            //    };
+            //}
+        
         //public async Task<AuthResult> UpdateAsync(string E_Posta)
         //{
         //    var kullanici = await _kullaniciRepo.GetByEmailAsync(E_Posta);

@@ -18,47 +18,32 @@
 }
 else
 {
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow" style="background-color: #f0f0f0; border: 1px solid #ccc;">
-                    <div class="card-body">
+        <RadzenCard class="form-wrapper">
+            <RadzenCard class="form-card">
                         <h3 class="card-title text-center mb-4">Kullanıcı Düzenle</h3>
-
                         <EditForm Model="@kullanici" OnValidSubmit="@Kaydet">
+                            <RadzenFieldset Text="Bilgiler">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <div class="mb-3">
                                 <RadzenLabel class="form-label">Adı</RadzenLabel>
-                                    <RadzenTextBox class="form-control" @bind-Value="kullanici.Adi" placeholder="Adı girin" />
-                            </div>
-                            <div class="mb-3">
+                                <RadzenTextBox class="form-control" @bind-Value="kullanici.Adi" placeholder="Adı girin" />
                                 <RadzenLabel  class="form-label">Soyadı</RadzenLabel>
                                 <RadzenTextBox class="form-control" @bind-Value="kullanici.Soyadi" placeholder="Soyadı girin" />
-                            </div>
-
-                            <div class="mb-3">
                                 <RadzenLabel class="form-label">E-Posta</RadzenLabel>
-                                <RadzenTextBox class="form-control" @bind-Value="kullanici.EPosta" placeholder="E-Posta girin" />
-                            </div>
-
-                            <div class="mb-3">
+                                <RadzenTextBox class="form-control" @bind-Value="kullanici.EPosta" placeholder="E-Posta girin" />           
                                 <RadzenLabel class="form-label">Şifre</RadzenLabel>
                                 <RadzenTextBox type="password" class="form-control" @bind-Value="kullanici.Sifre" placeholder="Şifreyi girin" />
-                            </div>
-
-                            <div class="d-flex justify-content-between mt-4">
-                                    <RadzenButton Text="Kaydet"  ButtonStyle="ButtonStyle.Success" Click="@Kaydet"></RadzenButton>
-                                    <RadzenButton Text="İptal"  ButtonStyle="ButtonStyle.Danger" Click="@Iptal"></RadzenButton>
-                            </div>
+                    <RadzenCard class="btn-group" >
+                            <RadzenButton Text="Kaydet" Icon="save" Click="@Kaydet" Style="width:30%;" class="radzen-button" Type="submit"></RadzenButton>
+                            <RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%;" class="radzen-button"></RadzenButton>
+                        </RadzenCard>
+                    </RadzenFieldset>
                         </EditForm>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    </RadzenCard>
+                    </RadzenCard>
 }
-</body></html>
+</body>
+</html>
 @code {
     [Parameter] 
     public int id { get; set; }
@@ -68,38 +53,35 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // kullanici = await _kullaniciRepo.GetByIDAsync(id);
+        kullanici = await _kullaniciRepo.GetByIDAsync(id) ?? new User();
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
         if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("geri", out var geri))
         {
             geriUrl = geri;
         }
     }
-    private LoginModel loginModel = new LoginModel();
-
-    async Task OnLogin(LoginModel model)
-    {
-
-        //var result = await AuthProvider.UpdateAsync(model.E_Posta);
-
-         // if (result.Basarili) //Eğer sonuç başarılı ise.
-         // {
-         //    bildirimServisi.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
-         //     NavigationManager.NavigateTo("/kullanicilar");
-         // }
-         // else
-         // {
-         //     bildirimServisi.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
-         // }
-    }
 
     private async Task Kaydet()
     {
-        kullanici.UpdUser = kullanici.ID;
-        kullanici.UpdDate = DateTime.Now;
-        await _kullaniciRepo.UpdateAsync(kullanici);
-        //  Kayıt tamamlandıktan sonra kullanıcılar sayfasına dön
-        NavigationManager.NavigateTo(geriUrl);
+        // ID kontrolü yap
+        if (kullanici.ID == 0)
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Kullanıcı bulunamadı.");
+            return;
+        }
+
+        // Console.WriteLine($"Güncellenen ID: {kullanici.ID}");
+        bool sonuc = await _kullaniciRepo.UpdateAsync(kullanici);
+        if(sonuc)
+        {
+            kullanici = await _kullaniciRepo.GetByIDAsync(id);
+            notificationService.Notify(NotificationSeverity.Success,"Güncelleme Başarılı.");
+            NavigationManager.NavigateTo("/kullanicilar");
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Güncelleme Başarısız...");
+        }
     }
 
     private void Iptal()

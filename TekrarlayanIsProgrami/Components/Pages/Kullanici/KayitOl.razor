@@ -1,52 +1,32 @@
-﻿@page "/kullanicilar/KayitOl"
-
-@inject CustomAuthenticationStateProvider AuthProvider
-@inject NavigationManager Navigation
-
+﻿@page "/KayitOl"
 
 <!-- Arka plan ve sayfa ortalama -->
-<div class="container">
-    
-        <div class="klogin-left">
+<RadzenCard class="form-wrapper">
+        <RadzenCard class="form-card">
         <!-- Başlık -->
-        <h2 style="text-align:center; margin-bottom:25px; color:#333;">Kayıt Ol</h2>
-
+        <h2>Kayıt Ol</h2>
         <!-- Form -->
         <EditForm Model="@newUser" OnValidSubmit="OnSubmit">
+            <RadzenFieldset>
             <DataAnnotationsValidator />
             <ValidationSummary />
-
-            <div style="margin-bottom:15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">Adınız</label>
-                <RadzenTextBox @bind-Value="newUser.Adi" placeholder="Adınız" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
-            </div>
-
-            <div style="margin-bottom:15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">Soyadınız</label>
-                <InputText @bind-Value="newUser.Soyadi" placeholder="Soyadınız" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
-            </div>
-
-            <div style="margin-bottom:15px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">E-posta</label>
-                <InputText @bind-Value="newUser.EPosta" placeholder="E-posta" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">Şifre</label>
-                <InputText @bind-Value="newUser.Sifre" type="password" placeholder="Şifre" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
-            </div>
-
-            <button type="submit" style="width:100%; padding:12px; background:#5563DE; color:white; font-weight:bold; border:none; border-radius:6px; cursor:pointer; transition:0.3s;">
-                Kayıt Ol
-            </button>
+                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="Adınız"></RadzenLabel>
+                <RadzenTextBox @bind-Value="newUser.Adi" placeholder="Adınız" style="width:100%;"/>
+                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="Soyadınız"></RadzenLabel>
+                <RadzenTextBox @bind-Value="newUser.Soyadi" placeholder="Soyadınız" style="width:100%;" />
+                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="E_posta"></RadzenLabel>
+                <RadzenTextBox @bind-Value="newUser.EPosta" placeholder="E-posta" style="width:100%;" />
+                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="Şifre"></RadzenLabel>
+                <RadzenTextBox @bind-Value="newUser.Sifre" type="password" placeholder="Şifre" style="width:100%; " />
+            <RadzenCard class="button-group">
+            <RadzenButton type="submit" class="radzen-button" style="width:30%;" Text="Kayıt Ol">
+            </RadzenButton>
+            </RadzenCard>
+            </RadzenFieldset>
         </EditForm>
-
-        <div style="text-align:center; margin-top:15px; font-size:0.9em;">
-            <a href="/GirisYap" style="color:#5563DE; text-decoration:none;">Zaten hesabınız var mı? Giriş Yap</a>
-        </div>
-
-    </div>
-</div>
+            <RadzenLink href="/GirisYap" style="color:#5563DE; text-decoration:none;">Zaten hesabınız var mı? Giriş Yap</RadzenLink>
+    </RadzenCard>
+</RadzenCard>
 @code {
     private User newUser = new User
     {
@@ -57,11 +37,11 @@
 
     private async Task OnSubmit()
     {
-        var result = await AuthProvider.KayitOlAsync(newUser);
+        var result = await girisSaglayici.KayitOlAsync(newUser);
         if (result.Basarili )
         {
             notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
-            Navigation.NavigateTo("/GirisYap");
+            NavigationManager.NavigateTo("/GirisYap");
         }
         else
         {
