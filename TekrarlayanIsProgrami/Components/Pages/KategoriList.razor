@@ -88,7 +88,7 @@
 				UpdUser=0,
 				DelUser=0
 			};
-			var dialogResult = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Ekle",
+			var dialogResult = await DialogService.OpenAsync<KategoriTnm>("Kategori Ekle",
 				new Dictionary<string, object> { { "ItemData", newItem } }, new DialogOptions { Width = "500px", Height = "300px" });
 
 
@@ -99,7 +99,7 @@
 				{
 					await GrdData.Reload();
 				}
-					
+
 				StateHasChanged();
 				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori eklendi!");
 
@@ -133,7 +133,7 @@
 	private async Task Duzenle(ItemKategori item)
 	{
 		item.UpdUser = 1;//Daha sonra giriş yapmış kullanıcının ıd si basılacak
-		ItemKategori result = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Düzenle",
+		ItemKategori result = await DialogService.OpenAsync<KategoriTnm>("Kategori Düzenle",
 			new Dictionary<string, object> { { "ItemData", item } },
 			new DialogOptions { Width = "500px", Height = "300px" });
 		if (result != null)
@@ -157,7 +157,7 @@
 		if (onay == true)
 		{
 			item.DelUser = 1;// kullanıcı ıd gelecek
-			var wsCvp = await Task.FromResult(DataService.SetKategori(item));
+			var wsCvp = await DataService.SetKategori(item);
 			if (wsCvp.Data > 0)
 			{
 				DataList.Remove(item);

@@ -1,0 +1,163 @@
+﻿@page "/Gorevler"
+@using System.Threading.Tasks
+
+<PageTitle>Görev Yönetimi</PageTitle>
+<h3>Görev Yönetimi</h3>
+
+<RadzenCard Style="margin:20px;">
+	<h3>📊 Görev İstatistikleri</h3>
+
+	<RadzenButton Text="Yeni Görev" Icon="add_circle" Style="margin-bottom:15px; background:#27ae60; color:white" Click="@YeniGorev"></RadzenButton>
+
+	@if (GorevListt==null || !GorevListt.Any())
+	{
+		<p>Veri yükleniyor... veya görev bulunamadı.</p>
+	}
+	else
+	{
+		<RadzenDataGrid TItem="ItemGorev" Data="@GorevListt" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick">
+			<Columns>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="70px"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="Kategori_ID" Title="Kategori"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Durum">
+					<Template Context="gorev">
+						<span @onclick="() => ToggleDurum(gorev)"
+							  style="@($"cursor:pointer; font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(gorev.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+							@(gorev.Aktif ? "Aktif" : "Pasif")
+						</span>
+						
+					</Template>
+				</RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Title="İşlemler" Width="150px">
+					<Template Context="gorev">
+						<RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(()=>Duzenle(gorev))" Style="margin-right:5px;"></RadzenButton>
+						<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(()=> Sil(gorev))"></RadzenButton>
+					</Template>
+				</RadzenDataGridColumn>
+			</Columns>
+		</RadzenDataGrid>
+	}
+</RadzenCard>
+	
+	@code {
+	private List<ItemGorev> GorevListt = new();
+	private RadzenDataGrid<ItemGorev>? GrdGorev;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await YukleGorevler();
+	}
+
+	private async Task YukleGorevler()
+	{
+		try
+		{
+			GorevListt = (await DataService.GetGorevler()).ToList();
+		}
+		catch (Exception ex)
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", ex.Message);
+		}
+	}
+	private async Task YeniGorev()
+	{
+
+		var result = await DialogService.OpenAsync<GorevTnm>("Yeni Görev",
+			new Dictionary<string, object> { { "Gorev", new ItemGorev { CreUser=1, Aktif=true} } },
+			new DialogOptions { Width = "600px", Height = "450px" });
+
+		if (result is ItemGorev g && g.ID>0)
+		{
+
+			GorevListt.Insert(0, g);
+			StateHasChanged();
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev eklendi!");
+		}
+	}
+
+
+	private async Task Duzenle(ItemGorev gorev)
+	{
+		gorev.UpdUser = 1;
+		var result = await DialogService.OpenAsync<GorevTnm>("Görev Düzenle",
+			new Dictionary<string, object> { { "Gorev", gorev } },
+			new DialogOptions { Width = "600px", Height = "450px" });
+
+		if (result is ItemGorev guncellendi)
+		{
+			// var index = GorevList.FindIndex(x => x.ID == guncellendi.ID);
+			// if (index>=0)
+			// {
+			// 	GorevList[index] = guncellendi;
+			// }
+			// await GrdGorev!.Reload();
+			// notificationService.Notify(NotificationSeverity.Success, "Güncellendi", "Görev güncellendi!");
+
+			if (guncellendi.ID==0)
+			{
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev eklendi!");
+			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev güncellendi!");
+			}
+		}
+	}
+
+	private async Task Sil(ItemGorev gorev)
+	{
+		bool? onay = await DialogService.Confirm("Görevi silmek istiyor musunuz?", "Onay",
+			new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" });
+
+		if (onay==true)
+		{
+			gorev.DelUser = 1;
+			var wsCvp = await DataService.SetGorev(gorev);
+
+			if (wsCvp.SonucKodu==0)
+			{
+				GorevListt.Remove(gorev);
+				await GrdGorev!.Reload();
+				notificationService.Notify(NotificationSeverity.Success, "Silindi", "Görev silindi!");
+			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Silme başarısız.");
+			}
+		}
+	}
+	private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<ItemGorev> args)
+	{
+		await Duzenle(args.Data);
+	}
+	private async Task ToggleDurum(ItemGorev gorev)
+	{
+		try
+		{
+			gorev.Aktif = !gorev.Aktif;
+			gorev.UpdUser = 1;
+
+			var sonuc = await DataService.SetGorev(gorev);
+
+			if (sonuc.SonucKodu==0)
+			{
+				notificationService.Notify(NotificationSeverity.Success, "Durum Güncellendi", gorev.Aktif ? "Görev aktif hale getirildi." : "Görev pasif hale getirildi.");
+
+				GorevListt = (await DataService.GetGorevler()).ToList();
+				await GrdGorev.Reload();
+			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", sonuc.SonucAciklama);
+				gorev.Aktif = !gorev.Aktif;
+			}
+		}
+		catch (Exception ex)
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", ex.Message);
+		}
+	}
+}

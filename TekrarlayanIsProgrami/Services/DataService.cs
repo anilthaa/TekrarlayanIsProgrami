@@ -15,29 +15,26 @@ namespace TekrarlayanIsProgrami.Services
         {(ID > 0 ? $@"and ""ID"" = {ID}" : "")} 
         ORDER BY ""ID"" ")).ToArray();
         }
-        public DataResult<int> SetKategori(ItemKategori item)
+        public async Task<DataResult<int>> SetKategori(ItemKategori item)
         {
-            if (item.ID != 0 && item.DelUser != 0)
+            if (item.ID.Equals(0) && item.DelUser.Equals(0))
             {
-                SQLExecute(@"UPDATE ""Kategori"" 
+                item.ID = await SQLExecuteScalar<int>(@"INSERT INTO ""Kategori"" (""Adi"", ""CreUser"", ""CreDate"")  VALUES (@Adi, @CreUser, now()) 
+                 RETURNING ""ID""", item);
+            }
+            else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
+            {
+                await SQLExecute(@"UPDATE ""Kategori"" 
+                     SET ""Adi"" = @Adi, ""UpdUser""=@UpdUser, ""UpdDate""=now()
+                     WHERE ""ID"" = @ID", item);
+            }
+            else if (!item.ID.Equals(0) && !item.DelUser.Equals(0))
+            {
+                await SQLExecute(@"UPDATE ""Kategori"" 
                      SET ""DelUser"" = @DelUser, ""DelDate"" = now() 
                      WHERE ""ID"" = @ID", item);
             }
-            else if (item.ID == 0)
-            {
-                var newId = SQLExecuteScalar<int>(
-                    @"INSERT INTO ""Kategori"" (""Adi"", ""CreUser"", ""CreDate"") 
-              VALUES (@Adi, @CreUser, now()) 
-              RETURNING ""ID""", item);
-                item.ID = newId;
-            }
-            else
-            {
-                SQLExecute(@"UPDATE ""Kategori"" 
-                     SET ""Adi"" = @Adi, ""UpdUser"" = @UpdUser, ""UpdDate"" = now() 
-                     WHERE ""ID"" = @ID", item);
-            }
-            return new DataResult<int> { Data = item.ID };
+            return new(){ Data = item.ID };
         }
 
         public async Task<ItemGorev[]> GetGorevler()
@@ -51,7 +48,7 @@ namespace TekrarlayanIsProgrami.Services
         {
             return (await SQLQueryAsync<ItemGorev>($@"
                 Select * From ""Gorev"" Where ""DelDate"" Is Null
-                And ""SonrakiCalismaTarihi>=NOW() Order By ""SonrakiCalismaTarihi"" Asc")).ToArray();
+                And ""SonrakiCalismaTarihi"">=NOW() Order By ""SonrakiCalismaTarihi"" Asc")).ToArray();
         }
 
         public async Task<ItemGorev[]> GecmisGorevlerAdmin()
@@ -63,68 +60,50 @@ namespace TekrarlayanIsProgrami.Services
                 Order By ""BitisTarihi"" DESC")).ToArray();
         }
 
-        public DataResult<int> SetGorev(ItemGorev gorev)
+        public async Task<DataResult<int>> SetGorev(ItemGorev item)
         {
-            var result = new DataResult<int> { SonucKodu = -1 };
 
-            try
+            if (item.ID.Equals(0) && item.DelUser.Equals(0))
             {
-                if (gorev.ID!=0 && gorev.DelUser!=0)
-                {
-                    SQLExecute(@"
-                        Update ""Gorev"" Set ""DelUser""=@DelUser,
-                        ""DelDate""=NOW(), ""Aktif""=false
-                        Where ""ID""=@ID And ""DelDate"" Is Null", gorev);
-                }
-                else if(gorev.ID==0)
-                {
-                    var newId = SQLExecuteScalar<int>(@"
-                        Insert Into ""Gorev"" (""Kullanici_ID"",""Baslik"", ""Kategori_ID"",
-                        ""OnemDerecesi"", ""BaslangicTarihi"",
-                        ""BitisTarihi"", ""TekrarlamaTipi"",
-                        ""Aktif"",""Kilitli"",""TekrarAraligi"",
-                        ""HaftaninGunu"",""AyinGunu"",""SonrakiCalismaTarihi"",
-                        ""CreUser"",""CreDate"") Values
-                        (@Kullanici_ID, @Baslik, @Kategori_ID, @OnemDerecesi,
-                        @BaslangicTarihi, @BitisTarihi, @TekrarlamaTipi,
-                        @Aktif, @Kilitli, @TekrarAraligi, @HaftaninGunu,
-                        @AyinGunu, @SonrakiCalismaTarihi, @CreUser,
-                        NOW()) RETURNING ""ID""", gorev);
-
-                    gorev.ID = newId;
-                }
-                else
-                {
-                    SQLExecute(@"
-                        Update ""Gorev"" Set
-                        ""Kullanici_ID""=@Kullanici_ID,
-                        ""Baslik""=@Baslik,
-                        ""Kategori_ID""=@Kategori_ID,
-                        ""OnemDerecesi""=@OnemDerecesi,
-                        ""BaslangicTarihi""=@BaslangicTarihi"",
-                        ""BitisTarihi""=@BitisTarihi,
-                        ""TekrarlamaTipi""=@TekrarlamaTipi,
-                        ""Aktif""=@Aktif,
-                        ""Kilitli""=@Kilitli,
-                        ""TekrarAraligi""=@TekrarAraligi,
-                        ""HaftaninGunu""=@HaftaninGunu,
-                        ""AyinGunu""=@AyinGunu,
-                        ""SonrakiCalismaTarihi""=@SonrakiCalismaTarihi,
-                        ""UpdUser""=@UpdUser,
-                        ""UpdDate""=NOW()
-                    Where ""ID""=@ID And ""DelDate"" Is Null", gorev);
-                }
-                result.SonucKodu = 0;
-                result.Data=gorev.ID;
+                item.ID = await SQLExecuteScalar<int>(@"INSERT INTO ""Gorev"" (""Kullanici_ID"", ""Baslik"", ""Kategori_ID"", ""OnemDerecesi"",
+                ""BaslangicTarihi"",""BitisTarihi"",""TekrarlamaTipi"", ""Aktif"", ""Kilitli"", ""TekrarAraligi"", ""HaftaninGunu"",
+                ""AyinGunu"", ""SonrakiCalismaTarihi"", ""CreUser"", ""CreDate"") 
+                VALUES (@Kullanici_ID, @Baslik, @Kategori_ID, @OnemDerecesi, @BaslangicTarihi, @BitisTarihi, @TekrarlamaTipi, @Aktif, 
+                @Kilitli, @TekrarAraligi, @HaftaninGunu, @AyinGunu, @SonrakiCalismaTarihi,@CreUser, now())
+                 RETURNING ""ID""", item);
             }
-            catch (Exception ex)
+            else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
             {
-                result.SonucKodu=-1;
-                result.SonucAciklama = ex.Message;
+                await SQLExecute(@"UPDATE ""Gorev"" SET
+                      ""Kullanici_ID""=@Kullanici_ID, ""Baslik""=@Baslik, ""Kategori_ID""=@Kategori_ID, 
+                      ""OnemDerecesi""=@OnemDerecesi, ""BaslangicTarihi""=@BaslangicTarihi, ""BitisTarihi""=@BitisTarihi,
+                      ""TekrarlamaTipi""=@TekrarlamaTipi, ""Aktif""=@Aktif, ""Kilitli""=@Kilitli, ""TekrarAraligi""=@TekrarAraligi,
+                      ""HaftaninGunu""=@HaftaninGunu, ""AyinGunu""=@AyinGunu, ""SonrakiCalismaTarihi""=@SonrakiCalismaTarihi, ""UpdUser""=@UpdUser, ""UpdDate""=now()
+                     WHERE ""ID"" = @ID", item);
             }
-            return result;
+            else if (!item.ID.Equals(0) && !item.DelUser.Equals(0))
+            {
+                await SQLExecute(@"UPDATE ""Gorev"" 
+                     SET ""DelUser"" = @DelUser, ""DelDate"" = now() 
+                     WHERE ""ID"" = @ID", item);
+            }
+            return new() { Data = item.ID };
         }
 
-        
+        public async Task<(int aktif, int silinen, int tamamlanan)> GetIstatistik()
+        {
+            var sql = @"
+                Select
+                    Count(*) Filter (Where ""Aktif""=True And ""DelDate"" Is Null) As aktif,
+                    Count(*) Filter (Where ""DelDate"" Is Not Null) As silinen,
+                    Count(*) Filter (Where ""Aktif"" = False And ""DelDate"" Is Null) As tamamlanan 
+                From ""Gorev"";";
+
+            var list = await SQLQueryAsync<(int aktif, int silinen, int tamamlanan)>(sql);
+            return list.FirstOrDefault();
+
+        }
+
+
     }
 }
