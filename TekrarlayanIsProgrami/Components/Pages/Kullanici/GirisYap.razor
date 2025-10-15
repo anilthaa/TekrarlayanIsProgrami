@@ -22,7 +22,7 @@
 
 				<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="E-posta                                                                                                         ✉" />
 				<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%; margin-top:9px;" Placeholder="Şifre                                                                                                             🔑" />
-				<RadzenLink Text="🔁 Şifrenizi unuttunuz mu?" Path="/SifremiUnuttum" class="sifreBaglanti"></RadzenLink>
+			<RadzenLink Text="🔁 Şifrenizi unuttunuz mu?" Path="/sifremi-unuttum" Style="text-decoration:none; color:rebeccapurple; cursor:pointer; "></RadzenLink>
 
             <RadzenButton Click="()=>OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
         </EditForm></RadzenCard>
