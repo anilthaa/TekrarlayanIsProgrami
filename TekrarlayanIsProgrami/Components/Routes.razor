@@ -1,6 +1,28 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+﻿   <CascadingAuthenticationState>
+       <RadzenComponents></RadzenComponents>
+      <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@GetLayoutType()" />
+              <FocusOnNavigate RouteData="@routeData" Selector="h1" /> 
+        </Found>
+        <NotFound>
+            <p>Sayfa bulunamadı.</p>
+            </NotFound>
+        
+    </Router>
+</CascadingAuthenticationState>
+@code {
+    private Type GetLayoutType()
+    {
+        var uri = NavigationManager.Uri.ToLower();
+
+        if (uri.Contains("/GirisYap"))
+        {
+            return typeof(EmptyLayout);
+        }
+        else
+        {
+            return typeof(MainLayout);
+        }
+    } 
+}

@@ -1,17 +1,61 @@
 ﻿@inherits LayoutComponentBase
 <RadzenComponents @rendermode="InteractiveServer"></RadzenComponents>
-<div class="page">
-   @*  <div class="sidebar">
-        <NavMenu />
-    </div>*@
 
-    <main>
-       @*  <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div> *@
+ <HeadContent>
+  <link href="css/site.css" rel="stylesheet" />
+</HeadContent>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>  
+<RadzenLayout>
+    @if (!NavigationManager.Uri.Contains("/GirisYap") &&
+         !NavigationManager.Uri.Contains("/kullanicilar/edit"))
+    {
+        <RadzenHeader>
+            <h3>Tekrarlayan İş Programı</h3>
+        </RadzenHeader>
+
+        <RadzenSidebar>
+            @if (NavigationManager.Uri.Contains("/Dashboard") || NavigationManager.Uri.Contains("/kategori") || NavigationManager.Uri.Contains("/kullanicilar") || NavigationManager.Uri.Contains("/Gorevler"))
+            {
+                <RadzenCard class="dashboard-nav">
+                    <h3>📊 Dashboard</h3>
+                    <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
+                    <NavLink href="/kategori" class="nav-link">Kategoriler</NavLink>
+                    <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%" class="radzen-button" />
+                </RadzenCard>
+            }
+        </RadzenSidebar>
+    }
+
+    <RadzenBody>
+        @Body
+    </RadzenBody>
+</RadzenLayout>
+
+<!--Çağrı abinin yazdığı-->
+   @*  <RadzenLayout>
+       <RadzenHeader>
+
+       </RadzenHeader>
+       <RadzenSidebar>
+           
+       </RadzenSidebar>
+       <RadzenBody>
+           @Body
+       </RadzenBody>
+   </RadzenLayout>
+    @if (NavigationManager.Uri.Contains("Dashboard"))
+    {
+        <RadzenCard class="dashboard-nav">
+            <h3>📊 Dashboard</h3>
+                <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
+                <NavLink Path="/Kategori" class="nav-link">Kategoriler</NavLink>
+                <RadzenButton Text="Çıkış" Click="CikisYap" style="width:100%" class="radzen-button"></RadzenButton>
+        </RadzenCard>
+    }  *@
+@code{
+    private async void CikisYap()
+    {
+        await girisSaglayici.CikisYapAsync();
+        NavigationManager.NavigateTo("/GirisYap", true);
+    }
+}

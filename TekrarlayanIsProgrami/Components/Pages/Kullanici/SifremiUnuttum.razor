@@ -1,0 +1,52 @@
+﻿@page "/sifremi-unuttum"
+@layout MainLayout
+
+<RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
+    <h3>Şifremi Unuttum</h3>
+    <p class="text-muted">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
+
+    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" Click="@OnSubmit" />
+
+    @if (!string.IsNullOrEmpty(bilgiMesaji))
+    {
+        <RadzenAlert Severity="Info" Summary="Bilgi" Detail="@bilgiMesaji" Class="mt-3" />
+    }
+</RadzenCard>
+
+@code {
+    private SifreUnuttumModel model = new();
+    private string bilgiMesaji;
+
+    private async Task OnSubmit()
+    {
+        var kullanici = await _kullaniciRepo.GetByEmailAsync(model.Email ,model.Sifre);
+        if (kullanici == null)
+        {
+            bilgiMesaji = "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.";
+            return;
+        }
+
+        // Token oluştur
+        var token = Guid.NewGuid().ToString(); // basit token örneği
+
+        // Mail gönder
+        bool basarili = await SifreService.SifreSifirlamaMailiGonder(kullanici.EPosta, token);
+        if (basarili)
+        {
+            notificationService.Notify(NotificationSeverity.Success,"Gönderildi");
+            StateHasChanged();
+            await Task.Delay(2000); // Mesaj gösterildikten sonra yönlendirme
+            NavigationManager.NavigateTo("/sifre-sifirla");
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Gönderilemedi");
+        }
+    }
+
+    public class SifreUnuttumModel
+    {
+        public string Email { get; set; }
+        public string Sifre{ get; set; }
+    }
+}
