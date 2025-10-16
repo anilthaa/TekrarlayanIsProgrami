@@ -12,8 +12,8 @@
 
 			<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="✉E-posta" />
 			<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%; margin-top:9px;" Placeholder="🔑Şifre" Icon="@eyeIcon" />
-			<a href="#" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti">🔁Şifrenimi Unuttun?</a>
-			@*<RadzenLink Text="🔁 Şifrenizi unuttunuz mu?" Path="@OpenSifreSifirlaDialog" class="sifreBaglanti"></RadzenLink>*@
+			@*<a href="/sifremi-unuttum" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti">🔁Şifrenimi Unuttun?</a>*@
+			<RadzenLink Text="🔁 Şifrenizi Unuttunuz mu?" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti"></RadzenLink>
 
 			<RadzenButton Click="() => OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
 		</EditForm>
@@ -21,7 +21,9 @@
 	<!-- Kayıt Formu -->
 
 	<div class="form register-form">
-		<EditForm Model="@newUser" OnValidSubmit="OnSubmit">
+		<EditForm Model="@newUser" OnValidSubmit="@OnSubmit">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
 			<div class="row">
 				<h3>Hesap Oluştur</h3>
 				<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
@@ -57,7 +59,7 @@
 					</RadzenFormField>
 					<RadzenRequiredValidator Component="TxtSifreTekrar" Text="Lütfen Şİfrenizi Tekrar Yazınız."></RadzenRequiredValidator>
 				</div>
-				<RadzenButton Click="@OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
+				<RadzenButton Click="OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
 			</div>
 		</EditForm>
 	</div>
@@ -114,30 +116,32 @@
 
 	private async Task OnSubmit()
 	{
+		var result = await girisSaglayici.KayitOlAsync(newUser);
+
 		//Şifre Tekrar ile Şifre farklıysa.
 		if (newUser.Sifre != newUser.SifreTekrar)
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Değil..");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Değil!");
 			return;   // işlemi durdurur
 		}
-
-		var result = await girisSaglayici.KayitOlAsync(newUser);
 		// Bildirim ve yönlendirme
-		if (result.Basarili)
+		 else if (result.Basarili)
 		{
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı" ,result.Mesaj);
 			NavigationManager.NavigateTo("/GirisYap");
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
+			notificationService.Notify(NotificationSeverity.Error, "Hata",result.Mesaj);
 		}
+
 	}
 	//Popup için bunlar.
 	[Inject] DialogService dialogService { get; set; }
 	void OpenSifreSifirlaDialog()
 	{
-		dialogService.Open<SifreSifirla>("", new Dictionary<string, object>());
+		DialogService.Open<SifreSifirla>("Şifre Sıfırla",
+				new Dictionary<string, object>());
 	}
 	//Giriş Yap taki şifre textboxunda gözün eklenmesi için.
 	private string sifreType = "password";

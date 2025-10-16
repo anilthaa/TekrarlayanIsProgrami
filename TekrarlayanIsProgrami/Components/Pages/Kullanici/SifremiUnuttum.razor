@@ -4,7 +4,12 @@
 <RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
     <h3>Şifremi Unuttum</h3>
     <p class="text-muted">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
-
+    <div class="col-sm-12 col-lg-12 container">
+					<RadzenFormField Text="E-posta">
+						<RadzenTextBox Name="txteposta" @bind-Value="model.Eposta" style="width:100%;" />
+					</RadzenFormField>
+					<RadzenRequiredValidator Component="txteposta" Text="Ad zorunludur."></RadzenRequiredValidator>
+  </div>
     <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" Click="@OnSubmit" />
 
     @if (!string.IsNullOrEmpty(bilgiMesaji))
@@ -19,10 +24,11 @@
 
     private async Task OnSubmit()
     {
-        var kullanici = await _kullaniciRepo.GetByEmailAsync(model.Email ,model.Sifre);
+        var kullanici = await _kullaniciRepo.GetByEmailAsync(model.Eposta ,model.Sifre);
         if (kullanici == null)
         {
-            bilgiMesaji = "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.";
+            //bilgiMesaji = "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.";
+            Console.WriteLine("Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
             return;
         }
 
@@ -46,7 +52,7 @@
 
     public class SifreUnuttumModel
     {
-        public string Email { get; set; }
+        public string Eposta { get; set; }
         public string Sifre{ get; set; }
     }
 }
