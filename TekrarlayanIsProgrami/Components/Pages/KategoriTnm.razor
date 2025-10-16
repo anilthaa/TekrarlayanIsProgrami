@@ -1,0 +1,112 @@
+﻿<RadzenCard Style="padding:20px;">
+	<RadzenTemplateForm TItem="ItemKategori" Data="@ItemData" Submit="@OnSubmit">
+		<ChildContent>
+			<RadzenLabel Text="Kategori Adı" Component="Adi"></RadzenLabel>
+			<RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi" Style="width:100%; margin-bottom:15px;" Change="() => degisiklikYapildiMi = true"></RadzenTextBox>
+
+			@if (!string.IsNullOrEmpty(ErrorMessage))
+			{
+				<div style="color: red; margin-bottom:10px;">@ErrorMessage</div>
+			}
+
+			<div style="text-align:right;">
+				<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit"
+							  Style="margin-right:10px; background:#27ae60; color:white"></RadzenButton>
+				<RadzenButton Text="İptal" Click="Iptal"
+							  Style="background:#e74c3c; color:white" ButtonType="ButtonType.Button"></RadzenButton>
+			</div>
+		</ChildContent>
+	</RadzenTemplateForm>
+</RadzenCard>
+
+@code {
+	[Parameter] public ItemKategori ItemData { get; set; } = new();
+
+	private string ErrorMessage = string.Empty;
+	private bool IsEdit;
+	private bool isProcessing = false;
+	private bool degisiklikYapildiMi = false;
+
+	protected override void OnInitialized()
+	{
+		// IsEdit durumu form ilk açıldığında sabitleniyor (sonradan değişmez)
+		IsEdit = ItemData.ID != 0;
+	}
+
+	private async Task OnSubmit(ItemKategori item)
+	{
+		if (isProcessing)
+			return; // ikinci tıklamayı engelle
+
+		isProcessing = true;
+		ErrorMessage = string.Empty;
+
+		try
+		{
+			if (string.IsNullOrWhiteSpace(item.Adi))
+			{
+				ErrorMessage = "Kategori adı boş olamaz!";
+				return;
+			}
+
+			// Kullanıcı bilgileri (örnek olarak statik)
+			item.DelUser = 0;
+			item.CreUser = IsEdit ? 0 : 1;
+			item.UpdUser = IsEdit ? 1 : 0;
+
+			// Veritabanı işlemi
+			var wsCvp = await Task.Run(() => DataService.SetKategori(item));
+			Console.WriteLine($"SonucKodu: {wsCvp.SonucKodu}, Data: {wsCvp.Data}");
+
+			if (wsCvp.SonucKodu == 0 && wsCvp.Data > 0)
+			{
+				if (!IsEdit)
+					item.ID = wsCvp.Data; // yeni eklenen kaydın ID'si
+
+				notificationService.Notify(
+					NotificationSeverity.Success,
+					"Başarılı",
+					IsEdit ? "Kategori güncellendi!" : "Kategori eklendi!"
+				);
+
+				await Task.Delay(100);
+				DialogService.Close(item);
+			}
+			else
+			{
+				await DialogService.Alert(
+					$"Hata Oluştu. SonucKodu: {wsCvp.SonucKodu}, Data: {wsCvp.Data}"
+				);
+			}
+		}
+		catch (Exception ex)
+		{
+			ErrorMessage = $"Hata Oluştu: {ex.Message}";
+			notificationService.Notify(NotificationSeverity.Error, "Hata", ErrorMessage);
+		}
+		finally
+		{
+			isProcessing = false; // her durumda form yeniden aktif olur
+		}
+	}
+
+	private async Task Iptal()
+	{
+		if (degisiklikYapildiMi)
+		{
+			bool? onay = await DialogService.Confirm("Yaptığınız değişiklikler kaybolacak. Devam etmek istiyor musunuz?",
+			"İptal Etme Onayı",
+			new ConfirmOptions
+			{
+				OkButtonText = "Evet",
+				CancelButtonText = "Hayır"
+			});
+
+			if (onay != true)
+				return;
+
+		}
+
+		DialogService.Close(null);
+	}
+}
