@@ -1,91 +1,91 @@
 ﻿@page "/GorevEkle"
-
+@layout MainLayout
 <RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
 	<h3 style="text-align:center; margin-bottom:20px;">Görev Ekle / Düzenle</h3>
 	<RadzenTemplateForm Data="@Gorev" TItem="ItemGorev" Submit="@OnSubmit">
 	<ChildContent>
-		<div class="row">
-			<div class="col-md-6">	
+		<RadzenCard class="row">
+			<RadzenCard class="col-md-6">	
 				<RadzenLabel Text="Önem Derecesi" Component="Onem"></RadzenLabel>
 				<RadzenDropDown @bind-Value="Gorev.OnemDerecesi" Data="@onemDereceleri" Style="width:100%"></RadzenDropDown>
-			</div>
-			<div class="col-md-6">
+			</RadzenCard>
+			<RadzenCard class="col-md-6">
 				<RadzenLabel Text="Tekrarlama Tipi" Component="Tekrar"></RadzenLabel>
 				<RadzenDropDown @bind-Value="Gorev.TekrarlamaTipi" Data="@tekrarTipleri" Style="width:100%"></RadzenDropDown>
-			</div>
-		</div>
+			</RadzenCard>
+		</RadzenCard>
 
 		@if (Gorev.TekrarlamaTipi=="Günlük")
 		{
-				<div class="row" style="margin-top:15px;">
-					<div class="col-md-12">
+				<RadzenCard class="row" style="margin-top:15px;">
+					<RadzenCard class="col-md-12">
 						<RadzenLabel Text="Tekrar Aralığı (Gün)"></RadzenLabel>
 						<RadzenNumeric @bind-Value="Gorev.TekrarAraligi" TValue="int?" Style="width:100%"></RadzenNumeric>
-					</div>
-				</div>
+					</RadzenCard>
+				</RadzenCard>
 		}
 
 		@if (Gorev.TekrarlamaTipi=="Haftalık")
 		{
-			<div class="row" style="margin-top:15px;">
-				<div class="col-md-12">
+				<RadzenCard class="row" style="margin-top:15px;">
+					<RadzenCard class="col-md-12">
 					<RadzenLabel Text="Haftanın Günü"></RadzenLabel>
 					<RadzenDropDown @bind-Value="Gorev.HaftaninGunu" Data="@haftaninGunleri" Style="width:100%"></RadzenDropDown>
-				</div>
-			</div>	
+				</RadzenCard>
+			</RadzenCard>	
 		}
 
 		@if (Gorev.TekrarlamaTipi=="Aylık")
 		{
-			<div class="row" style="margin-top:15px;">
-				<div class="col-md-12">
+				<RadzenCard class="row" style="margin-top:15px;">
+					<RadzenCard class="col-md-12">
 					<RadzenLabel Text="Ayın Günü"></RadzenLabel>
 					<RadzenNumeric @bind-Value="Gorev.AyinGunu" TValue="int?" Style="width:100%"></RadzenNumeric>
-				</div>
-			</div>	
+				</RadzenCard>
+			</RadzenCard>	
 		}
 
 
-		<div class="row" style="margin-top:15px;">
-			<div class="col-md-6">
+			<RadzenCard class="row" style="margin-top:15px;">
+			<RadzenCard class="col-md-6">
 				<RadzenLabel Text="Başlangıç Tarihi" Component="Baslangic"></RadzenLabel>
 				<RadzenDatePicker @bind-Value="Gorev.BaslangicTarihi" Style="width:100%"></RadzenDatePicker>
-			</div>
-			<div class="col-md-6">
+			</RadzenCard>
+			<RadzenCard class="col-md-6">
 				<RadzenLabel Text="Bitiş Tarihi" Component="Bitis"></RadzenLabel>
 				<RadzenDatePicker @bind-Value="Gorev.BitisTarihi" Style="width:100%"></RadzenDatePicker>
-			</div>
-		</div>
+			</RadzenCard>
+		</RadzenCard>
 
-		<div class="row" style="margin-top:15px;">
-			<div class="col-md-12">
+		<RadzenCard class="row" style="margin-top:15px;">
+			<RadzenCard class="col-md-12">
 				<RadzenLabel Text="Başlık" Component="Baslik"></RadzenLabel>
 				<RadzenTextBox @bind-Value="Gorev.Baslik" Style="width:100%" Name="Baslik"></RadzenTextBox>
-			</div>
-		</div>
-		<div class="row" style="margin-top:15px;">
-			<div class="col-md-6">
+			</RadzenCard>
+		</RadzenCard>
+		<RadzenCard class="row" style="margin-top:15px;">
+			<RadzenCard class="col-md-6">
 				<RadzenLabel Text="Kategori" Component="Kategori"></RadzenLabel>
 				<RadzenDropDown @bind-Value="Gorev.Kategori_ID" Data="@kategoriler" TextProperty="Adi" ValueProperty="ID" Style="width:100%" Placeholder="Kategori Seçin"></RadzenDropDown>
-			</div>
-			<div class="col-md-6">
+			</RadzenCard>
+			<RadzenCard class="col-md-6">
 				<RadzenCheckBox @bind-Value="Gorev.Kilitli" TValue="bool"></RadzenCheckBox>
 				<RadzenLabel Text="Kilitli Görev" Style="margin-left:5px;"></RadzenLabel>
-			</div>
-		</div>
+			</RadzenCard>
+		</RadzenCard>
 		@if (Gorev.Kilitli)
 		{
-			<div class="row" style="margin-top:15px;">
-				<div class="col-md-12">
+			<RadzenCard class="row" style="margin-top:15px;">
+				<RadzenCard class="col-md-12">
 					<RadzenLabel Text="Görev Sahibi" Component="Kullanici"></RadzenLabel>
 					<RadzenDropDown @bind-Value="Gorev.Kullanici_ID" Data="@kullanicilar" TextProperty="Adi" ValueProperty="ID" Style="width:100%" Placeholder="Kullanıcı Seçin"></RadzenDropDown>
-				</div>
-			</div>	
+				</RadzenCard>
+			</RadzenCard>	
 		}
 
-		<div style="margin-top:20px; text-align:center;">
+		<RadzenCard style="margin-top:20px; text-align:center;">
 				<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit" Style="background:#3498db; color:white; border:none; border-radius:6px; padding:10px 20px;"></RadzenButton>
-		</div>
+		</RadzenCard>
 	</ChildContent>
 </RadzenTemplateForm> 
 </RadzenCard>

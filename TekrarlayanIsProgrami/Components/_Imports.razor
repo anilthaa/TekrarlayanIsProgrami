@@ -19,6 +19,7 @@
 @using Microsoft.AspNetCore.Mvc.RazorPages;
 @using Microsoft.AspNetCore.WebUtilities
 @using TekrarlayanIsProgrami.Components.Layout
+@using Microsoft.AspNetCore.Authorization
 @using static TekrarlayanIsProgrami.Components.Pages.Kullanici.GirisYap
 @using TekrarlayanIsProgrami.Components.Pages.Kullanici
 @inject NotificationService notificationService
@@ -27,5 +28,6 @@
 @inject CustomAuthenticationStateProvider girisSaglayici
 @inject DialogService DialogService
 @inject GorevRepository GorevRepo
+@inject SifreService SifreService
 @inject DataService DataService
 @inject IJSRuntime Js

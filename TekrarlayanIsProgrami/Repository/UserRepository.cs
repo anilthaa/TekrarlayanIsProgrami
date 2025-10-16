@@ -25,18 +25,18 @@ namespace TekrarlayanIsProgrami.Repository
             var result=await conn.QueryAsync<User>(sql);
             return result.ToList();
         }
-        public async Task<User?> GetByIDAsync(int id)
+        public async Task<User?> GetByIDAsync(int ID)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""ID"" = @ID";
-            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID= id });
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID= ID });
             
         }
-        public async Task<User?> GetByEmailAsync(string eposta)
+        public async Task<User?> GetByEmailAsync(string EPosta, string Sifre)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
-            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
-            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { eposta });
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre";
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta, Sifre});
         }
 
         public async Task<bool> UpdateAsync(User user)
@@ -58,7 +58,19 @@ namespace TekrarlayanIsProgrami.Repository
             });
             return result > 0;
         }
-        
+        public async Task<bool> SifreGuncelle(string Token, string YeniSifre)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            // TODO: Token veritabanında doğrula ve kullanıcıyı bul
+            var kullanici = await baglanti.QueryFirstOrDefaultAsync<User>("SELECT * FROM \"Kullanici\" WHERE \"ResetToken\" = @token", new { Token });
+            if (kullanici == null)
+            return false;
+
+            var sql = @"UPDATE ""Kullanici"" SET ""Sifre"" = @sifre, ""ResetToken"" = NULL WHERE ""ID"" = @id";
+            await baglanti.ExecuteAsync(sql, new { sifre = YeniSifre, id = kullanici.ID });
+
+            return true;
+        }
 
         public async Task DeleteAsync(int id)
         {
@@ -74,7 +86,7 @@ namespace TekrarlayanIsProgrami.Repository
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
         }
 
-        public async Task<User> KayitOlAsync(string eposta,string sifre ,string ad ,string soyad )
+        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre)
         {
             using var conn = GetConnection();
 
@@ -85,10 +97,10 @@ namespace TekrarlayanIsProgrami.Repository
 
             var user = new User
             {
-                Adi = ad,
-                Soyadi = soyad,
-                EPosta = eposta,
-                Sifre = sifre,
+                Adi =Adi, //Buraya @ eklenilcek gibi.
+                Soyadi = Soyadi,
+                EPosta = EPosta,
+                Sifre = Sifre,
                 Aktif = true,
                 CreUser = 1,
                 CreDate = DateTime.Now,

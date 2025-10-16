@@ -1,0 +1,51 @@
+﻿@page "/sifre-sifirla"
+
+@code {
+    [Parameter] public string token { get; set; } // token URL’den gelir
+}
+
+<RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
+    <h3>Yeni Şifre Belirle</h3>
+   <EditForm Data="@model" Submit="@OnSubmit">
+        <RadzenTextBox @bind-Value="model.YeniSifre" Name="YeniSifre" Placeholder="Yeni şifre" Type="Password" Style="width:100%;" />
+        <RadzenRequiredValidator Component="YeniSifre" Text="Şifre zorunludur." Style="display:block" />
+
+        <RadzenTextBox @bind-Value="model.YeniSifreTekrar" Name="YeniSifreTekrar" Placeholder="Yeni şifre tekrar" Type="Password" Style="width:100%;" />
+        <RadzenCompareValidator Component="YeniSifreTekrar" CompareTo="YeniSifre" Text="Şifreler eşleşmeli." Style="display:block" />
+
+        <RadzenButton Text="Şifreyi Kaydet" ButtonStyle="ButtonStyle.Primary" Type="Submit" Class="mt-3 w-100" />
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(bilgiMesaji))
+    {
+        <RadzenAlert Severity="Info" Summary="Bilgi" Detail="@bilgiMesaji" Class="mt-3" />
+    }
+</RadzenCard>
+
+@code {
+    private SifreSifirlaModel model = new();
+    private string bilgiMesaji;
+
+    private async Task OnSubmit()
+    {
+        // TODO: token doğrulama yap
+        bool basarili = await _kullaniciRepo.SifreGuncelle(token, model.YeniSifre);
+
+        if (basarili)
+        {
+            bilgiMesaji = "Şifreniz başarıyla değiştirildi.";
+            await Task.Delay(1500);
+            NavigationManager.NavigateTo("/GirisYap");
+        }
+        else
+        {
+            bilgiMesaji = "Token geçersiz veya şifre değiştirilemedi.";
+        }
+    }
+
+    public class SifreSifirlaModel
+    {
+        public string YeniSifre { get; set; }
+        public string YeniSifreTekrar { get; set; }
+    }
+}

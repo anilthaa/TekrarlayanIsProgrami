@@ -1,42 +1,52 @@
 ﻿@page "/sifremi-unuttum"
+@layout MainLayout
 
-<h3>Şifremi Unuttum</h3>
+<RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
+    <h3>Şifremi Unuttum</h3>
+    <p class="text-muted">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
 
-<RadzenTextBox @bind-Value="E_posta" Placeholder="E-posta adresiniz" Style="width:300px;" />
-<RadzenButton Text="Sıfırlama Bağlantısı Gönder" Click="@SendResetLink" Style="margin-top:10px;" />
+    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" Click="@OnSubmit" />
+
+    @if (!string.IsNullOrEmpty(bilgiMesaji))
+    {
+        <RadzenAlert Severity="Info" Summary="Bilgi" Detail="@bilgiMesaji" Class="mt-3" />
+    }
+</RadzenCard>
 
 @code {
-    string E_posta = "";
+    private SifreUnuttumModel model = new();
+    private string bilgiMesaji;
 
-    async Task SendResetLink()
+    private async Task OnSubmit()
     {
-        if (string.IsNullOrWhiteSpace(E_posta))
-        {
-            await Js.InvokeVoidAsync("alert", "Lütfen e-posta adresinizi girin.");
-            return;
-        }
-
-        var kullanici = await _kullaniciRepo.GetByEmailAsync(E_posta);
+        var kullanici = await _kullaniciRepo.GetByEmailAsync(model.Email ,model.Sifre);
         if (kullanici == null)
         {
-            await Js.InvokeVoidAsync("alert", "Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı.");
+            bilgiMesaji = "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.";
             return;
         }
 
-        // 1. Token üret
-        var token = Guid.NewGuid().ToString();
+        // Token oluştur
+        var token = Guid.NewGuid().ToString(); // basit token örneği
 
-        // 2. Token’ı veritabanına kaydet (örneğin Kullanici tablosuna veya ayrı bir tabloya)
-        await _kullaniciRepo.SaveResetTokenAsync(kullanici.ID, token);
-
-        // 3. Sıfırlama bağlantısını oluştur
-        var resetUrl = $"{NavigationManager.BaseUri}sifre-sifirla/{token}";
-
-        // 4. E-posta gönderimi (burada test amaçlı sadece konsola yazıyoruz)
-        Console.WriteLine($"Sıfırlama bağlantısı: {resetUrl}");
-
-        await Js.InvokeVoidAsync("alert", "E-posta adresinize sıfırlama bağlantısı gönderildi.");
+        // Mail gönder
+        bool basarili = await SifreService.SifreSifirlamaMailiGonder(kullanici.EPosta, token);
+        if (basarili)
+        {
+            notificationService.Notify(NotificationSeverity.Success,"Gönderildi");
+            StateHasChanged();
+            await Task.Delay(2000); // Mesaj gösterildikten sonra yönlendirme
+            NavigationManager.NavigateTo("/sifre-sifirla");
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Gönderilemedi");
+        }
     }
-}
+
+    public class SifreUnuttumModel
+    {
+        public string Email { get; set; }
+        public string Sifre{ get; set; }
     }
 }
