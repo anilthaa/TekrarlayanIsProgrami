@@ -20,8 +20,19 @@
 				<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="70px"></RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="Kategori_ID" Title="Kategori"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarlamaTipi" Title="Tekrarlama"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="AyinGunu" Title="Ayın Günü"></RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç"></RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="Kilitli" Title="Kilitli Mi?">
+					<Template Context="g">
+						@(g.Kilitli ? "Evet" : "Hayır")
+					</Template>
+				</RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Durum">
 					<Template Context="gorev">
 						<span @onclick="() => ToggleDurum(gorev)"
