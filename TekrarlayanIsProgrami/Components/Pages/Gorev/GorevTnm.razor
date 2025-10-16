@@ -40,12 +40,12 @@
 			<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
 				<RadzenStack>
 					<RadzenLabel Text="Başlangıç Tarihi"></RadzenLabel>
-					<RadzenDatePicker @bind-Value="Gorev.BaslangicTarihi" Style="width:100%"></RadzenDatePicker>
+					<RadzenDatePicker @bind-Value="Gorev.BaslangicTarihi" Style="width:100%" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true"></RadzenDatePicker>
 				</RadzenStack>
 
 				<RadzenStack>
 					<RadzenLabel Text="Bitiş Tarihi"></RadzenLabel>
-					<RadzenDatePicker @bind-Value="Gorev.BitisTarihi" Style="width:100%"></RadzenDatePicker>
+					<RadzenDatePicker @bind-Value="Gorev.BitisTarihi" Style="width:100%" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true"></RadzenDatePicker>
 				</RadzenStack>
 			</RadzenStack>
 
@@ -106,9 +106,10 @@
 		{
 			Gorev.Aktif = true;
 			Gorev.Kilitli = false;
-			Gorev.BaslangicTarihi = DateTime.Today;
-			Gorev.BitisTarihi = DateTime.Today.AddDays(1);
+			Gorev.BaslangicTarihi = DateTime.Now;
+			Gorev.BitisTarihi = DateTime.Now.AddDays(1);
 		}
+		StateHasChanged();
 	}
 
 	private DayOfWeek MapHaftaninGunu(string gun)

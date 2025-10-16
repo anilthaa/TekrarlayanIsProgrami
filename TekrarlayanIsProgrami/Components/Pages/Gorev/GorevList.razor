@@ -15,19 +15,45 @@
 	}
 	else
 	{
-		<RadzenDataGrid TItem="ItemGorev" Data="@GorevListt" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick">
+		<RadzenDataGrid TItem="ItemGorev" Data="@GorevListt" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick" Style="width:100%; white-space:nowrap; overflow-x:auto;" ColumnWidth="150px" >
 			<Columns>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="70px"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true"></RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="Kategori_ID" Title="Kategori"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarlamaTipi" Title="Tekrarlama"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="AyinGunu" Title="Ayın Günü"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş"></RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem">
+					<Template Context="g">
+						@(string.IsNullOrWhiteSpace(g.OnemDerecesi) ? "Yok" : g.OnemDerecesi)
+					</Template>
+					<Template Context="onem">
+						<span style="font-size:12px; padding:3px 8px; border-radius:6px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+							@onem.OnemDerecesi
+						</span>
+					</Template>
+				</RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarlamaTipi" Title="Tekrarlama">
+					<Template Context="g">
+						@(string.IsNullOrWhiteSpace(g.TekrarlamaTipi) ? "Yok" : g.TekrarlamaTipi)
+					</Template>
+				</RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı">
+					<Template Context="g">
+						@(g.TekrarAraligi.HasValue ? g.TekrarAraligi.ToString() : "Yok")
+					</Template>
+				</RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü">
+					<Template Context="g">
+						@(string.IsNullOrWhiteSpace(g.HaftaninGunu) ? "Yok" : g.HaftaninGunu)
+					</Template>
+				</RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="AyinGunu" Title="Ayın Günü">
+					<Template Context="g">
+						@(g.AyinGunu.HasValue ? g.AyinGunu.ToString() : "Yok")
+					</Template>
+				</RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç" FormatString="{0:dd.MM.yyyy HH:mm}">
+				</RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
+				<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemGorev" Property="Kilitli" Title="Kilitli Mi?">
 					<Template Context="g">
 						@(g.Kilitli ? "Evet" : "Hayır")
@@ -84,9 +110,10 @@
 		{
 
 			GorevListt.Insert(0, g);
-			StateHasChanged();
+			await GrdGorev!.Reload();
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev eklendi!");
 		}
+
 	}
 
 
@@ -170,5 +197,15 @@
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", ex.Message);
 		}
+	}
+	private string GetOnemRengi(string onem)
+	{
+		return onem?.ToLower() switch
+		{
+			"yüksek" => "#e74c3c",
+			"orta" => "#f1c40f",
+			"düşük" => "#2ecc71"
+			
+		};
 	}
 }
