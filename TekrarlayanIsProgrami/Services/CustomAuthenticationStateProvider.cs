@@ -106,6 +106,7 @@ namespace TekrarlayanIsProgrami.Services
                     {
                         return new AuthResult
                         {
+
                             Basarili = true,
                             Mesaj = "Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın."
                         };
