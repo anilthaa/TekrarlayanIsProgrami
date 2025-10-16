@@ -15,19 +15,19 @@
 	<div class="login-container @(isRegisterActive ? "slide-active" : "")">
 
     <!-- Giriş Formu -->
-    <div class="form login-form">
+    <RadzenCard class="form login-form">
        <EditForm Model="@loginModel" OnValidSubmit="()=>OnLogin(loginModel)">
 				<h3>🔐Giriş Yap</h3>
             <p>Lütfen bilgilerinizi girin</p>
 
-				<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="✉E-posta" />
-				<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%;" Placeholder="🔑Şifre" />
-				<RadzenLabel style="margin-left:5px;">🔁 Şifrenizi unuttunuz mu?</RadzenLabel>
+				<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="E-posta                                                                                                         ✉" />
+				<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%; margin-top:9px;" Placeholder="Şifre                                                                                                             🔑" />
+			<RadzenLink Text="🔁 Şifrenizi unuttunuz mu?" Path="/sifremi-unuttum" Style="text-decoration:none; color:rebeccapurple; cursor:pointer; "></RadzenLink>
 
             <RadzenButton Click="()=>OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
-        </EditForm></div>
+        </EditForm></RadzenCard>
 		<!-- Kayıt Formu -->
-    <div class="form register-form">
+    <RadzenCard class="form register-form">
         <EditForm Model="@newUser" OnValidSubmit="OnSubmit">
             <h3>Hesap Oluştur</h3>
             <p>Lütfen bilgilerinizi girin</p>
@@ -38,12 +38,12 @@
 				<RadzenLabel Text="E-posta" class="radzen-labell"></RadzenLabel>
 				<RadzenTextBox @bind-Value="newUser.EPosta" style="width:100%" Placeholder="E-posta"   /><br />
 				<RadzenLabel Text="Sifre" class="radzen-labell"></RadzenLabel>
-				<RadzenTextBox @bind-Value="newUser.Sifre" style="width:100%" Placeholder="Şifre"></RadzenTextBox><br />
+				<RadzenTextBox @bind-Value="newUser.Sifre" style="width:100%" Placeholder="Şifre" Type="password"></RadzenTextBox><br />
 				<RadzenLabel Text="Tekrar Şifre" class="radzen-labell"></RadzenLabel>
-				<RadzenTextBox style="width:100%" Placeholder="Tekrar Şifre"></RadzenTextBox><br />
+				<RadzenTextBox style="width:100%" Placeholder="Tekrar Şifre" Type="password"></RadzenTextBox><br />
 				<RadzenButton Click="@OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info"></RadzenButton>
                </EditForm>
-            </div>
+            </RadzenCard>
 			<!-- Slider Panel -->
 			<div class="slider-panel">
 				<div class="slider-content">
@@ -89,6 +89,7 @@
 		public string E_Posta { get; set; }
 		public string Sifre { get; set; }
 	}
+
 	private User newUser = new User
 	{
 		CreUser = 1,
@@ -98,7 +99,14 @@
 
 	private async Task OnSubmit()
 	{
+		//Şifre Tekrar ile Şifre farklıysa.
+		if (newUser.Sifre != newUser.SifreTekrar)
+		{
+			NotificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Değil..");
+			/* return;  */ // işlemi durdurur
+		}
 		var result = await AuthProvider.KayitOlAsync(newUser);
+		// 4️⃣ Bildirim ve yönlendirme
 		if (result.Basarili)
 		{
 			NotificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
