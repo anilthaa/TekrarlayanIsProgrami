@@ -9,44 +9,44 @@
 
 
 
-	<div class="row" style="margin-bottom:20px;">
-		<div class="col-md-4">
+	<RadzenCard class="row" style="margin-bottom:20px;">
+		<RadzenCard class="col-md-4">
 			<RadzenCard Style="text-align:center; background:#4caf50; color:white; border-radius:10px;">
 				<h4>Aktif Görevler</h4>
 				<h2>@aktifSayisi</h2>
 			</RadzenCard>
-		</div>
-		<div class="col-md-4">
+		</RadzenCard>
+		<RadzenCard class="col-md-4">
 			<RadzenCard Style="text-align:center; background:#2196F3; color:white; border-radius:10px;">
 				<h4>Tamamlanan Görevler</h4>
 				<h2>@tamamlananSayisi</h2>
 			</RadzenCard>
-		</div>
-		<div class="col-md-4">
+		</RadzenCard>
+		<RadzenCard class="col-md-4">
 			<RadzenCard Style="text-align:center; background:#f44336; color:white; border-radius:10px;">
 				<h4>Silinen Görevler</h4>
 				<h2>@silinenSayisi</h2>
 			</RadzenCard>
-		</div>
+		</RadzenCard>
 
-	</div>
+	</RadzenCard>
 
-	<div class="row">
-		<div class="col-md-6">
+	<RadzenCard class="row">
+		<RadzenCard class="col-md-6">
 			<RadzenChart Style="height:300px" Palette="@(new [] {"#3498db","#2ecc71","#e74c3c"})">
 				<RadzenPieSeries Data="@istatistikler" CategoryProperty="Durum" ValueProperty="Sayi" Title="Görevler"></RadzenPieSeries>
 				<RadzenLegend Position="LegendPosition.Right"></RadzenLegend>
 			</RadzenChart>
-		</div>
+		</RadzenCard>
 
-		<div class="col-md-6">
+		<RadzenCard class="col-md-6">
 			<RadzenChart Style="height:300px" Palette="@(new [] {"#3498db","#2ecc71","#e74c3c"})">
 				<RadzenColumnSeries Data="@istatistikler" CategoryProperty="Durum" ValueProperty="Sayi" Title="Görevler"></RadzenColumnSeries>
 				<RadzenCategoryAxis></RadzenCategoryAxis>
 				<RadzenValueAxis></RadzenValueAxis>
 			</RadzenChart>
-		</div>
-	</div>
+		</RadzenCard>
+	</RadzenCard>
 </RadzenCard>
 <RadzenTabs>
 	<Tabs>

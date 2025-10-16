@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="en">
-
-<head>
+    <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    <link rel="stylesheet" href="css/site.css" />
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="TekrarlayanIsProgrami.styles.css" />
@@ -14,9 +15,24 @@
 </head>
 
 <body>
-    <Routes @rendermode="InteractiveServer"/>
-    <script src="_framework/blazor.web.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+ <Routes @rendermode="InteractiveServer" /> 
+<script src="_framework/blazor.web.js"></script>
+<script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)">
+</script>
 </body>
-
 </html>
+@code {
+    private Type GetLayoutType()
+    {
+        var uri = NavigationManager.Uri.ToLower();
+
+        if (uri.Contains("/GirisYap"))
+        {
+            return typeof(EmptyLayout);
+        }
+        else
+        {
+            return typeof(MainLayout);
+        }
+    }
+}

@@ -1,13 +1,14 @@
-﻿<RadzenCard Style="padding:20px;">
+﻿@layout MainLayout
+<RadzenCard Style="padding:20px;">
 	<RadzenTemplateForm TItem="ItemKategori" Data="@Kategori" Submit="@OnSubmit">
 		<ChildContent>
 			<RadzenLabel Text="Kategori Adı" Component="Adi"></RadzenLabel>
 			<RadzenTextBox @bind-Value="Kategori.Adi" Name="Adi" Style="width:100%; margin-bottom:15px;"></RadzenTextBox>
 
-			<div style="text-align:right;">
+			<RadzenCard style="text-align:right;">
 				<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit" Style="margin-right:10px; background:#27ae60; color:white"></RadzenButton>
 				<RadzenButton Text="İptal" Click="Iptal" Style="background:#e74c3c; color:white"></RadzenButton>
-			</div>
+			</RadzenCard>
 		</ChildContent>
 	</RadzenTemplateForm>
 </RadzenCard>

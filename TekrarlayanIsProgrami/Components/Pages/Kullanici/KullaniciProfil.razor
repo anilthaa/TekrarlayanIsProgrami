@@ -1,33 +1,26 @@
 ﻿@page "/Profil"
-
-@inject AuthenticationStateProvider AuthProvider
-<html>
-    <head>
-    <link href="css/site.css" rel="stylesheet" />
-    </head>
-<body>
+@layout MainLayout
 
     @if (kullanici != null)
     {
-     <div class="profile-card">
+     <RadzenCard class="profile-card">
      <h2>Profil</h2>
     <h3>@kullanici.Adi @kullanici.Soyadi</h3>
     <p>@kullanici.EPosta</p>
     <RadzenButton @onclick="CikisYap" class="radzenprofile-but" Text="Çıkış Yap"></RadzenButton>
-    </div>
+    </RadzenCard>
     }
     else
     {
         <p>Kullanıcı bilgileri yükleniyor veya bulunamadı...</p>
     }
-</body>
-</html>
+
 @code {
     private User? kullanici;
 
     protected override async Task OnInitializedAsync()
     {
-        var girisDurumu = await AuthProvider.GetAuthenticationStateAsync();
+        var girisDurumu = await girisSaglayici.GetAuthenticationStateAsync();
          var userClaims = girisDurumu.User;
 
         // if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)

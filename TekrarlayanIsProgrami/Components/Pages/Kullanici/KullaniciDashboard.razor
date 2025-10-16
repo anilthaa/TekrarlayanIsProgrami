@@ -1,12 +1,17 @@
 ﻿@page "/Dashboard"
+@layout MainLayout
+ @*@attribute [Authorize]  
+ sayfanın güvenliği için yazdık bunu*@ 
+    <h2>Hoş geldin, @currentUser?.Adi!</h2>
 
-<html>
-<head>
-    <link href="css/site.css" rel="stylesheet" />
-</head>
-<body>
+    <RadzenCard>
+        <h4>📊 Kontrol Paneli</h4>
+        <p>Burada istatistikler, bildirimler veya kullanıcı bilgileri yer alacak.</p>
+    </RadzenCard>
 
-    <header>
+
+
+    @* <header>
         <h1>Tekrarlayan İş Programı</h1>
         <nav>
             <a href="#">Ana Sayfa</a>
@@ -14,36 +19,37 @@
         </nav>
     </header>
 
-    <div class="container">
-        <div class="welcome">
+    <RadzenCard class="container">
+        <RadzenCard class="welcome">
             Hoşgeldiniz, <strong>Kullanıcı!</strong>
-        </div>
+        </RadzenCard>
 
-        <div class="cards">
-            <div class="card">
+        <RadzenCard class="cards">
+            <RadzenCard class="card">
                 <h3>Görevlerim</h3>
                 <p>Toplam görev sayınız: 12</p>
 
-            </div>
-            <div class="card">
+            </RadzenCard>
+            <RadzenCard class="card">
                 <h3>Tamamlanan İşler</h3>
                 <p>Bugüne kadar tamamlanan iş sayısı: 7</p>
-            </div>
-            <div class="card">
+            </RadzenCard>
+            <RadzenCard class="card">
                 <h3>Yeni Görevler</h3>
                 <p>Bugün için eklenen yeni görev sayısı: 3</p>
-            </div>
-        </div>
-    </div>
+            </RadzenCard>
+        </RadzenCard>
+    </RadzenCard>
 
     <footer>
         &copy; 2025 Tekrarlayan İş Programı
-    </footer>
-</body>
-</html>
-
-
-
+    </footer> *@
 @code {
-   
+    private User? currentUser;
+
+     @* override async Task OnInitializedAsync()
+     {
+         // Eğer login bilgilerini AuthProvider tutuyorsa:
+         currentUser = await girisSaglayici.GetCurrentUserAsync();
+     }*@
 }

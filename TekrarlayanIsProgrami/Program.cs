@@ -31,6 +31,7 @@ builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<KategoriRepository>();
 builder.Services.AddScoped<GorevRepository>();
 builder.Services.AddScoped<GorevLoglariRepository>();
+builder.Services.AddScoped<SifreService>();
 
 var app = builder.Build();
 

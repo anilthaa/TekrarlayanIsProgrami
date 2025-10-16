@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Npgsql;
+using Radzen;
 using Radzen.Blazor.Markdown;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -39,32 +40,34 @@ namespace TekrarlayanIsProgrami.Services
             var user = new ClaimsPrincipal(identity);
             return Task.FromResult(new AuthenticationState(user));
         }
-        public async Task<AuthResult> GirisYapAsync(string eposta ,string Sifre)
+        public async Task<AuthResult> GirisYapAsync(string eposta ,string sifre)
         {
-            var Kullanici = await _kullaniciRepo.GetByEmailAsync(eposta);
-            if (Kullanici != null)
+            var Kullanici = await _kullaniciRepo.GetByEmailAsync(eposta,sifre);
+            if (Kullanici == null || Kullanici.Sifre!=sifre || Kullanici.EPosta!=eposta)
             {
+                return new AuthResult
+                {
+                    Basarili = false,
+                    Mesaj = $"E-posta veya Şifre Hatalı!"
+                };
+            }
+            else
+            {
+                var identity = new ClaimsIdentity(new[]
+                {
+                new Claim(ClaimTypes.Name, Kullanici.Adi + " " + Kullanici.Soyadi),
+                new Claim(ClaimTypes.Email, Kullanici.EPosta),
+                new Claim(ClaimTypes.NameIdentifier, Kullanici.ID.ToString())
+                }, "apiauth_type");
+
+                var kullaniciPrincipal = new ClaimsPrincipal(identity);//Blazor, AuthenticationStateProvider üzerinden principal ile kullanıcının giriş durumunu bilir.
+                NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(kullaniciPrincipal)));//Bu satır, uygulamanın diğer bileşenlerine kullanıcının artık giriş yaptığını bildirir.
                 return new AuthResult
                 {
                     Basarili = true,
                     Mesaj = $"Hoşgeldiniz {Kullanici.Adi}!"
                 };
             }
-            var identity = new ClaimsIdentity(new[]
-{
-            new Claim(ClaimTypes.Name, Kullanici?.Adi + " " + Kullanici?.Soyadi),
-            new Claim(ClaimTypes.Email, Kullanici.EPosta),
-            new Claim(ClaimTypes.NameIdentifier, Kullanici.ID.ToString())
-            }, "apiauth_type");
-
-            var kullaniciPrincipal = new ClaimsPrincipal(identity);
-
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(kullaniciPrincipal)));
-            return new AuthResult
-            {
-                Basarili = false,
-                Mesaj = "E-posta veya şifre hatalı!"
-            };
         }
 
         public async Task<AuthResult> KayitOlAsync(User user)
@@ -74,100 +77,92 @@ namespace TekrarlayanIsProgrami.Services
                 return new AuthResult
                 {
                     Basarili = false,
-                    Mesaj = "Şifre en az 8 karakter olmalıdır."
+                    Mesaj =$"Şifre en az 8 karakter olmalıdır."
                 };
             }
+            //else if(user.Sifre!=user.SifreTekrar)
+            //{
+            //    return new AuthResult
+            //    {
+            //        Basarili=false,
+            //        Mesaj=$"Lütfen Şifreleri Aynı Giriniz."
+            //    };
+            //}
 
-            try
-            {
-                // Repo metodunu User döndürecek şekilde değiştir
-                User kayitliUser = await _kullaniciRepo.KayitOlAsync(user.EPosta, user.Sifre, user.Adi, user.Soyadi);
-
-                if (kayitliUser != null)
+                try
                 {
-                    return new AuthResult
-                    {
-                        Basarili = true,
-                        Mesaj = "Kayıt Başarıyla Tamamlandı!"
-                    };
-                }
-                else
+                    // Repo metodunu User döndürecek şekilde dönüyor.
+                    User kayitliUser = await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre);
+
+                if (user.Sifre != user.SifreTekrar || user.EPosta == null || user.Sifre == null || user.SifreTekrar == null)
                 {
                     return new AuthResult
                     {
                         Basarili = false,
-                        Mesaj = "Kayıt sırasında bir hata oluştu."
+                        Mesaj = "Kayıt sırasında bir hata oluştu.Lütfen Bilgilerinizi Kontrol Ediniz."
                     };
                 }
-            }
-            catch (Exception ex)
-            {
-                return new AuthResult
+                else if (kayitliUser != null)
+                    {
+                        return new AuthResult
+                        {
+                            Basarili = true,
+                            Mesaj = "Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın."
+                        };
+                }
+                
+              }
+                catch (Exception ex)
                 {
-                    Basarili = false,
-                    Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
-                };
-            }
+                    return new AuthResult
+                    {
+                        Basarili = false,
+                        Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
+                    };
+                }
+            return default;
         }
-            //// Şifre minimum 8 karakter kontrolü
-            //if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
-            //{
-            //    return new AuthResult
-            //    {
-            //        Basarili = false,
-            //        Mesaj = "Şifre en az 8 karakter olmalıdır."
-            //    };
-            //}
 
-            //try
-            //{
-            //    bool kayitBasarili = await _kullaniciRepo.KayitOlAsync(user);
+        public async Task<AuthResult> UpdateAsync(User user)
+        {
+            var kullanici = await _kullaniciRepo.GetByEmailAsync(user.EPosta,user.Sifre);
+            if (kullanici == null) 
+            {
+            }
 
-            //    if (kayitBasarili)
-            //    {
-            //        return new AuthResult
-            //        {
-            //            Basarili = true,
-            //            Mesaj = "Kayıt Başarıyla Tamamlandı!"
-            //        };
-            //    }
-            //    else
-            //    {
-            //        return new AuthResult
-            //        {
-            //            Basarili = false,
-            //            Mesaj = "Kayıt sırasında bir hata oluştu."
-            //        };
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    return new AuthResult
-            //    {
-            //        Basarili = false,
-            //        Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
-            //    };
-            //}
-        
-        //public async Task<AuthResult> UpdateAsync(string E_Posta)
-        //{
-        //    var kullanici = await _kullaniciRepo.GetByEmailAsync(E_Posta);
-        //    if (kullanici == null) { }
-
-        //    // Yeni ClaimsIdentity oluştur
-        //    var identity = new ClaimsIdentity(new[]
-        //    {
-        //    new Claim(ClaimTypes.NameIdentifier, kullanici.ID.ToString()),
-        //    new Claim(ClaimTypes.Name, kullanici.Adi + " " + kullanici.Soyadi),
-        //    new Claim(ClaimTypes.Email, kullanici.EPosta)
-        //}, "apiauth");
+            // Yeni ClaimsIdentity oluştur
+            var identity = new ClaimsIdentity(new[]
+            {
+            new Claim(ClaimTypes.NameIdentifier, kullanici.ID.ToString()),
+            new Claim(ClaimTypes.Name, kullanici.Adi + " " + kullanici.Soyadi),
+            new Claim(ClaimTypes.Email, kullanici.EPosta)
+        }, "apiauth");
+            return new AuthResult {
+                Basarili = true, Mesaj = "Giriş başarılı" 
+            };
+        }
 
         //    var userPrincipal = new ClaimsPrincipal(identity);
-
         //    // Authentication state’i güncelle
-        //    AuthProvider.NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(userPrincipal)));
-        //    return new AuthResult { Basarili = true, Mesaj = "Giriş başarılı" };
-        //}
+        //   AuthenticationStateProvider.NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(userPrincipal)));
+        public async Task<User?> GetCurrentUserAsync() //Bu metot şu anda giriş yapmış olan kullanıcıyı sistemden bulur ve döndürür.
+        {
+            var authState = await GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            {
+                return new User
+                {
+                    ID = int.TryParse(user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0,
+                    Adi = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value?.Split(' ').FirstOrDefault() ?? "",
+                    Soyadi = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value?.Split(' ').Skip(1).FirstOrDefault() ?? "",
+                    EPosta = user.FindFirst(c => c.Type == ClaimTypes.Email)?.Value ?? ""
+                };
+            }
+
+           return null;
+        }
         public Task CikisYapAsync()
         {
             _currentUser = null;
@@ -175,13 +170,5 @@ namespace TekrarlayanIsProgrami.Services
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
             return Task.CompletedTask;
         }
-
-
-        //public Task GuncelleAsync(ClaimsPrincipal user)
-        //   {
-        //       _currentUser = user;
-        //       NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_currentUser)));
-        //       return Task.CompletedTask;
-        //   }
     }
 }
