@@ -103,7 +103,7 @@
 }
 /*Dashboard daki NavLink ayarları*/
 .nav-link {
-    background-color: #374151;
+    background-color: transparent;
     text-decoration: none;
     padding: 0.5rem 1rem;
     display: block;
@@ -168,7 +168,7 @@ footer {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
     transform: translateY(-50%);
     z-index: 2;
-    margin-top:470px;
+    margin-top:350px;
     
 }
 
@@ -302,7 +302,7 @@ footer {
     padding: 40px;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    width: 650px;
+    width: 700px;
     font-family: 'Segoe UI', sans-serif;
 }
 

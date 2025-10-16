@@ -9,9 +9,7 @@
     @if (!NavigationManager.Uri.Contains("/GirisYap") &&
          !NavigationManager.Uri.Contains("/kullanicilar/edit"))
     {
-        <RadzenHeader>
-            <h3>Tekrarlayan İş Programı</h3>
-        </RadzenHeader>
+        
 
         <RadzenSidebar>
             @if (NavigationManager.Uri.Contains("/Dashboard") || NavigationManager.Uri.Contains("/kategori") || NavigationManager.Uri.Contains("/kullanicilar") || NavigationManager.Uri.Contains("/Gorevler"))
@@ -20,6 +18,7 @@
                     <h3>📊 Dashboard</h3>
                     <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
                     <NavLink href="/kategori" class="nav-link">Kategoriler</NavLink>
+                    <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
                     <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%" class="radzen-button" />
                 </RadzenCard>
             }

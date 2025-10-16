@@ -1,51 +1,57 @@
-﻿@page "/KayitOl"
-@layout MainLayout
+﻿@layout MainLayout
 <!-- Arka plan ve sayfa ortalama -->
-<RadzenCard class="form-wrapper">
-        <RadzenCard class="form-card">
-        <!-- Başlık -->
-        <h2>Kayıt Ol</h2>
-        <!-- Form -->
-        <EditForm Model="@newUser" OnValidSubmit="OnSubmit">
-            <RadzenFieldset>
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="Adınız"></RadzenLabel>
-                <RadzenTextBox @bind-Value="newUser.Adi" placeholder="Adınız" style="width:100%;"/>
-                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="Soyadınız"></RadzenLabel>
-                <RadzenTextBox @bind-Value="newUser.Soyadi" placeholder="Soyadınız" style="width:100%;" />
-                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="E_posta"></RadzenLabel>
-                <RadzenTextBox @bind-Value="newUser.EPosta" placeholder="E-posta" style="width:100%;" />
-                <RadzenLabel style="display:block; margin-bottom:5px; font-weight:bold;" Text="Şifre"></RadzenLabel>
-                <RadzenTextBox @bind-Value="newUser.Sifre" type="password" placeholder="Şifre" style="width:100%; " />
-            <RadzenCard class="button-group">
-            <RadzenButton type="submit" class="radzen-button" style="width:30%;" Text="Kayıt Ol">
-            </RadzenButton>
-            </RadzenCard>
-            </RadzenFieldset>
-        </EditForm>
-            <RadzenLink href="/GirisYap" style="color:#5563DE; text-decoration:none;">Zaten hesabınız var mı? Giriş Yap</RadzenLink>
-    </RadzenCard>
-</RadzenCard>
-@code {
-    private User newUser = new User
-    {
-        CreUser = 1,
-        CreDate = DateTime.Now,
-        Aktif = true
-    };
 
-    private async Task OnSubmit()
-    {
-        var result = await girisSaglayici.KayitOlAsync(newUser);
-        if (result.Basarili )
-        {
-            notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
-            NavigationManager.NavigateTo("/GirisYap");
-        }
-        else
-        {
-            notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
-        }
-    }
+<RadzenCard class="max-width:600px; margin:auto; padding:20px;">
+
+	<h3 class="card-title text-center mb-4">Kullanıcı Ekle</h3>
+	<RadzenTemplateForm Data="@newUser" TItem="User" Submit="@OnSubmit">
+		<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
+			<DataAnnotationsValidator />
+			<ValidationSummary /> 
+			<RadzenLabel class="form-label">Adı</RadzenLabel>
+			<RadzenTextBox class="form-control" @bind-Value="newUser.Adi" placeholder="Adı girin" />
+			<RadzenLabel class="form-label">Soyadı</RadzenLabel>
+			<RadzenTextBox class="form-control" @bind-Value="newUser.Soyadi" placeholder="Soyadı girin" />
+			<RadzenLabel class="form-label">E-Posta</RadzenLabel>
+			<RadzenTextBox class="form-control" @bind-Value="newUser.EPosta" placeholder="E-Posta girin" />
+			<RadzenLabel class="form-label">Şifre</RadzenLabel>
+			<RadzenTextBox type="password" class="form-control" @bind-Value="newUser.Sifre" placeholder="Şifreyi girin" />
+			<RadzenCard class="btn-group">
+				<RadzenButton Text="Kaydet" Icon="save"  Click="@OnSubmit" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
+				<RadzenButton Text="İptal"  Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
+			</RadzenCard>
+		</RadzenFieldset>
+	</RadzenTemplateForm>
+
+</RadzenCard>
+
+
+
+
+@code {
+	private User newUser = new User
+	{
+		CreUser = 1,
+		CreDate = DateTime.Now,
+		Aktif = true
+	};
+
+	private async Task OnSubmit()
+	{
+		var result = await girisSaglayici.KayitOlAsync(newUser);
+		if (result.Basarili)
+		{
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
+			NavigationManager.NavigateTo("/GirisYap");
+		}
+		else
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
+		}
+	}
+	private void Iptal()
+	{
+		NavigationManager.NavigateTo(geriUrl);
+	}
+	private string geriUrl = "/kullanicilar";
 }
