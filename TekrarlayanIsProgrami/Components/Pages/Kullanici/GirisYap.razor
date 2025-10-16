@@ -1,30 +1,31 @@
 ﻿@page "/GirisYap"
-@page "/"   
-@layout EmptyLayout 
+@page "/"
+@layout EmptyLayout
 <RadzenDialog></RadzenDialog>
 
 <div class="login-container @(isRegisterActive ? "slide-active" : "")">
-    <!-- Giriş Formu -->
-    <div class="form login-form">
-       <EditForm Model="@loginModel" OnValidSubmit="()=>OnLogin(loginModel)">
-				<h3>🔐Giriş Yap</h3>
-            <p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
+	<!-- Giriş Formu -->
+	<div class="form login-form">
+		<EditForm Model="@loginModel" OnValidSubmit="() => OnLogin(loginModel)">
+			<h3>🔐Giriş Yap</h3>
+			<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
 
 			<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="✉E-posta" />
-			<RadzenPassword @bind-Value="loginModel.Sifre"  Style="width:100%; margin-top:9px;" Placeholder="🔑Şifre" Icon="@eyeIcon" />
+			<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%; margin-top:9px;" Placeholder="🔑Şifre" Icon="@eyeIcon" />
 			<a href="#" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti">🔁Şifrenimi Unuttun?</a>
 			@*<RadzenLink Text="🔁 Şifrenizi unuttunuz mu?" Path="@OpenSifreSifirlaDialog" class="sifreBaglanti"></RadzenLink>*@
 
-			<RadzenButton Click="()=>OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>  
-        </EditForm></div>
-		<!-- Kayıt Formu -->
+			<RadzenButton Click="() => OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
+		</EditForm>
+	</div>
+	<!-- Kayıt Formu -->
 
-    <div class="form register-form">
-        <EditForm Model="@newUser" OnValidSubmit="OnSubmit">
+	<div class="form register-form">
+		<EditForm Model="@newUser" OnValidSubmit="OnSubmit">
 			<div class="row">
 				<h3>Hesap Oluştur</h3>
 				<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
-					<div class="col-sm-12 col-lg-12 container">
+				<div class="col-sm-12 col-lg-12 container">
 					<RadzenFormField Text="Ad">
 						<RadzenTextBox Name="TxtAd" @bind-Value="newUser.Adi" style="width:100%;" />
 					</RadzenFormField>
@@ -56,29 +57,29 @@
 					</RadzenFormField>
 					<RadzenRequiredValidator Component="TxtSifreTekrar" Text="Lütfen Şİfrenizi Tekrar Yazınız."></RadzenRequiredValidator>
 				</div>
-				<RadzenButton Click="@OnSubmit"   Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
+				<RadzenButton Click="@OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
 			</div>
-               </EditForm>
-            </div>
-			<!-- Slider Panel -->
-			<div class="slider-panel">
-				<RadzenCard class="slider-content">
-					@if (!isRegisterActive)
-					{
-						<h2>Merhabalar!</h2>
-				        <p>Tüm site özelliklerini kullanmak için kişisel bilgilerinizle kayıt olun.</p>
+		</EditForm>
+	</div>
+	<!-- Slider Panel -->
+	<div class="slider-panel">
+		<RadzenCard class="slider-content">
+			@if (!isRegisterActive)
+			{
+				<h2>Merhabalar!</h2>
+				<p>Tüm site özelliklerini kullanmak için kişisel bilgilerinizle kayıt olun.</p>
 				<RadzenButton Click="@(() => isRegisterActive = true)" Text="KAYIT OL" Style="background-color: white;color: #2196f3; margin-top:10px;" />
 			}
-					else
-					{
-				        <h2>Tekrar Hoş Geldiniz!</h2>
-				        <p>Zaten hesabınız var mı? Giriş yapın.</p>
-						<RadzenButton Click="@(() => isRegisterActive = false)" Text="GİRİŞ YAP" Style="background-color: white; color: #2196f3; margin-top:10px;" />
-					}
+			else
+			{
+				<h2>Tekrar Hoş Geldiniz!</h2>
+				<p>Zaten hesabınız var mı? Giriş yapın.</p>
+				<RadzenButton Click="@(() => isRegisterActive = false)" Text="GİRİŞ YAP" Style="background-color: white; color: #2196f3; margin-top:10px;" />
+			}
 
-				</RadzenCard>
-			</div>
-			</div>
+		</RadzenCard>
+	</div>
+</div>
 @code {
 	bool isRegisterActive = false;
 	private LoginModel loginModel = new LoginModel();
@@ -133,10 +134,10 @@
 		}
 	}
 	//Popup için bunlar.
-	[Inject] DialogService dialogService{ get; set; }
+	[Inject] DialogService dialogService { get; set; }
 	void OpenSifreSifirlaDialog()
 	{
-		dialogService.Open<SifreSifirla>("",new Dictionary<string ,object>());
+		dialogService.Open<SifreSifirla>("", new Dictionary<string, object>());
 	}
 	//Giriş Yap taki şifre textboxunda gözün eklenmesi için.
 	private string sifreType = "password";
