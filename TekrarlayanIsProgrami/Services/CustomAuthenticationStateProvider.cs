@@ -30,7 +30,7 @@ namespace TekrarlayanIsProgrami.Services
                 new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
                 new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
                 new Claim(ClaimTypes.Email, _currentUser.EPosta)
-            }, "apiauth");
+            }, "apiauth_type");
             }
             else
             {
@@ -80,15 +80,6 @@ namespace TekrarlayanIsProgrami.Services
                     Mesaj =$"Şifre en az 8 karakter olmalıdır."
                 };
             }
-            //else if(user.Sifre!=user.SifreTekrar)
-            //{
-            //    return new AuthResult
-            //    {
-            //        Basarili=false,
-            //        Mesaj=$"Lütfen Şifreleri Aynı Giriniz."
-            //    };
-            //}
-
                 try
                 {
                     // Repo metodunu User döndürecek şekilde dönüyor.

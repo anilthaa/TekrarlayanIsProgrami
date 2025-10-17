@@ -1,4 +1,22 @@
-﻿   <CascadingAuthenticationState>
+﻿@using TekrarlayanIsProgrami.Components.Pages
+  <CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@GetLayoutType()">
+                <NotAuthorized>
+                    <RedirectToLogin  />
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>Sayfa bulunamadı.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+@*bu yazılıydı.*@
+@*  <CascadingAuthenticationState>
        <RadzenComponents></RadzenComponents>
       <Router AppAssembly="@typeof(Program).Assembly">
         <Found Context="routeData">
@@ -10,7 +28,7 @@
             </NotFound>
         
     </Router>
-</CascadingAuthenticationState>
+</CascadingAuthenticationState> *@
 @code {
     private Type GetLayoutType()
     {
