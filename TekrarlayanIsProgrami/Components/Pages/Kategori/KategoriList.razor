@@ -1,13 +1,13 @@
 ﻿@page "/Kategori"
 @layout MainLayout
 <RadzenCard Style="margin:20px;">
-	<h3>📂 Kategori Yönetimi</h3>
+	<h3>Kategori Listesi</h3>
 
 	<RadzenButton Text="Yeni Kategori" Icon="add_circle"
 				  Style="margin-bottom:15px; background:#3498db; color:white"
 				  Click="@Ekle" />
 
-	<RadzenButton Text="Test" Click="@Deneme"></RadzenButton>
+	
 	@if (DataList == null || !DataList.Any())
 	{
 		<p>Veri yükleniyor... veya veri bulunamadı.</p>
@@ -46,14 +46,7 @@
 
 	}
 
-	private async Task Deneme()
-	{
-		try
-		{
-			await DialogService.OpenAsync<Radzen.Blazor.RadzenLabel>("Test", new Dictionary<string, object>(), new DialogOptions { Width = "300px" });
-		}
-		catch (Exception ex) { Console.WriteLine($"Test Dialog Hatası: {ex}"); }
-	}
+	
 	private async Task YukleDataAsync()
 	{
 		try

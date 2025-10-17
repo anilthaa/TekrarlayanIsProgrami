@@ -15,6 +15,7 @@
         public string? HaftaninGunu {  get; set; }
         public int? AyinGunu {  get; set; }
         public DateTime? SonrakiCalismaTarihi { get; set; }
-        
+        public bool Tamamlandi { get; set; }
+
     }
 }
