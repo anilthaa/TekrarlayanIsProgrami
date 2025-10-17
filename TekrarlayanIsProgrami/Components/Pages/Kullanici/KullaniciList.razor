@@ -37,9 +37,9 @@
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="180px">
-                <Template Context="k">
+                <Template Context="user">
                     <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@OpenEditDialog" Style="margin-right:5px;" />
-                    <RadzenButton  ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="() => Sil(k.ID)" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
                 </Template>
             </RadzenDataGridColumn>
         </Columns>
@@ -73,17 +73,17 @@
         NavigationManager.NavigateTo($"/kullanicilar/edit/{id}?geri=/kullanicilar");
     }
 
-    private async void Sil(int id)
-    {
-        var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
-        if (kullanici == null) return;
+    // private async void Sil(int id)
+    //  {
+    //      var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
+    //      if (kullanici == null) return;
 
-        if (await Js.InvokeAsync<bool>("confirm", $"'{kullanici.Adi}' silinsin mi?"))
-        {
-            await _kullaniciRepo.DeleteAsync(kullanici.ID);
-            kullanicilar = await _kullaniciRepo.GetAllAsync();
-        }
-    }
+    //      if (await Js.InvokeAsync<bool>("confirm", $"'{kullanici.Adi}' silinsin mi?"))
+    //      {
+    //          await _kullaniciRepo.DeleteAsync(kullanici.ID);
+    //          kullanicilar = await _kullaniciRepo.GetAllAsync();
+    //      }
+    //  }
 
     private void YeniKullanici()
     {
@@ -102,6 +102,32 @@
     void Yenile()
     {
         kullaniciGrid.Reload();
+    }
+
+    private async Task ConfirmDelete(User user)
+    {
+        bool? result = await DialogService.Confirm(
+            $"Kullanıcı {user.Adi} silinsin mi?",
+            "Onay",
+            new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" }
+        );
+
+        if (result == true)
+        {
+            await DeleteUser(user);
+        }
+        else
+        {
+            // Kullanıcı “Hayır” dedi → işlem iptal
+            Console.WriteLine("Silme işlemi iptal edildi.");
+        }
+    }
+
+    private async Task DeleteUser(User user)
+    {
+        // Repository veya Dapper ile sil
+        kullanicilar.Remove(user); // listeyi güncelle
+        notificationService.Notify(NotificationSeverity.Success,"Başarılı",$"{user.Adi} Adlı Kullanıcı Silindi.");
     }
 
 }

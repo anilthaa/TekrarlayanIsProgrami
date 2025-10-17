@@ -30,7 +30,7 @@ namespace TekrarlayanIsProgrami.Services
                 new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
                 new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
                 new Claim(ClaimTypes.Email, _currentUser.EPosta)
-            }, "apiauth");
+            }, "apiauth_type");
             }
             else
             {

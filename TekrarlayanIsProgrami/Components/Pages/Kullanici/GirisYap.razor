@@ -29,37 +29,31 @@
 				<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
 				<div class="col-sm-12 col-lg-12 container">
 					<RadzenFormField Text="Ad">
-						<RadzenTextBox Name="TxtAd" @bind-Value="newUser.Adi" style="width:100%;" />
+						<RadzenTextBox @bind-Value="newUser.Adi" style="width:100%;" />
 					</RadzenFormField>
-					<RadzenRequiredValidator Component="TxtAd" Text="Ad zorunludur."></RadzenRequiredValidator>
-
 				</div>
-				<div class="col-sm-12 container">
+				<div class="col-sm-12">
 					<RadzenFormField Text="Soyad">
-						<RadzenTextBox Name="TxtSoyad" @bind-Value="newUser.Soyadi" style="width:100%;" />
+						<RadzenTextBox @bind-Value="newUser.Soyadi" style="width:100%;" />
 					</RadzenFormField>
-					<RadzenRequiredValidator Component="TxtSoyad" Text="Soyad zorunludur."></RadzenRequiredValidator>
 				</div>
 				<div class="col-lg-12">
 					<RadzenFormField Text="E-posta">
-						<RadzenTextBox Name="TxtEposta" @bind-Value="newUser.EPosta" style="width:100%;" />
+						<RadzenTextBox @bind-Value="newUser.EPosta" style="width:100%;" />
 					</RadzenFormField>
 				</div>
-				<RadzenRequiredValidator Component="TxtEposta" Text="E-posta zorunludur."></RadzenRequiredValidator>
-
 				<div class="col-sm-12">
 					<RadzenFormField Text="Şifre">
-						<RadzenPassword Name="TxtSifre" @bind-Value="newUser.Sifre" style="width:100%;" Type="password"></RadzenPassword>
+						<RadzenPassword @bind-Value="newUser.Sifre" style="width:100%;" Type="password"></RadzenPassword>
 					</RadzenFormField>
-					<RadzenRequiredValidator Component="TxtSifre" Text="Sifre zorunludur."></RadzenRequiredValidator>
 				</div>
 				<div class="col-sm-12">
 					<RadzenFormField Text="Şifre Tekrar">
-						<RadzenPassword Name="TxtSifreTekrar" @bind-Value="newUser.SifreTekrar" style="width:100%;" Type="password"></RadzenPassword>
+						<RadzenPassword @bind-Value="newUser.SifreTekrar" style="width:100%;" Type="password"></RadzenPassword>
 					</RadzenFormField>
-					<RadzenRequiredValidator Component="TxtSifreTekrar" Text="Lütfen Şİfrenizi Tekrar Yazınız."></RadzenRequiredValidator>
 				</div>
 				<RadzenButton Click="OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
+				<RadzenButton Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
 			</div>
 		</EditForm>
 	</div>

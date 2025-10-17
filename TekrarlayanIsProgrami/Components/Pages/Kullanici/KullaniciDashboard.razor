@@ -1,7 +1,8 @@
 ﻿@page "/Dashboard"
 @layout MainLayout
- @*@attribute [Authorize]  
- sayfanın güvenliği için yazdık bunu*@ 
+@attribute [Authorize] 
+@*bunu ekledim.*@
+ @* sayfanın güvenliği için yazdık bunu yani kullanıcı giriş yapmamışsa dashboard sayfasına giremez.*@ 
     <h2>Hoş geldin, @currentUser?.Adi!</h2>
 
     <RadzenCard>
@@ -11,35 +12,7 @@
 
 
 
-    @* <header>
-        <h1>Tekrarlayan İş Programı</h1>
-        <nav>
-            <a href="#">Ana Sayfa</a>
-            <a href="https://localhost:7014/Profil">Profil</a>
-        </nav>
-    </header>
-
-    <RadzenCard class="container">
-        <RadzenCard class="welcome">
-            Hoşgeldiniz, <strong>Kullanıcı!</strong>
-        </RadzenCard>
-
-        <RadzenCard class="cards">
-            <RadzenCard class="card">
-                <h3>Görevlerim</h3>
-                <p>Toplam görev sayınız: 12</p>
-
-            </RadzenCard>
-            <RadzenCard class="card">
-                <h3>Tamamlanan İşler</h3>
-                <p>Bugüne kadar tamamlanan iş sayısı: 7</p>
-            </RadzenCard>
-            <RadzenCard class="card">
-                <h3>Yeni Görevler</h3>
-                <p>Bugün için eklenen yeni görev sayısı: 3</p>
-            </RadzenCard>
-        </RadzenCard>
-    </RadzenCard>
+   @*
 
     <footer>
         &copy; 2025 Tekrarlayan İş Programı
@@ -47,9 +20,5 @@
 @code {
     private User? currentUser;
 
-     @* override async Task OnInitializedAsync()
-     {
-         // Eğer login bilgilerini AuthProvider tutuyorsa:
-         currentUser = await girisSaglayici.GetCurrentUserAsync();
-     }*@
+  
 }
