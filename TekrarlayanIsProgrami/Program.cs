@@ -30,7 +30,6 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
-builder.Services.AddScoped<GorevRepository>();
 builder.Services.AddScoped<GorevLoglariRepository>();
 builder.Services.AddScoped<SifreService>();
 builder.Services.AddScoped<DataService>(serviceProvider =>
