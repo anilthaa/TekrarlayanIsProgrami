@@ -4,13 +4,10 @@
  <HeadContent>
   <link href="css/site.css" rel="stylesheet" />
 </HeadContent>
-
+<RadzenDialog></RadzenDialog>
 <RadzenLayout>
-    @if (!NavigationManager.Uri.Contains("/GirisYap") &&
-         !NavigationManager.Uri.Contains("/kullanicilar/edit"))
+    @if (!NavigationManager.Uri.Contains("/GirisYap"))
     {
-        
-
         <RadzenSidebar>
             @if (NavigationManager.Uri.Contains("/Dashboard") || NavigationManager.Uri.Contains("/kategori") || NavigationManager.Uri.Contains("/kullanicilar") || NavigationManager.Uri.Contains("/Gorevler"))
             {
@@ -29,28 +26,6 @@
         @Body
     </RadzenBody>
 </RadzenLayout>
-
-<!--Çağrı abinin yazdığı-->
-   @*  <RadzenLayout>
-       <RadzenHeader>
-
-       </RadzenHeader>
-       <RadzenSidebar>
-           
-       </RadzenSidebar>
-       <RadzenBody>
-           @Body
-       </RadzenBody>
-   </RadzenLayout>
-    @if (NavigationManager.Uri.Contains("Dashboard"))
-    {
-        <RadzenCard class="dashboard-nav">
-            <h3>📊 Dashboard</h3>
-                <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
-                <NavLink Path="/Kategori" class="nav-link">Kategoriler</NavLink>
-                <RadzenButton Text="Çıkış" Click="CikisYap" style="width:100%" class="radzen-button"></RadzenButton>
-        </RadzenCard>
-    }  *@
 @code{
     private async void CikisYap()
     {

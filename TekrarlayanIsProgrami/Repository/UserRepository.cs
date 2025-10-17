@@ -122,13 +122,20 @@ namespace TekrarlayanIsProgrami.Repository
 
             return user;
         }
-
+        //Bu kayıt Ol için bir eposta varmı kontrolu.
+        public async Task<bool> EpostaVarMiAsync(string EPosta)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            var sql = await conn.QueryFirstOrDefaultAsync<User>(
+               @"SELECT * FROM ""Kullanicilar"" WHERE ""EPosta"" = @EPosta", new { EPosta = EPosta });
+            return sql != null;
+        }
+        //Bu bizim şifremizi değiştirdiğimiz zaman tokenimizi değiştirmek için yazdık.
         public async Task SaveResetTokenAsync(int Id, string token)
         {
             using var conn = new NpgsqlConnection(_connectionString);
             var sql = @"UPDATE ""Kullanici"" SET ""ResetToken"" = @token WHERE ""ID"" = @id";
             await conn.ExecuteAsync(sql, new { token, id = Id });
         }
-
     }
 }

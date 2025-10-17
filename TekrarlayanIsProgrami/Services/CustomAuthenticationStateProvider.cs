@@ -30,7 +30,7 @@ namespace TekrarlayanIsProgrami.Services
                 new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
                 new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
                 new Claim(ClaimTypes.Email, _currentUser.EPosta)
-            }, "apiauth");
+            }, "apiauth_type");
             }
             else
             {
@@ -72,7 +72,15 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<AuthResult> KayitOlAsync(User user)
         {
-            if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
+            if (await _kullaniciRepo.EpostaVarMiAsync(user.EPosta))
+            {
+                return new AuthResult
+                {
+                    Basarili = false,
+                    Mesaj = $"Bu E-posta Zaten Kayıtlı!"
+                };
+            }
+            else if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult
                 {
@@ -80,29 +88,11 @@ namespace TekrarlayanIsProgrami.Services
                     Mesaj =$"Şifre en az 8 karakter olmalıdır."
                 };
             }
-            //else if(user.Sifre!=user.SifreTekrar)
-            //{
-            //    return new AuthResult
-            //    {
-            //        Basarili=false,
-            //        Mesaj=$"Lütfen Şifreleri Aynı Giriniz."
-            //    };
-            //}
-
                 try
                 {
                     // Repo metodunu User döndürecek şekilde dönüyor.
                     User kayitliUser = await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre);
-
-                if (user.Sifre != user.SifreTekrar || user.EPosta == null || user.Sifre == null || user.SifreTekrar == null)
-                {
-                    return new AuthResult
-                    {
-                        Basarili = false,
-                        Mesaj = "Kayıt sırasında bir hata oluştu.Lütfen Bilgilerinizi Kontrol Ediniz."
-                    };
-                }
-                else if (kayitliUser != null)
+                if (kayitliUser != null)
                     {
                         return new AuthResult
                         {
@@ -143,9 +133,6 @@ namespace TekrarlayanIsProgrami.Services
             };
         }
 
-        //    var userPrincipal = new ClaimsPrincipal(identity);
-        //    // Authentication state’i güncelle
-        //   AuthenticationStateProvider.NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(userPrincipal)));
         public async Task<User?> GetCurrentUserAsync() //Bu metot şu anda giriş yapmış olan kullanıcıyı sistemden bulur ve döndürür.
         {
             var authState = await GetAuthenticationStateAsync();

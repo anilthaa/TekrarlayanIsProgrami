@@ -1,0 +1,7 @@
+﻿@code {
+    //Kullanıcı giriş yapmadığı halde sayfalara girememesi için bu metodu ekledik app.razor sayfasında kullanmak için.
+    protected override void OnInitialized()
+    {
+        NavigationManager.NavigateTo("/GirisYap", true);
+    }
+}
