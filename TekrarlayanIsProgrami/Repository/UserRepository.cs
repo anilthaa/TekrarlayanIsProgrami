@@ -86,7 +86,7 @@ namespace TekrarlayanIsProgrami.Repository
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
         }
 
-        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre)
+        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre ,string SifreTekrar)
         {
             using var conn = GetConnection();
 

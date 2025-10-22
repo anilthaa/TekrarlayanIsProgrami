@@ -1,5 +1,7 @@
 ﻿@page "/kullanicilar"
 @layout MainLayout
+@attribute [Authorize]
+@*[Authorize(Roles = "Admin")] belirli roller erişebildiğini bellitiyoruz.*@ 
 <RadzenDialog></RadzenDialog>
 
 <RadzenCard class="container mt-4">
