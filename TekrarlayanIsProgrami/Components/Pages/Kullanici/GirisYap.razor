@@ -53,7 +53,6 @@
 					</RadzenFormField>
 				</div>
 				<RadzenButton Click="OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
-				<RadzenButton Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
 			</div>
 		</EditForm>
 	</div>
@@ -89,6 +88,9 @@
 
 		if (result.Basarili) //Eğer sonuç başarılı ise.
 		{
+			var user = result.User;
+			//giriş yapan kullanıcıyı sisteme tanıtmak
+			((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsAuthenticated(user);
 			notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
 			NavigationManager.NavigateTo("/Dashboard");
 		}
@@ -113,27 +115,28 @@
 
 	private async Task OnSubmit()
 	{
-		var result = await girisSaglayici.KayitOlAsync(newUser);
-
-		newUser.Adi = "newUser.Adi?.Trim()";
-
-		newUser.Soyadi = "newUser.Soyadi?.Trim()";
 
 		//Şifre Tekrar ile Şifre farklıysa.
 		if (newUser.Sifre != newUser.SifreTekrar)
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Değil!");
+			// notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Değil!");
+			await DialogService.Alert("Şifre ile Tekrar Şifre Aynı Değil!", "UYARI");
 			return;   // işlemi durdurur
 		}
+
+		var result = await girisSaglayici.KayitOlAsync(newUser);
+
 		// Bildirim ve yönlendirme
-		 else if (result.Basarili)
+	    if (result.Basarili)
 		{
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı" ,result.Mesaj);
+			//notificationService.Notify(NotificationSeverity.Success, "Başarılı" ,result.Mesaj);
+			await DialogService.Alert(result.Mesaj, "BAŞARILI");
 			NavigationManager.NavigateTo("/GirisYap");
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata",result.Mesaj);
+			await DialogService.Alert(result.Mesaj, "UYARI");
+			//notificationService.Notify(NotificationSeverity.Error, "Hata",result.Mesaj);
 		}
 
 	}
