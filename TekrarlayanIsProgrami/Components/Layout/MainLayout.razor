@@ -29,7 +29,8 @@
 @code{
     private async void CikisYap()
     {
-        await girisSaglayici.CikisYapAsync();
+        ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
+       // await girisSaglayici.CikisYapAsync();
         NavigationManager.NavigateTo("/GirisYap", true);
     }
 }

@@ -86,7 +86,7 @@ namespace TekrarlayanIsProgrami.Repository
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
         }
 
-        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre)
+        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre ,string SifreTekrar)
         {
             using var conn = GetConnection();
 
@@ -127,7 +127,7 @@ namespace TekrarlayanIsProgrami.Repository
         {
             using var conn = new NpgsqlConnection(_connectionString);
             var sql = await conn.QueryFirstOrDefaultAsync<User>(
-               @"SELECT * FROM ""Kullanicilar"" WHERE ""EPosta"" = @EPosta", new { EPosta = EPosta });
+               @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta", new { EPosta = EPosta });
             return sql != null;
         }
         //Bu bizim şifremizi değiştirdiğimiz zaman tokenimizi değiştirmek için yazdık.
