@@ -112,12 +112,6 @@
 
 	private async Task OnSubmit()
 	{
-		var result = await girisSaglayici.KayitOlAsync(newUser);
-
-		newUser.Adi = "newUser.Adi?.Trim()";
-
-		newUser.Soyadi = "newUser.Soyadi?.Trim()";
-
 		//Şifre Tekrar ile Şifre farklıysa.
 		if (newUser.Sifre != newUser.SifreTekrar)
 		{
