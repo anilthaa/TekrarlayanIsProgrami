@@ -127,7 +127,7 @@ namespace TekrarlayanIsProgrami.Repository
         {
             using var conn = new NpgsqlConnection(_connectionString);
             var sql = await conn.QueryFirstOrDefaultAsync<User>(
-               @"SELECT * FROM ""Kullanicilar"" WHERE ""EPosta"" = @EPosta", new { EPosta = EPosta });
+               @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta", new { EPosta = EPosta });
             return sql != null;
         }
         //Bu bizim şifremizi değiştirdiğimiz zaman tokenimizi değiştirmek için yazdık.

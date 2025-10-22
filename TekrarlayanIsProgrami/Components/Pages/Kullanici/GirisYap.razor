@@ -76,6 +76,9 @@
 	</div>
 </div>
 @code {
+
+
+
 	bool isRegisterActive = false;
 	private LoginModel loginModel = new LoginModel();
 
@@ -112,6 +115,7 @@
 
 	private async Task OnSubmit()
 	{
+
 		//Şifre Tekrar ile Şifre farklıysa.
 		if (newUser.Sifre != newUser.SifreTekrar)
 		{
