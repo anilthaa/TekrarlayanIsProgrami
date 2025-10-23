@@ -13,7 +13,7 @@
 			<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="✉E-posta" />
 			<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%; margin-top:9px;" Placeholder="🔑Şifre" Icon="@eyeIcon" />
 			@*<a href="/sifremi-unuttum" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti">🔁Şifrenimi Unuttun?</a>*@
-			<RadzenLink Text="🔁 Şifrenizi Unuttunuz mu?" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti"></RadzenLink>
+			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifreSifirlaDialog" class="sifreBaglanti"></RadzenButton>
 
 			<RadzenButton Click="() => OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
 		</EditForm>
@@ -76,9 +76,6 @@
 	</div>
 </div>
 @code {
-
-
-
 	bool isRegisterActive = false;
 	private LoginModel loginModel = new LoginModel();
 
@@ -90,7 +87,7 @@
 		{
 			var user = result.User;
 			//giriş yapan kullanıcıyı sisteme tanıtmak
-			((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsAuthenticated(user);
+			// ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsAuthenticated(user);
 			notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
 			NavigationManager.NavigateTo("/Dashboard");
 		}
@@ -144,8 +141,7 @@
 	[Inject] DialogService dialogService { get; set; }
 	void OpenSifreSifirlaDialog()
 	{
-		DialogService.Open<SifreSifirla>("Şifre Sıfırla",
-				new Dictionary<string, object>());
+		dialogService.Open<SifreSifirla>("Şifre Sıfırla",new Dictionary<string, object>());
 	}
 	//Giriş Yap taki şifre textboxunda gözün eklenmesi için.
 	private string sifreType = "password";
