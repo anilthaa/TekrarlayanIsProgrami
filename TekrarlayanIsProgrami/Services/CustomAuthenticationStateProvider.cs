@@ -19,12 +19,12 @@ namespace TekrarlayanIsProgrami.Services
         private ClaimsPrincipal _user;
         private readonly UserRepository _kullaniciRepo;
 
-        public CustomAuthenticationStateProvider(UserRepository dbContext,IJSRuntime Js)
+        public CustomAuthenticationStateProvider(UserRepository dbContext, IJSRuntime js)
         {
             _kullaniciRepo = dbContext;
-            this.Js = Js;
+            Js = js;
         }
-        public override  Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             ClaimsIdentity identity;
             if (_currentUser != null)
