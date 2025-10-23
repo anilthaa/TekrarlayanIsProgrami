@@ -336,14 +336,9 @@
 				notificationService.Notify(NotificationSeverity.Error, "Hata", sonuc.SonucAciklama);
 
 				item.Tamamlandi = !item.Tamamlandi;
-				if (item.Tamamlandi)
-				{
-					item.Aktif = true;
-				}
-				else
-				{
-					item.Aktif = false;
-				}
+
+				item.Aktif = !item.Aktif;
+
 			}
 		}
 		catch (Exception ex)
