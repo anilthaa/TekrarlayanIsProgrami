@@ -9,21 +9,25 @@ using System.Threading.Tasks;
 using TekrarlayanIsProgrami.Models;
 using TekrarlayanIsProgrami.Repository;
 using static Dapper.SqlMapper;
+using static System.Net.WebRequestMethods;
 namespace TekrarlayanIsProgrami.Services
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private readonly IJSRuntime Js;
+        private readonly IJSRuntime _Js;
         private User _currentUser;
         private ClaimsPrincipal anonymous = new ClaimsPrincipal(new ClaimsIdentity());
         private ClaimsPrincipal _user;
         private readonly UserRepository _kullaniciRepo;
+        private readonly HttpClient _http;
 
-        public CustomAuthenticationStateProvider(UserRepository dbContext, IJSRuntime js)
+        public CustomAuthenticationStateProvider(UserRepository dbContext, IJSRuntime Js, HttpClient http)
         {
             _kullaniciRepo = dbContext;
-            Js = js;
+            _Js = Js;
+            _http = http;
         }
+
         public override Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             ClaimsIdentity identity;
@@ -44,22 +48,36 @@ namespace TekrarlayanIsProgrami.Services
             var user = new ClaimsPrincipal(identity);
             return Task.FromResult(new AuthenticationState(user));
         }
-
         //Kullanıcının giriş yaptığını sisteme bildirmek.
         public async Task MarkUserAsAuthenticated(User user)
         {
             _currentUser = user;
             var json = JsonSerializer.Serialize(user);
-            await Js.InvokeVoidAsync("localStorage.setItem", "_currentUser", json);
+            await _Js.InvokeVoidAsync("localStorage.setItem", "_currentUser", json);
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
         //Kullanıcının çıkış yaptığını sisteme bildirmek
         public async Task MarkUserAsLoggedOut()
         {
             _currentUser = null;
-            await Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
+            await _Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
+        //
+        public async Task LoadUserFromLocalStorageAsync()
+        {
+            var userJson = await _Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+            if (!string.IsNullOrEmpty(userJson))
+            {
+                var user = JsonSerializer.Deserialize<User>(userJson);
+                if (user != null)
+                {
+                    _currentUser = user;
+                    NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+                }
+            }
+        }
+
         public async Task<AuthResult> GirisYapAsync(string eposta ,string sifre)
         {
             var Kullanici = await _kullaniciRepo.GetByEmailAsync(eposta,sifre);
@@ -92,16 +110,16 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<AuthResult> KayitOlAsync(User user)
         {
-            var kullanici =await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre, user.SifreTekrar);
-            if(kullanici==null)
-            {
-                return new AuthResult
-                {
-                    Basarili = false,
-                    Mesaj=$"Lütfen Bilgilerinizi Doldurunuz!"
-                };
-            }
-            else if (await _kullaniciRepo.EpostaVarMiAsync(user.EPosta))
+            //var kullanici =await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre, user.SifreTekrar);
+            //if(kullanici==null)
+            //{
+            //    return new AuthResult
+            //    {
+            //        Basarili = false,
+            //        Mesaj=$"Lütfen Bilgilerinizi Doldurunuz!"
+            //    };
+            //}
+            if (await _kullaniciRepo.EpostaVarMiAsync(user.EPosta))
             {
                 return new AuthResult
                 {
@@ -181,6 +199,20 @@ namespace TekrarlayanIsProgrami.Services
             }
 
            return null;
+        }
+        //Tarayıcıda kullanıcının token ı gelsin diye yazdık.
+        public async Task<AuthResult> Login(string eposta, string sifre)
+        {
+            var loginData = new { Email = eposta, Password = sifre };
+            var response = await _http.PostAsJsonAsync("api/auth/login", loginData);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<AuthResult>();
+                return result; // AuthResult içinde Token var
+            }
+
+            return null;
         }
         public Task CikisYapAsync()
         {

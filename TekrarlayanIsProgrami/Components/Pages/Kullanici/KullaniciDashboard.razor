@@ -1,14 +1,24 @@
-﻿@page "/Dashboard"
+﻿@page "/dashboard"
 @layout MainLayout
-@* @attribute [Authorize] *@
-@*bunu ekledim.*@
- @* sayfanın güvenliği için yazdık bunu yani kullanıcı giriş yapmamışsa dashboard sayfasına giremez.*@ 
+@attribute [Authorize] 
+@if (loading)
+{
+    <p>Yükleniyor...</p>
+}
+else if (currentUser == null)
+{
+    <p>Kullanıcı bulunamadı. Giriş sayfasına yönlendiriliyorsunuz...</p>
+    @* Yönlendirme *@
+    NavigationManager.NavigateTo("/GirisYap");
+}
+else{
     <h2>Hoş geldin, @currentUser?.Adi!</h2>
 
     <RadzenCard>
         <h4>📊 Kontrol Paneli</h4>
         <p>Burada istatistikler, bildirimler veya kullanıcı bilgileri yer alacak.</p>
     </RadzenCard>
+}
 
 
 
@@ -19,6 +29,19 @@
     </footer> *@
 @code {
     private User? currentUser;
+    private bool loading = true;
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserFromLocalStorageAsync();
+    }
+    private async Task LoadUserFromLocalStorageAsync()
+    {
+        var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "currentUser");
+        if (!string.IsNullOrEmpty(userJson))
+        {
+            currentUser = JsonSerializer.Deserialize<User>(userJson);
+        }
+    }
 
   
 }
