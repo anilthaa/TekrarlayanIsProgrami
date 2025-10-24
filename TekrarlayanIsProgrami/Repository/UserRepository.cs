@@ -137,5 +137,11 @@ namespace TekrarlayanIsProgrami.Repository
             var sql = @"UPDATE ""Kullanici"" SET ""ResetToken"" = @token WHERE ""ID"" = @id";
             await conn.ExecuteAsync(sql, new { token, id = Id });
         }
+        public async Task<User?> SifreEmailAsync(string EPosta)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta });
+        }
     }
 }

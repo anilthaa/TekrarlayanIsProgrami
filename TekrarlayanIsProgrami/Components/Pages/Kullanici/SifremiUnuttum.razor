@@ -1,5 +1,4 @@
-﻿@page "/sifremi-unuttum"
-@layout MainLayout
+﻿@layout MainLayout
 
 <RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
     <h3>Şifremi Unuttum</h3>
@@ -24,11 +23,11 @@
 
     private async Task OnSubmit()
     {
-        var kullanici = await _kullaniciRepo.GetByEmailAsync(model.Eposta ,model.Sifre);
+        var kullanici = await _kullaniciRepo.SifreEmailAsync(model.Eposta);
         if (kullanici == null)
         {
-            //bilgiMesaji = "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.";
-            Console.WriteLine("Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
+            bilgiMesaji = "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.";
+            //Console.WriteLine("Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
             return;
         }
 

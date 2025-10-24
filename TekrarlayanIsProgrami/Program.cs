@@ -1,9 +1,11 @@
-﻿using TekrarlayanIsProgrami.Components;
-using Radzen;
-using TekrarlayanIsProgrami.Services;
-using Microsoft.AspNetCore.Components.Authorization;
-using TekrarlayanIsProgrami.Repository;
+﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
+using Radzen;
+using Radzen.Blazor.Markdown;
+using System.ComponentModel;
+using TekrarlayanIsProgrami.Components;
+using TekrarlayanIsProgrami.Repository;
+using TekrarlayanIsProgrami.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtService= new JwtService(); //JwtServive nesnesi oluştur.
@@ -17,23 +19,33 @@ Console.WriteLine("\n Token geçerli mi?" +Valid);
 var connectionString = builder.Configuration.GetConnectionString("PostgreSqlConnection"); // ConnectionString.
 
 // Add services to the container.
+builder.Services.AddAuthentication("Identity.Application")
+    .AddCookie("Identity.Application"); // scheme ismi önemli
 builder.Services.AddRazorComponents()
      .AddInteractiveServerComponents();
+builder.Services.AddHttpClient<AuthService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7014/"); // API adresin
+});
 
 
+builder.Services.AddControllers();
+builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<TooltipService>(); 
-builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<GorevLoglariRepository>();
 builder.Services.AddScoped<SifreService>();
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<DataService>(serviceProvider =>
     new DataService(builder.Configuration.GetConnectionString("PostgreSqlConnection")));
+builder.Services.AddControllers();
+
 
 
 
@@ -54,7 +66,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
