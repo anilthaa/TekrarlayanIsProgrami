@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\css\AdminDashboard.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\css\AdminDashboard.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Devart.Data.PostgreSql" Version="8.4.290" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.21" />
