@@ -11,6 +11,11 @@ namespace TekrarlayanIsProgrami.Api
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        private readonly JwtService _jwtService;
+        public AuthController(JwtService jwtService) 
+        {
+            _jwtService = jwtService;
+        }
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequest model)
         {
@@ -23,10 +28,11 @@ namespace TekrarlayanIsProgrami.Api
             return Unauthorized(new AuthResult { Basarili = false, Mesaj = "Geçersiz giriş" });
         }
 
+
         private string GenerateJwtToken(string email)
         {
             // Burada JWT üretme mantığını yaz
-            return "örnek-jwt-token";
+            return _jwtService.GenerateToken(email);
         }
 
     }

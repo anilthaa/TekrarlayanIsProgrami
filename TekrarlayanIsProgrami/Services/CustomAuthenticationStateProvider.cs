@@ -88,6 +88,10 @@ namespace TekrarlayanIsProgrami.Services
                     Basarili = false,
                     Mesaj = $"E-posta veya Şifre Hatalı!"
                 };
+
+                await MarkUserAsAuthenticated(Kullanici);
+
+                return new AuthResult { Basarili = true, Mesaj=$"Hoşgeldiniz {Kullanici.Adi}" };
             }
             else
             {
@@ -127,7 +131,7 @@ namespace TekrarlayanIsProgrami.Services
                     Mesaj = $"Bu E-posta Zaten Kayıtlı!"
                 };
             }
-            else if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
+            if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult
                 {
@@ -135,7 +139,7 @@ namespace TekrarlayanIsProgrami.Services
                     Mesaj =$"Şifre en az 8 karakter olmalıdır."
                 };
             }
-            else { 
+            
                 try
                 {
                     // Repo metodunu User döndürecek şekilde dönüyor.
@@ -159,8 +163,8 @@ namespace TekrarlayanIsProgrami.Services
                         Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
                     };
                 }
-            return default;
-                }
+                return new AuthResult { Basarili = false, Mesaj = "Bilinmeyen bir hata oluştu." };
+                
         }
 
         public async Task<AuthResult> UpdateAsync(User user)
@@ -187,14 +191,14 @@ namespace TekrarlayanIsProgrami.Services
             var authState = await GetAuthenticationStateAsync();
             var user = authState.User;
 
-            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            if (user.Identity?.IsAuthenticated==true)
             {
                 return new User
                 {
-                    ID = int.TryParse(user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0,
-                    Adi = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value?.Split(' ').FirstOrDefault() ?? "",
-                    Soyadi = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value?.Split(' ').Skip(1).FirstOrDefault() ?? "",
-                    EPosta = user.FindFirst(c => c.Type == ClaimTypes.Email)?.Value ?? ""
+                    ID = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0,
+                    Adi = user.FindFirst(ClaimTypes.Name)?.Value?.Split(' ').FirstOrDefault() ?? "",
+                    Soyadi = user.FindFirst(ClaimTypes.Name)?.Value?.Split(' ').Skip(1).FirstOrDefault() ?? "",
+                    EPosta = user.FindFirst(ClaimTypes.Email)?.Value ?? ""
                 };
             }
 
@@ -214,12 +218,11 @@ namespace TekrarlayanIsProgrami.Services
 
             return null;
         }
-        public Task CikisYapAsync()
+        public async Task CikisYapAsync()
         {
             _currentUser = null;
-            _user = anonymous;
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-            return Task.CompletedTask;
+            await _Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
         }
     }
 }

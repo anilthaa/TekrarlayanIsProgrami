@@ -1,11 +1,14 @@
-﻿using TekrarlayanIsProgrami.Models;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using TekrarlayanIsProgrami.Models;
 
 namespace TekrarlayanIsProgrami.Services
 {
     public class DataService : DBClass
     {
-        public DataService(string connectionString) : base(connectionString)
+        private readonly AuthenticationStateProvider _stateProvider;
+        public DataService(string connectionString, AuthenticationStateProvider stateProvider) : base(connectionString)
         {
+            _stateProvider = stateProvider;
         }
 
         public async Task<ItemKategori[]> GetKategori(int ID = 0)
@@ -39,6 +42,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<ItemGorev[]> GetGorevler()
         {
+            
             return (await SQLQueryAsync<ItemGorev>($@"
                 Select * From ""Gorev""
                 Where ""DelDate"" Is Null Order By ""BaslangicTarihi""")).ToArray();
@@ -46,6 +50,8 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<ItemGorev[]> YaklasanGorevlerAdmin()
         {
+            
+
             return (await SQLQueryAsync<ItemGorev>($@"
                 Select * From ""Gorev"" Where ""DelDate"" Is Null
                 And ""SonrakiCalismaTarihi"">=NOW() Order By ""SonrakiCalismaTarihi"" Asc")).ToArray();
@@ -53,6 +59,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<ItemGorev[]> GecmisGorevlerAdmin()
         {
+            
             return (await SQLQueryAsync<ItemGorev>($@"
                 Select * From ""Gorev""
                 Where ""DelDate"" Is Null
@@ -62,6 +69,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<DataResult<int>> SetGorev(ItemGorev item)
         {
+            
 
             if (item.ID.Equals(0) && item.DelUser.Equals(0))
             {
@@ -92,6 +100,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<(int aktif, int silinen, int tamamlanan)> GetIstatistik()
         {
+            
             var sql = @"
                 Select
                     Count(*) Filter (Where ""Aktif""=True And ""DelDate"" Is Null) As aktif,
@@ -102,6 +111,22 @@ namespace TekrarlayanIsProgrami.Services
             var list = await SQLQueryAsync<(int aktif, int silinen, int tamamlanan)>(sql);
             return list.FirstOrDefault();
 
+        }
+
+        private async Task CheckAdminRole()
+        {
+            var authState=await _stateProvider.GetAuthenticationStateAsync();
+            var user=authState.User;
+
+            if (!user.Identity.IsAuthenticated)
+            {
+                throw new UnauthorizedAccessException("Giriş yapmanız gerekiyor.");
+            }
+
+            if (!user.IsInRole("Administrator"))
+            {
+                throw new UnauthorizedAccessException("Bu verilere erişim yetkiniz yok.");
+            }
         }
 
 

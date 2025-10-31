@@ -6,30 +6,38 @@ using System.ComponentModel;
 using TekrarlayanIsProgrami.Components;
 using TekrarlayanIsProgrami.Repository;
 using TekrarlayanIsProgrami.Services;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Components;
 var builder = WebApplication.CreateBuilder(args);
-var jwtService= new JwtService(); //JwtServive nesnesi oluştur.
-string token = jwtService.GenerateToken("Kullanici1"); //token oluştur.
-Console.WriteLine("Oluşturulan Token:");//Console ekranında oluşturulan token i yazcak.
-Console.WriteLine(token);
+//var jwtService= new JwtService(); //JwtServive nesnesi oluştur.
+//string token = jwtService.GenerateToken("Kullanici1"); //token oluştur.
+//Console.WriteLine("Oluşturulan Token:");//Console ekranında oluşturulan token i yazcak.
+//Console.WriteLine(token);
 
-bool Valid=jwtService.ValidateToken(token); //Token i doğrula.
-Console.WriteLine("\n Token geçerli mi?" +Valid);
+//bool Valid=jwtService.ValidateToken(token); //Token i doğrula.
+//Console.WriteLine("\n Token geçerli mi?" +Valid);
+
+builder.Services.AddSingleton<JwtService>();
 
 var connectionString = builder.Configuration.GetConnectionString("PostgreSqlConnection"); // ConnectionString.
 
 // Add services to the container.
 builder.Services.AddAuthentication("Identity.Application")
-    .AddCookie("Identity.Application"); // scheme ismi önemli
+    .AddCookie("Identity.Application", options=>
+    {
+        options.LoginPath = "/GirisYap";
+        options.AccessDeniedPath = "/AccessDenied";
+    }); // scheme ismi önemli
 builder.Services.AddRazorComponents()
      .AddInteractiveServerComponents();
-builder.Services.AddHttpClient<AuthService>(client =>
+builder.Services.AddScoped(sp =>
 {
-    client.BaseAddress = new Uri("https://localhost:7014/"); // API adresin
+    var nav = sp.GetRequiredService<NavigationManager>();
+    return new HttpClient { BaseAddress = new Uri(nav.BaseUri) };
 });
 
 
-builder.Services.AddControllers();
+
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<DialogService>();
@@ -43,7 +51,9 @@ builder.Services.AddScoped<GorevLoglariRepository>();
 builder.Services.AddScoped<SifreService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<DataService>(serviceProvider =>
-    new DataService(builder.Configuration.GetConnectionString("PostgreSqlConnection")));
+    new DataService(builder.Configuration.GetConnectionString("PostgreSqlConnection"),
+    stateProvider:serviceProvider.GetRequiredService<AuthenticationStateProvider>()
+    ));
 builder.Services.AddControllers();
 
 
