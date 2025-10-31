@@ -1,6 +1,6 @@
 ﻿@page "/kullanicilar"
 @layout MainLayout
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 @*[Authorize(Roles = "Admin")] belirli roller erişebildiğini bellitiyoruz.*@ 
 <RadzenDialog></RadzenDialog>
 
@@ -40,7 +40,7 @@
 
             <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="180px">
                 <Template Context="user">
-                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@OpenEditDialog" Style="margin-right:5px;" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="OpenEditDialog" Style="margin-right:5px;" />
                     <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
                 </Template>
             </RadzenDataGridColumn>
@@ -51,60 +51,45 @@
 @code {
     private List<User>? kullanicilar=new List<User>();
     private RadzenDataGrid<User> kullaniciGrid;
+    private User seciliKullanici;
 
     protected override async Task OnInitializedAsync()
     {
         kullanicilar = await _kullaniciRepo.GetAllAsync();
     }
-    [Inject]
-    DialogService dialogService { get; set; }
 
-    void OpenRegisterDialog()
+     async Task OpenRegisterDialog()
     {
-        dialogService.Open<KayitOl>(" ", new Dictionary<string, object>());
+        var result = await DialogService.OpenAsync<KayitOl>(" ", null, new DialogOptions { Width = "600px", Height = "auto" });
+
+        if (result == true) // popup "true" döndürürse kayıt yapılmıştır
+        {
+            kullanicilar = await _kullaniciRepo.GetAllAsync(); // listeyi güncelle
+            StateHasChanged(); // tabloyu yenile
+        }
     }
     //Popup sayfası açmak için.
     void OpenEditDialog()
     {
-        dialogService.Open<KullaniciTnm>(" ",new Dictionary<string, object>());
+        DialogService.Open<KullaniciTnm>(" ", new Dictionary<string, object>(),new DialogOptions { Width = "600px", Height = "auto" });
     }
 
-    private void Duzenle(int id)
-    {
-        // Düzenleme sayfasına yönlendirme
-        NavigationManager.NavigateTo($"/kullanicilar/edit/{id}?geri=/kullanicilar");
-    }
+    // private void Duzenle(int id)
+    // {
+    //     // Düzenleme sayfasına yönlendirme
+    //     NavigationManager.NavigateTo($"/kullanicilar/edit/{id}?geri=/kullanicilar");
+    // }
 
-    // private async void Sil(int id)
-    //  {
-    //      var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
-    //      if (kullanici == null) return;
-
-    //      if (await Js.InvokeAsync<bool>("confirm", $"'{kullanici.Adi}' silinsin mi?"))
-    //      {
-    //          await _kullaniciRepo.DeleteAsync(kullanici.ID);
-    //          kullanicilar = await _kullaniciRepo.GetAllAsync();
-    //      }
-    //  }
-
-    private void YeniKullanici()
-    {
-        // Yeni kullanıcı ekleme sayfasına yönlendirme
-        NavigationManager.NavigateTo("/KayitOl");
-    }
     void OnRowSelect(User selectedKullanici)
     {
         // Seçilen satırdaki kullanıcı bilgisi burada
         Console.WriteLine($"Seçilen kullanıcı: {selectedKullanici.Adi} {selectedKullanici.Soyadi}");
-
-        // Örnek: Detay sayfasına yönlendirme
-        // NavigationManager.NavigateTo($"/kullanici-detay/{selectedKullanici.ID}");
     }
 
-    void Yenile()
-    {
-        kullaniciGrid.Reload();
-    }
+    // void Yenile()
+    // {
+    //     kullaniciGrid.Reload();
+    // }
 
     private async Task ConfirmDelete(User user)
     {
@@ -116,20 +101,22 @@
 
         if (result == true)
         {
-            await DeleteUser(user);
+            await Sil(user.ID);
         }
         else
         {
-            // Kullanıcı “Hayır” dedi → işlem iptal
-            Console.WriteLine("Silme işlemi iptal edildi.");
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Silme işlemi iptal edildi.");
+            // Console.WriteLine("Silme işlemi iptal edildi.");
         }
     }
 
-    private async Task DeleteUser(User user)
+    private async Task Sil(int id)
     {
-        // Repository veya Dapper ile sil
-        kullanicilar.Remove(user); // listeyi güncelle
-        notificationService.Notify(NotificationSeverity.Success,"Başarılı",$"{user.Adi} Adlı Kullanıcı Silindi.");
-    }
+        var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
+        if (kullanici == null) return;
 
+        await _kullaniciRepo.DeleteAsync(kullanici.ID);
+        kullanicilar = await _kullaniciRepo.GetAllAsync();
+        StateHasChanged(); // tabloyu yeniler
+    }
 }

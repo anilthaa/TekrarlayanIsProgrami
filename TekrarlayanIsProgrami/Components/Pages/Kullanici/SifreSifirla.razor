@@ -7,16 +7,19 @@
 <RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
     <h3>Yeni Şifre Belirle</h3>
    <EditForm Model="@model" OnValidSubmit="@OnSubmit">
-        <RadzenTextBox @bind-Value="model.YeniSifre" Name="YeniSifre" Placeholder="Yeni şifre" Type="Password" Style="width:100%;" />
+        <RadzenFormField Text="Yeni Şifre" Style="width:100%">
+        <RadzenTextBox @bind-Value="model.YeniSifre" Name="YeniSifre" Type="Password" Style="width:100%;" />
+        </RadzenFormField>
+        <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:100%">
         <RadzenTextBox @bind-Value="model.YeniSifreTekrar" Name="YeniSifreTekrar" Placeholder="Yeni şifre tekrar" Type="Password" Style="width:100%;" />
-
+        </RadzenFormField>
         <RadzenButton Text="Şifreyi Kaydet" ButtonStyle="ButtonStyle.Primary" Type="Submit" Class="mt-3 w-100" />
     </EditForm>
 
-    @if (!string.IsNullOrEmpty(bilgiMesaji))
+   @*  @if (!string.IsNullOrEmpty(bilgiMesaji))
     {
         <RadzenAlert Severity="Info" Summary="Bilgi" Detail="@bilgiMesaji" Class="mt-3" />
-    }
+    } *@
 </RadzenCard>
 
 @code {
@@ -31,12 +34,12 @@
         if (basarili)
         {
             notificationService.Notify(NotificationSeverity.Success,"Başarılı","Şifreniz Başarıyla Değiştirildi.");
-             await Task.Delay(5000);
+             await Task.Delay(1000);
              NavigationManager.NavigateTo("/GirisYap");
          }
          else
          {
-             bilgiMesaji = "Token geçersiz veya şifre değiştirilemedi.";
+            notificationService.Notify(NotificationSeverity.Error, "Başarısız", "Token geçersiz veya şifre değiştirilemedi.");
          }
     }
 

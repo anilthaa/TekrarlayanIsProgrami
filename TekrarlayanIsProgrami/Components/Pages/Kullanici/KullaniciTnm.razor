@@ -14,7 +14,6 @@ else
 			<RadzenTemplateForm Data="@kullanici" TItem="User" Submit="@Kaydet">
 				<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 					<DataAnnotationsValidator />
-					<ValidationSummary />
 					<RadzenLabel class="form-label">Adı</RadzenLabel>
 					<RadzenTextBox class="form-control" @bind-Value="kullanici.Adi" placeholder="Adı girin" />
 					<RadzenLabel class="form-label">Soyadı</RadzenLabel>

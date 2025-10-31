@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace TekrarlayanIsProgrami.Models
 {
@@ -12,7 +13,7 @@ namespace TekrarlayanIsProgrami.Models
         public string Soyadi { get; set; }
 
         [Required(ErrorMessage="Bu Alan Zorunludur.")]
-        [EmailAddress(ErrorMessage = "Geçerli bir e-posta girin.")]
+        [EmailAddress(ErrorMessage="Lütfen Geçerli E-posta Giriniz.")]
         public string EPosta { get; set; }
         public int KullaniciTip_ID { get; set; }
 
@@ -32,4 +33,5 @@ namespace TekrarlayanIsProgrami.Models
         public string ResetToken {  get; set; }
         public DateTime ResetTokenExpiry {  get; set; }
     }
+
 }

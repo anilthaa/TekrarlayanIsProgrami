@@ -7,15 +7,21 @@
 	<RadzenTemplateForm Data="@newUser" TItem="User" Submit="@OnSubmit">
 		<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 			<DataAnnotationsValidator />
-			<ValidationSummary /> 
 			<RadzenLabel class="form-label">Adı</RadzenLabel>
 			<RadzenTextBox class="form-control" @bind-Value="newUser.Adi" placeholder="Adı girin" />
+			<ValidationMessage For="@(() => newUser.Adi)"></ValidationMessage>
 			<RadzenLabel class="form-label">Soyadı</RadzenLabel>
 			<RadzenTextBox class="form-control" @bind-Value="newUser.Soyadi" placeholder="Soyadı girin" />
+			<ValidationMessage For="@(()=> newUser.Soyadi)"></ValidationMessage>
 			<RadzenLabel class="form-label">E-Posta</RadzenLabel>
 			<RadzenTextBox class="form-control" @bind-Value="newUser.EPosta" placeholder="E-Posta girin" />
+			<ValidationMessage For="@(() => newUser.EPosta)"></ValidationMessage>
 			<RadzenLabel class="form-label">Şifre</RadzenLabel>
 			<RadzenTextBox type="password" class="form-control" @bind-Value="newUser.Sifre" placeholder="Şifreyi girin" />
+			<ValidationMessage For="@(() => newUser.Sifre)"></ValidationMessage>
+			<RadzenLabel class="form-label">Şifre Tekrar</RadzenLabel>
+			<RadzenTextBox type="password" class="form-control" @bind-Value="newUser.SifreTekrar" placeholder="Şifreyi girin" />
+			<ValidationMessage For="@(() => newUser.SifreTekrar)"></ValidationMessage>
 			<RadzenCard class="btn-group">
 				<RadzenButton Text="Kaydet" Icon="save"  Click="@OnSubmit" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
 				<RadzenButton Text="İptal"  Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
@@ -24,9 +30,6 @@
 	</RadzenTemplateForm>
 
 </RadzenCard>
-
-
-
 
 @code {
 	private User newUser = new User
@@ -39,15 +42,21 @@
 	private async Task OnSubmit()
 	{
 		var result = await girisSaglayici.KayitOlAsync(newUser);
-		if (result.Basarili)
+	    if(newUser.Sifre!= newUser.SifreTekrar)
 		{
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
-			NavigationManager.NavigateTo("/GirisYap");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda.");
+		}
+		else if (result.Basarili)
+		{
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
+			NavigationManager.NavigateTo("/kullanicilar");
+			StateHasChanged();
 		}
 		else
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
 		}
+		DialogService.Close(true);
 	}
 	private void Iptal()
 	{
