@@ -86,7 +86,7 @@ namespace TekrarlayanIsProgrami.Repository
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
         }
 
-        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre ,string SifreTekrar)
+        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre ,string SifreTekrar, string? ResetToken)
         {
             using var conn = GetConnection();
 
@@ -97,14 +97,14 @@ namespace TekrarlayanIsProgrami.Repository
 
             var user = new User
             {
-                Adi =Adi, //Buraya @ eklenilcek gibi.
+                Adi = Adi, //Buraya @ eklenilcek gibi.
                 Soyadi = Soyadi,
                 EPosta = EPosta,
                 Sifre = Sifre,
                 Aktif = true,
                 CreUser = 1,
                 CreDate = DateTime.Now,
-                ResetToken = Guid.NewGuid().ToString()
+                ResetToken = ResetToken
             };
 
             user.ID = await conn.ExecuteScalarAsync<int>(sqlInsert, new
@@ -134,8 +134,10 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task SaveResetTokenAsync(int Id, string token)
         {
             using var conn = new NpgsqlConnection(_connectionString);
+            // ResetToken kolonu varchar(100) olduğu için uzun JWT'lerde taşma olmaması adına kısaltıyoruz
+            var tokenToStore = token != null && token.Length > 100 ? token.Substring(0, 100) : token;
             var sql = @"UPDATE ""Kullanici"" SET ""ResetToken"" = @token WHERE ""ID"" = @id";
-            await conn.ExecuteAsync(sql, new { token, id = Id });
+            await conn.ExecuteAsync(sql, new { token = tokenToStore, id = Id });
         }
         public async Task<User?> SifreEmailAsync(string EPosta)
         {

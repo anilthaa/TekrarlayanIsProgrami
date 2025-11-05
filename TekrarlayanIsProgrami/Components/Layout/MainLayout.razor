@@ -32,12 +32,24 @@
     {
         if (firstRender)
         {
-            await ((CustomAuthenticationStateProvider)girisSaglayici).LoadUserFromLocalStorageAsync();
+            // await ((CustomAuthenticationStateProvider)girisSaglayici).LoadUserFromLocalStorageAsync();
+            var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+            var token = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
+
+            if (!string.IsNullOrEmpty(userJson) && !string.IsNullOrEmpty(token))
+            {
+                await ((CustomAuthenticationStateProvider)girisSaglayici).LoadUserFromLocalStorageAsync();
+            }
+            else
+            {
+                await Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
+                await Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
+            }
         }
     }
     private async void CikisYap()
     {
-        ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
+        await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
        // await girisSaglayici.CikisYapAsync();
         NavigationManager.NavigateTo("/GirisYap", true);
     }
