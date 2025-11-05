@@ -1,5 +1,4 @@
 ﻿@layout MainLayout
-<!-- Arka plan ve sayfa ortalama -->
 
 <RadzenCard class="max-width:600px; margin:auto; padding:20px;">
 
@@ -7,20 +6,29 @@
 	<RadzenTemplateForm Data="@newUser" TItem="User" Submit="@OnSubmit">
 		<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 			<DataAnnotationsValidator />
-			<RadzenLabel class="form-label">Adı</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="newUser.Adi" placeholder="Adı girin" />
+			<RadzenFormField Text="Ad" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenTextBox class="form-control" @bind-Value="newUser.Adi" />
+			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.Adi)"></ValidationMessage>
-			<RadzenLabel class="form-label">Soyadı</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="newUser.Soyadi" placeholder="Soyadı girin" />
+
+			<RadzenFormField Text="Soyad" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenTextBox class="form-control" @bind-Value="newUser.Soyadi"/>
+			</RadzenFormField>
 			<ValidationMessage For="@(()=> newUser.Soyadi)"></ValidationMessage>
-			<RadzenLabel class="form-label">E-Posta</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="newUser.EPosta" placeholder="E-Posta girin" />
+
+			<RadzenFormField Text="E-posta" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenTextBox class="form-control" @bind-Value="newUser.EPosta" />
+			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.EPosta)"></ValidationMessage>
-			<RadzenLabel class="form-label">Şifre</RadzenLabel>
-			<RadzenTextBox type="password" class="form-control" @bind-Value="newUser.Sifre" placeholder="Şifreyi girin" />
+
+			<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenPassword class="form-control" @bind-Value="newUser.Sifre" />
+			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.Sifre)"></ValidationMessage>
-			<RadzenLabel class="form-label">Şifre Tekrar</RadzenLabel>
-			<RadzenTextBox type="password" class="form-control" @bind-Value="newUser.SifreTekrar" placeholder="Şifreyi girin" />
+
+			<RadzenFormField Text="Şifre Tekrar" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenPassword type="password" @bind-Value="newUser.SifreTekrar"/>
+			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.SifreTekrar)"></ValidationMessage>
 			<RadzenCard class="btn-group">
 				<RadzenButton Text="Kaydet" Icon="save"  Click="@OnSubmit" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
@@ -41,12 +49,20 @@
 
 	private async Task OnSubmit()
 	{
-		var result = await girisSaglayici.KayitOlAsync(newUser);
-	    if(newUser.Sifre!= newUser.SifreTekrar)
+		if (!EpostaGecerliMi(newUser.EPosta))
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
+			return;
+		}
+
+		if(newUser.Sifre!= newUser.SifreTekrar)
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda.");
+			return;
 		}
-		else if (result.Basarili)
+
+		var result = await girisSaglayici.KayitOlAsync(newUser);
+		if (result.Basarili)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
 			NavigationManager.NavigateTo("/kullanicilar");
@@ -54,13 +70,24 @@
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
+			notificationService.Notify(NotificationSeverity.Error,"Hata","Kayıt Sırasında Bir Hta Oluştu.");
 		}
 		DialogService.Close(true);
 	}
+	private bool EpostaGecerliMi(string eposta)
+	{
+		if (string.IsNullOrWhiteSpace(eposta))
+			return false;
+
+		var desen = @"^[\w\.-]+@(gmail\.com|hotmail\.com)$";
+		return Regex.IsMatch(eposta, desen, RegexOptions.IgnoreCase);
+	}
+
+
 	private void Iptal()
 	{
 		NavigationManager.NavigateTo(geriUrl);
+		notificationService.Notify(NotificationSeverity.Warning, "UYARI", "Kayıt İşleminiz İptal Edildi.");
 	}
 	private string geriUrl = "/kullanicilar";
 }

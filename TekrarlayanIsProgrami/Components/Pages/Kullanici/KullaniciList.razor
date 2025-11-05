@@ -4,15 +4,15 @@
 @*[Authorize(Roles = "Admin")] belirli roller erişebildiğini bellitiyoruz.*@ 
 <RadzenDialog></RadzenDialog>
 
-<RadzenCard class="container mt-4">
+<RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
     <h2 class="text-center mb-4">Kullanıcılar Listesi</h2>
 
     <RadzenCard style="margin-left:950px; margin-bottom:3px;">
-        <!--class="text-end mb-3-->
+      
         <RadzenButton Text="Yeni Kullanıcı Ekle" Style="background-color:royalblue;" Click="@OpenRegisterDialog"> </RadzenButton>
     </RadzenCard>
 
-    <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" TItem="User" RowSelect="@OnRowSelect"
+    <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name"  TItem="User" RowSelect="@OnRowSelect"
                     AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="true"
                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                     class="text-center align-middle">
@@ -27,20 +27,18 @@
 
             <RadzenDataGridColumn TItem="User" Title="Durum">
                 <Template Context="k">
-                    @if (k.Aktif)
-                    {
-                        <RadzenBadge Text="Aktif" Severity="Severity.Success" />
-                    }
-                    else
-                    {
-                        <RadzenBadge Text="Pasif" Severity="Severity.Secondary" />
-                    }
+                    <span style="cursor:pointer;" @onclick="() => ToggleDurum(k)">
+                        <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
+                                     Style="@(k.Aktif
+                                                 ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
+                                                 : "background-color:red;color:white;padding:5px 10px;border-radius:10px;")" />
+                    </span>
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="180px">
                 <Template Context="user">
-                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="OpenEditDialog" Style="margin-right:5px;" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
                     <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
                 </Template>
             </RadzenDataGridColumn>
@@ -51,46 +49,40 @@
 @code {
     private List<User>? kullanicilar=new List<User>();
     private RadzenDataGrid<User> kullaniciGrid;
-    private User seciliKullanici;
-
     protected override async Task OnInitializedAsync()
     {
         kullanicilar = await _kullaniciRepo.GetAllAsync();
     }
-
-     async Task OpenRegisterDialog()
+    //Popuplar.
+    private async Task OpenRegisterDialog()
     {
         var result = await DialogService.OpenAsync<KayitOl>(" ", null, new DialogOptions { Width = "600px", Height = "auto" });
 
-        if (result == true) // popup "true" döndürürse kayıt yapılmıştır
+        if (result == true) 
         {
-            kullanicilar = await _kullaniciRepo.GetAllAsync(); // listeyi güncelle
-            StateHasChanged(); // tabloyu yenile
+            kullanicilar = await _kullaniciRepo.GetAllAsync(); 
+            StateHasChanged(); 
         }
     }
-    //Popup sayfası açmak için.
-    void OpenEditDialog()
-    {
-        DialogService.Open<KullaniciTnm>(" ", new Dictionary<string, object>(),new DialogOptions { Width = "600px", Height = "auto" });
-    }
+    [Parameter]
+    public int KullaniciId { get; set; }
+    bool isDialogOpen{ get; set; }
 
-    // private void Duzenle(int id)
-    // {
-    //     // Düzenleme sayfasına yönlendirme
-    //     NavigationManager.NavigateTo($"/kullanicilar/edit/{id}?geri=/kullanicilar");
-    // }
+    private async Task OpenEditDialog(int id)
+    {
+         await DialogService.OpenAsync<KullaniciTnm>(
+              " ",
+              new Dictionary<string, object>() { { "KullaniciId", id } },
+              new DialogOptions() {Width = "600px", Height = "auto" }
+          );
+    }
+    //
 
     void OnRowSelect(User selectedKullanici)
     {
-        // Seçilen satırdaki kullanıcı bilgisi burada
         Console.WriteLine($"Seçilen kullanıcı: {selectedKullanici.Adi} {selectedKullanici.Soyadi}");
     }
-
-    // void Yenile()
-    // {
-    //     kullaniciGrid.Reload();
-    // }
-
+    //Silme İşlemi.
     private async Task ConfirmDelete(User user)
     {
         bool? result = await DialogService.Confirm(
@@ -105,8 +97,7 @@
         }
         else
         {
-            notificationService.Notify(NotificationSeverity.Error, "Hata", "Silme işlemi iptal edildi.");
-            // Console.WriteLine("Silme işlemi iptal edildi.");
+            notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Silme İşleminiz İptal Edildi.");
         }
     }
 
@@ -117,6 +108,14 @@
 
         await _kullaniciRepo.DeleteAsync(kullanici.ID);
         kullanicilar = await _kullaniciRepo.GetAllAsync();
-        StateHasChanged(); // tabloyu yeniler
+        StateHasChanged(); 
+    }
+    //
+    //Aktif-Pasif
+    private void ToggleDurum(User user)
+    {
+        user.Aktif = !user.Aktif;
+         _kullaniciRepo.UpdateAsync(user);
+        StateHasChanged();
     }
 }

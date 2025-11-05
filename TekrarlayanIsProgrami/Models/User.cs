@@ -12,8 +12,8 @@ namespace TekrarlayanIsProgrami.Models
         [Required(ErrorMessage = "Bu Alan Zorunludur.")]
         public string Soyadi { get; set; }
 
-        [Required(ErrorMessage="Bu Alan Zorunludur.")]
-        [EmailAddress(ErrorMessage="Lütfen Geçerli E-posta Giriniz.")]
+        [Required(ErrorMessage = "Bu Alan Zorunludur.")]
+        [EmailAddress(ErrorMessage = "Lütfen Geçerli E-posta Giriniz.")]
         public string EPosta { get; set; }
         public int KullaniciTip_ID { get; set; }
 
@@ -30,8 +30,19 @@ namespace TekrarlayanIsProgrami.Models
         public DateTime UpdDate { get; set; }
         public int DelUser { get; set; }
         public DateTime DelDate { get; set; }
-        public string ResetToken {  get; set; }
-        public DateTime ResetTokenExpiry {  get; set; }
-    }
+        public string ResetToken { get; set; }
+        public DateTime ResetTokenExpiry { get; set; }
+        public User Clone()
+        {
+            return new User
+            {
+                ID = this.ID,
+                Adi = this.Adi,
+                Soyadi = this.Soyadi,
+                EPosta = this.EPosta,
+                Sifre = this.Sifre
+            };
+        }
 
+    }
 }

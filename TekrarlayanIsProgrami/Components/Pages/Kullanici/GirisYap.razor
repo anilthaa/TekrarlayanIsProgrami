@@ -13,10 +13,7 @@
 			<RadzenTextBox @bind-Value="loginModel.E_Posta"/>
 			</RadzenFormField>
 			<RadzenFormField Text="🔑Şifre" Style="width:85%; margin-left:45px; margin-top:4px;">
-				<RadzenPassword @bind-Value="loginModel.Sifre" @ref="passwordInput" />
-				<RadzenIcon Icon="@eyeIcon"
-							Style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;"
-							Click="@TogglePassword" />
+				<RadzenPassword @bind-Value="loginModel.Sifre"/>
 			</RadzenFormField>
 			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" style="background-color:transparent; color:mediumpurple; margin-top:15px; margin-left:5px;"></RadzenButton>
 			<RadzenButton Click="() => OnLogin(loginModel)" Style="width:90%; margin-top:25px; margin-left:33px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
@@ -50,7 +47,7 @@
 				</div>
 				<div class="col-sm-12">
 					<RadzenFormField Text="Şifre" Style="width:85%; margin-left:45px; margin-top:4px;">
-						<RadzenPassword @bind-Value="newUser.Sifre" Type="password"></RadzenPassword>
+							<RadzenPassword @bind-Value="newUser.Sifre" />
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.Sifre)" />
 				</div>
@@ -90,15 +87,12 @@
 	{
 		var result = await girisSaglayici.GirisYapAsync(model.E_Posta, model.Sifre);
 
-		if (result.Basarili) //Eğer sonuç başarılı ise.
+		if (result.Basarili) 
 		{
 			var user = new User { EPosta = model.E_Posta, ResetToken = result.Token };
 			await girisSaglayici.MarkUserAsAuthenticated(user);
-
 			// Tarayıcıya token kaydet
 			await Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-
-			// Kontrol için console'a yazdır
 			var storedToken = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
 			notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
 			NavigationManager.NavigateTo("/dashboard");
@@ -124,23 +118,19 @@
 
 	private async Task OnSubmit()
 	{
-		// E-posta kontrolü
 		if (!EpostaGecerliMi(newUser.EPosta))
 		{
 			notificationService.Notify(NotificationSeverity.Error,"Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
 			return;
 		}
 
-		//Şifre Tekrar ile Şifre farklıysa.
 		if (newUser.Sifre != newUser.SifreTekrar)
 		{
 		    notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda!");
-			return;   // işlemi durdurur
+			return;   
 		}
 
 		var result = await girisSaglayici.KayitOlAsync(newUser);
-
-		// Bildirim ve yönlendirme
 	    if (result.Basarili)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı" ,result.Mesaj);
@@ -150,7 +140,6 @@
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata",result.Mesaj);
 		}
-
 	}
 	private bool EpostaGecerliMi(string eposta)
 	{
@@ -161,19 +150,26 @@
 		return Regex.IsMatch(eposta, desen, RegexOptions.IgnoreCase);
 	}
 
-	//Popup için bunlar.
-	void OpenSifremiUnuttumDialog()
+	//Popup
+	private async Task OpenSifremiUnuttumDialog()
 	{
-		DialogService.Open<SifremiUnuttum>("Şifre",new Dictionary<string, object>());
+		await DialogService.OpenAsync<SifremiUnuttum>("Şifre",new Dictionary<string, object>());
 	}
 
-	private RadzenPassword passwordInput;
-	private bool isVisible = false;
-	private string eyeIcon => isVisible ? "visibility_off" : "visibility";
+	private string InputType { get; set; } = "password";
+	private string Icon { get; set; } = "visibility"; // göz açık
 
-	private async Task TogglePassword()
+	void TogglePassword()
 	{
-		isVisible = !isVisible;
-		await Js.InvokeVoidAsync("setInputType", passwordInput.Element, isVisible ? "text" : "password");
+		if (InputType == "password")
+		{
+			InputType = "text";
+			Icon = "visibility_off"; // göz kapalı
+		}
+		else
+		{
+			InputType = "password";
+			Icon = "visibility";
+		}
 	}
 }
