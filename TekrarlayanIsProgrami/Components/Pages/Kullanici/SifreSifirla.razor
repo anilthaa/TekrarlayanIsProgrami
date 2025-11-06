@@ -1,11 +1,12 @@
 ﻿@page "/sifre-sifirla"
 @layout EmptyLayout
+@attribute [AllowAnonymous]
 @code {
     [Parameter] public string token { get; set; } // token URL’den gelir
 }
 
-<RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
-    <h3>Yeni Şifre Belirle</h3>
+<RadzenCard Class="mx-auto mt-5" Style="max-width:400px;">
+    <h3 style="text-align:center;">Yeni Şifre Belirle</h3>
    <EditForm Model="@model" OnValidSubmit="@OnSubmit">
         <RadzenFormField Text="Yeni Şifre" Style="width:100%">
         <RadzenTextBox @bind-Value="model.YeniSifre" Name="YeniSifre" Type="Password" Style="width:100%;" />

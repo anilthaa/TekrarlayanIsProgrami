@@ -11,7 +11,7 @@ else
 	<RadzenCard class="max-width:600px; margin:auto; padding:20px;">
 		
 			<h3 class="card-title text-center mb-4">Kullanıcı Düzenle</h3>
-		<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@Kaydet">
+		<RadzenTemplateForm  Data="@kullanicilar" TItem="User" Submit="@Kaydet">
 				<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 					<DataAnnotationsValidator />
 					<RadzenLabel class="form-label">Adı</RadzenLabel>
@@ -54,24 +54,21 @@ else
 
 	private async Task Kaydet()
 	{
-		if (kullanicilar.ID == 0)
+		if (kullanicilar == null || kullanicilar.ID == 0)
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Kullanıcı bulunamadı.");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz kullanıcı bilgisi.");
 			return;
 		}
 
 		bool sonuc = await _kullaniciRepo.UpdateAsync(kullanicilar);
 		if (sonuc)
 		{
-			kullanicilar = await _kullaniciRepo.GetByIDAsync(id);
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı","Düzenleme İşleminiz Başarıyla Tamamalandı.");
-			NavigationManager.NavigateTo("/kullanicilar");
-			_kullaniciRepo.UpdateAsync(kullanicilar);
-			StateHasChanged();
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Düzenleme işleminiz başarıyla tamamlandı.");
+			NavigationManager.NavigateTo("/kullanicilar", true); // Sayfayı tam yenile
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata","Düzenleme İşleminiz Başarısız!");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Düzenleme işleminiz başarısız!");
 		}
 	}
 

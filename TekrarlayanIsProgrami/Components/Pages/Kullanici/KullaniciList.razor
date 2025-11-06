@@ -18,16 +18,16 @@
                     class="text-center align-middle">
 
         <Columns>
-            <RadzenDataGridColumn TItem="User" Property="ID" Title="Id" Width="50px" />
+            <RadzenDataGridColumn TItem="User" Property="ID" Title="Id" />
             <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" />
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" />
-            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" />
+            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" Width="250px;" />
             <RadzenDataGridColumn TItem="User" Property="Sifre" Title="Şifre" />
             <RadzenDataGridColumn TItem="User" Property="KullaniciTip_ID" Title="Rol" />
 
             <RadzenDataGridColumn TItem="User" Title="Durum">
                 <Template Context="k">
-                    <span style="cursor:pointer;" @onclick="() => ToggleDurum(k)">
+                    <span style="cursor:pointer;" @onclick="@(async () => await ToggleDurum(k))">
                         <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
                                      Style="@(k.Aktif
                                                  ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
@@ -49,6 +49,7 @@
 @code {
     private List<User>? kullanicilar=new List<User>();
     private RadzenDataGrid<User> kullaniciGrid;
+    private User user = new User();
     protected override async Task OnInitializedAsync()
     {
         kullanicilar = await _kullaniciRepo.GetAllAsync();
@@ -70,11 +71,11 @@
 
     private async Task OpenEditDialog(int id)
     {
-         await DialogService.OpenAsync<KullaniciTnm>(
-              " ",
-              new Dictionary<string, object>() { { "KullaniciId", id } },
-              new DialogOptions() {Width = "600px", Height = "auto" }
-          );
+        await DialogService.OpenAsync<KullaniciTnm>(
+             " ",
+             new Dictionary<string, object>() { { "KullaniciId", id } },
+             new DialogOptions() {Width = "600px", Height = "auto" }
+         );
     }
     //
 
@@ -94,6 +95,7 @@
         if (result == true)
         {
             await Sil(user.ID);
+            notificationService.Notify(NotificationSeverity.Success,"Başarılı" ,"Silme İşlemi Başarıyla Tamamlandı.");
         }
         else
         {
@@ -106,16 +108,49 @@
         var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
         if (kullanici == null) return;
 
-        await _kullaniciRepo.DeleteAsync(kullanici.ID);
-        kullanicilar = await _kullaniciRepo.GetAllAsync();
-        StateHasChanged(); 
+        int currentUserId = await GetCurrentUserId(); // Oturumdaki kullanıcı ID'si
+        await _kullaniciRepo.DeleteAsync(kullanici.ID, currentUserId); // Soft delete
+
+        kullanicilar = await _kullaniciRepo.GetAllAsync(); // Silinmemişleri getir
+        await kullaniciGrid.Reload();
+
+        notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kullanıcı silindi.");
     }
-    //
-    //Aktif-Pasif
-    private void ToggleDurum(User user)
+
+    private async Task<int> GetCurrentUserId()
+    {
+        var authState = await girisSaglayici.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            return int.Parse(user.FindFirst("UserId")?.Value ?? "0");
+        }
+        return 0; // Giriş yapılmamışsa varsayılan
+    }
+
+    private async Task ToggleDurum(User user)
     {
         user.Aktif = !user.Aktif;
-         _kullaniciRepo.UpdateAsync(user);
-        StateHasChanged();
+
+        var sonuc = await _kullaniciRepo.UpdateAsync(user);
+        if (sonuc)
+        {
+            // Sadece bu kullanıcıyı yeniden al
+            var updatedUser = await _kullaniciRepo.GetByIDAsync(user.ID);
+
+            // Listede güncel halini yerine yerleştir
+            var index = kullanicilar.FindIndex(k => k.ID == user.ID);
+            if (index >= 0)
+            {
+                kullanicilar[index] = updatedUser;
+            }
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Durum Başarıyla Güncellendi.");
+            StateHasChanged();
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Durum güncellenemedi.");
+        }
     }
 }
