@@ -70,7 +70,7 @@
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error,"Hata","Kayıt Sırasında Bir Hta Oluştu.");
+			notificationService.Notify(NotificationSeverity.Error,"Hata","Kayıt Sırasında Bir Hata Oluştu.");
 		}
 		DialogService.Close(true);
 	}
@@ -87,7 +87,7 @@
 	private void Iptal()
 	{
 		NavigationManager.NavigateTo(geriUrl);
-		notificationService.Notify(NotificationSeverity.Warning, "UYARI", "Kayıt İşleminiz İptal Edildi.");
+		notificationService.Notify(NotificationSeverity.Warning, "Uyarı!", "Kayıt İşleminiz İptal Edildi.");
 	}
 	private string geriUrl = "/kullanicilar";
 }
