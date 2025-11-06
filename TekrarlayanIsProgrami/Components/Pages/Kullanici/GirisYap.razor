@@ -8,14 +8,15 @@
 	<div class="form login-form">
 		<EditForm Model="@loginModel" OnValidSubmit="() => OnLogin(loginModel)">
 			<h3>🔐Giriş Yap</h3>
-			<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
-
-			<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="✉E-posta" />
-			<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%; margin-top:9px;" Placeholder="🔑Şifre" Icon="@eyeIcon" />
-			@*<a href="/sifremi-unuttum" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti">🔁Şifrenimi Unuttun?</a>*@
-			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" class="sifreBaglanti"></RadzenButton>
-
-			<RadzenButton Click="() => OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
+			<p style="color:rebeccapurple; margin-left:15px; margin-bottom:5px;">Lütfen bilgilerinizi girin</p>
+			<RadzenFormField Text="✉E-posta" Style="width:85%; margin-left:45px;">
+			<RadzenTextBox @bind-Value="loginModel.E_Posta"/>
+			</RadzenFormField>
+			<RadzenFormField Text="🔑Şifre" Style="width:85%; margin-left:45px; margin-top:4px;">
+				<RadzenPassword @bind-Value="loginModel.Sifre"/>
+			</RadzenFormField>
+			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" style="background-color:transparent; color:mediumpurple; margin-top:15px; margin-left:5px;"></RadzenButton>
+			<RadzenButton Click="() => OnLogin(loginModel)" Style="width:90%; margin-top:25px; margin-left:33px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
 		</EditForm>
 	</div>
 	<!-- Kayıt Formu -->
@@ -25,38 +26,38 @@
 			<DataAnnotationsValidator />
 			<div class="row">
 				<h3>Hesap Oluştur</h3>
-				<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
+				<p style="color:rebeccapurple; margin-left:5px; margin-bottom:5px;">Lütfen bilgilerinizi girin</p>
 				<div class="col-sm-12">
-					<RadzenFormField Text="Ad">
-						<RadzenTextBox @bind-Value="newUser.Adi" style="width:100%;" />
+					<RadzenFormField Text="Ad" Style="width:85%; margin-left:45px;">
+						<RadzenTextBox @bind-Value="newUser.Adi"  />
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.Adi)" />
 				</div>
 				<div class="col-sm-12">
-					<RadzenFormField Text="Soyad">
-						<RadzenTextBox @bind-Value="newUser.Soyadi" style="width:100%;" />
+					<RadzenFormField Text="Soyad" Style="width:85%; margin-left:45px; margin-top:4px;">
+						<RadzenTextBox @bind-Value="newUser.Soyadi" />
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.Soyadi)" />
 				</div>
 				<div class="col-lg-12">
-					<RadzenFormField Text="E-posta">
-						<RadzenTextBox @bind-Value="newUser.EPosta" style="width:100%;" />
+					<RadzenFormField Text="E-posta" Style="width:85%; margin-left:45px; margin-top:4px;">
+						<RadzenTextBox @bind-Value="newUser.EPosta" />
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.EPosta)" />
 				</div>
 				<div class="col-sm-12">
-					<RadzenFormField Text="Şifre">
-						<RadzenPassword @bind-Value="newUser.Sifre" style="width:100%;" Type="password"></RadzenPassword>
+					<RadzenFormField Text="Şifre" Style="width:85%; margin-left:45px; margin-top:4px;">
+							<RadzenPassword @bind-Value="newUser.Sifre" />
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.Sifre)" />
 				</div>
 				<div class="col-sm-12">
-					<RadzenFormField Text="Şifre Tekrar">
-						<RadzenPassword @bind-Value="newUser.SifreTekrar" style="width:100%;" Type="password"></RadzenPassword>
+					<RadzenFormField Text="Şifre Tekrar" Style="width:85%; margin-left:45px; margin-top:4px;">
+						<RadzenPassword @bind-Value="newUser.SifreTekrar"Type="password"></RadzenPassword>
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.SifreTekrar)" />
 				</div>
-				<RadzenButton Click="OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
+				<RadzenButton Style="width:90%; margin-top:35px; margin-left:31px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
 			</div>
 		</EditForm>
 	</div>
@@ -75,7 +76,6 @@
 				<p>Zaten hesabınız var mı? Giriş yapın.</p>
 				<RadzenButton Click="@(() => isRegisterActive = false)" Text="GİRİŞ YAP" Style="background-color: white; color: #2196f3; margin-top:10px;" />
 			}
-
 		</RadzenCard>
 	</div>
 </div>
@@ -87,15 +87,12 @@
 	{
 		var result = await girisSaglayici.GirisYapAsync(model.E_Posta, model.Sifre);
 
-		if (result.Basarili) //Eğer sonuç başarılı ise.
+		if (result.Basarili) 
 		{
 			var user = new User { EPosta = model.E_Posta, ResetToken = result.Token };
 			await girisSaglayici.MarkUserAsAuthenticated(user);
-
 			// Tarayıcıya token kaydet
 			await Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-
-			// Kontrol için console'a yazdır
 			var storedToken = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
 			notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
 			NavigationManager.NavigateTo("/dashboard");
@@ -104,20 +101,6 @@
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
 		}
-	// 	var result = await girisSaglayici.GirisYapAsync(model.E_Posta, model.Sifre);
-
-	// 	if (result.Basarili) //Eğer sonuç başarılı ise.
-	// 	{
-	// 		var user = result.User;
-	// 		//giriş yapan kullanıcıyı sisteme tanıtmak
-	// 		// ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsAuthenticated(user);
-	// 		notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
-	// 		NavigationManager.NavigateTo("/Dashboard");
-	// 	}
-	// 	else
-	// 	{
-	// 		notificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
-	// 	}
 	}
 
 	public class LoginModel
@@ -135,16 +118,19 @@
 
 	private async Task OnSubmit()
 	{
-		//Şifre Tekrar ile Şifre farklıysa.
+		if (!EpostaGecerliMi(newUser.EPosta))
+		{
+			notificationService.Notify(NotificationSeverity.Error,"Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
+			return;
+		}
+
 		if (newUser.Sifre != newUser.SifreTekrar)
 		{
-		    notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Değil!");
-			return;   // işlemi durdurur
+		    notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda!");
+			return;   
 		}
 
 		var result = await girisSaglayici.KayitOlAsync(newUser);
-
-		// Bildirim ve yönlendirme
 	    if (result.Basarili)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı" ,result.Mesaj);
@@ -154,14 +140,36 @@
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata",result.Mesaj);
 		}
-
 	}
-	//Popup için bunlar.
-	void OpenSifremiUnuttumDialog()
+	private bool EpostaGecerliMi(string eposta)
 	{
-		DialogService.Open<SifremiUnuttum>("Şifre",new Dictionary<string, object>());
+		if (string.IsNullOrWhiteSpace(eposta))
+			return false;
+
+		var desen = @"^[\w\.-]+@(gmail\.com|hotmail\.com)$";
+		return Regex.IsMatch(eposta, desen, RegexOptions.IgnoreCase);
 	}
-	//Giriş Yap taki şifre textboxunda gözün eklenmesi için.
-	private string sifreType = "password";
-	private string eyeIcon = "visibility_off";
+
+	//Popup
+	private async Task OpenSifremiUnuttumDialog()
+	{
+		await DialogService.OpenAsync<SifremiUnuttum>("Şifre",new Dictionary<string, object>());
+	}
+
+	private string InputType { get; set; } = "password";
+	private string Icon { get; set; } = "visibility"; // göz açık
+
+	void TogglePassword()
+	{
+		if (InputType == "password")
+		{
+			InputType = "text";
+			Icon = "visibility_off"; // göz kapalı
+		}
+		else
+		{
+			InputType = "password";
+			Icon = "visibility";
+		}
+	}
 }

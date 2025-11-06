@@ -1,87 +1,88 @@
-﻿<RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
-	<RadzenHeading Size="H3" Text="Görev Ekle / Düzenle" Style="text-align:center; margin-bottom:20px;"></RadzenHeading>
+﻿<RadzenCard class="container my-4 p-4 shadow-sm">
+	<h3 class="text-center mb-4">Görev Ekle / Düzenle</h3>
 
 	<RadzenTemplateForm Data="@Gorev" TItem="ItemGorev" Submit="@OnSubmit">
-		<RadzenFieldset Text="Görev Bilgileri" Style="margin-bottom:15px;">
-				<div class="row">
-					<div class="col-sm-6">
-						<RadzenLabel Text="Önem Derecesi"></RadzenLabel>
-						<RadzenDropDown Name="DDOnem" @bind-Value="Gorev.OnemDerecesi" Data="@onemDereceleri" Style="width:100%"></RadzenDropDown>
-					</div>                               
-					<div class="col-sm-6">
-					<RadzenFormField Text="Tekrarlama Tipi" AllowFloatingLabel="false">
-						<RadzenDropDown @bind-Value="Gorev.TekrarlamaTipi" Data="@tekrarTipleri" Style="width:100%"></RadzenDropDown>
-						</RadzenFormField>
-					</div>
-				</div>				
 
+		<fieldset class="border rounded p-3 mb-4">
+			<legend class="float-none w-auto px-2">Görev Bilgileri</legend>
 
-			@if (Gorev.TekrarlamaTipi=="Günlük")
+			<div class="row g-3">
+				<div class="col-md-6">
+					<RadzenFormField Text="Önem Derecesi" style="width:100%;">
+						<RadzenDropDown @bind-Value="Gorev.OnemDerecesi" Data="@onemDereceleri" class="w-100" />
+					</RadzenFormField>
+				</div>
+				<div class="col-md-6">
+					<RadzenFormField Text="Tekrarlama Tipi" style="width:100%;">
+						<RadzenDropDown @bind-Value="Gorev.TekrarlamaTipi" Data="@tekrarTipleri" class="w-100" />
+					</RadzenFormField>
+				</div>
+			</div>
+
+			@if (Gorev.TekrarlamaTipi == "Günlük")
 			{
-				<RadzenFormField Text="Tekrar Aralığı (Gün)">
-					<RadzenNumeric @bind-Value="Gorev.TekrarAraligi" TValue="int?" Style="width:100%"></RadzenNumeric>
+				<RadzenFormField Text="Tekrar Aralığı (Gün)" Style="width:49%; margin-top:10px;" >
+					<RadzenNumeric @bind-Value="Gorev.TekrarAraligi" TValue="int?" class="w-100" />
 				</RadzenFormField>
 			}
-
-			@if (Gorev.TekrarlamaTipi=="Haftalık")
+			@if (Gorev.TekrarlamaTipi == "Haftalık")
 			{
 				<RadzenFormField Text="Haftanın Günü">
-					<RadzenDropDown @bind-Value="Gorev.HaftaninGunu" Data="@haftaninGunleri" Style="width:100%"></RadzenDropDown>
+					<RadzenDropDown @bind-Value="Gorev.HaftaninGunu" Data="@haftaninGunleri" class="w-100" />
 				</RadzenFormField>
 			}
-
-			@if (Gorev.TekrarlamaTipi=="Aylık")
+			@if (Gorev.TekrarlamaTipi == "Aylık")
 			{
 				<RadzenFormField Text="Ayın Günü">
-					<RadzenNumeric @bind-Value="Gorev.AyinGunu" TValue="int?" Style="width:100%"></RadzenNumeric>
+					<RadzenNumeric @bind-Value="Gorev.AyinGunu" TValue="int?" class="w-100" />
 				</RadzenFormField>
 			}
 
-			<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
-				<RadzenStack>
-					<RadzenLabel Text="Başlangıç Tarihi"></RadzenLabel>
-					<RadzenDatePicker @bind-Value="Gorev.BaslangicTarihi" Style="width:100%" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true"></RadzenDatePicker>
-				</RadzenStack>
+			<div class="row g-3">
+				<div class="col-md-6">
+					<RadzenFormField Text="Başlangıç Tarihi" style="width:100%; margin-top:10px;">
+						<RadzenDatePicker @bind-Value="Gorev.BaslangicTarihi" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true" class="w-100" />
+					</RadzenFormField>
+				</div>
+				<div class="col-md-6">
+					<RadzenFormField Text="Bitiş Tarihi" style="width:100%; margin-top:10px;">
+						<RadzenDatePicker @bind-Value="Gorev.BitisTarihi" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true" class="w-100" />
+					</RadzenFormField>
+				</div>
+			</div>
 
-				<RadzenStack>
-					<RadzenLabel Text="Bitiş Tarihi"></RadzenLabel>
-					<RadzenDatePicker @bind-Value="Gorev.BitisTarihi" Style="width:100%" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true"></RadzenDatePicker>
-				</RadzenStack>
-			</RadzenStack>
-
-			<RadzenFormField Text="Başlık">
-				<RadzenTextBox Name="TxtBaslik" @bind-Value="Gorev.Baslik" Style="width:100%"></RadzenTextBox>
+			<RadzenFormField Text="Başlık" style="width:47%; margin-top:10px;">
+				<RadzenTextBox Name="TxtBaslik" @bind-Value="Gorev.Baslik" class="w-100" />
 			</RadzenFormField>
-			<RadzenRequiredValidator Component="TxtBaslik" Text="Başlık Zorunludur."></RadzenRequiredValidator>
-			<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
-				<RadzenStack>
-					<RadzenLabel Text="Kategori"></RadzenLabel>
-					<RadzenDropDown @bind-Value="Gorev.Kategori_ID" Data="@DataKategoriList" TextProperty="Adi" ValueProperty="ID" Style="width:100%" Placeholder="Kategori seçin"></RadzenDropDown>
-				</RadzenStack>
+			<RadzenRequiredValidator Component="TxtBaslik" Text="Başlık Zorunludur." />
 
-				<RadzenStack Style="align-items:center;">
-					<RadzenCheckBox @bind-Value="Gorev.Kilitli" TValue="bool"></RadzenCheckBox>
-					<RadzenLabel Text="Kilitli Görev" Style="margin-left:5px;"></RadzenLabel>
-				</RadzenStack>
-			</RadzenStack>
+			<div class="row g-3">
+				<div class="col-md-6">
+					<RadzenFormField Text="Kategori" style="width:100%; margin-top:10px;">
+						<RadzenDropDown @bind-Value="Gorev.Kategori_ID" Data="@DataKategoriList" TextProperty="Adi" ValueProperty="ID" class="w-100" Placeholder="Kategori seçin" />
+					</RadzenFormField>
+				</div>
+				<div class="col-md-6 d-flex align-items-center mt-4">
+					<RadzenCheckBox @bind-Value="Gorev.Kilitli" TValue="bool" />
+					<span class="ms-2">Kilitli Görev</span>
+				</div>
+			</div>
 
 			@if (Gorev.Kilitli)
 			{
-				<RadzenFormField Text="Görev Sahibi">
-					<RadzenDropDown @bind-Value="Gorev.Kullanici_ID" Data="@kullanicilar" TextProperty="Adi" ValueProperty="ID" Style="width:100%" Placeholder="Kullanıcı Seçin"></RadzenDropDown>
+				<RadzenFormField Text="Görev Sahibi" style="width:100%; margin-top:10px;">
+					<RadzenDropDown @bind-Value="Gorev.Kullanici_ID" Data="@kullanicilar" TextProperty="Adi" ValueProperty="ID" class="w-100" Placeholder="Kullanıcı Seçin" />
 				</RadzenFormField>
 			}
-		</RadzenFieldset>
+		</fieldset>
 
-		<RadzenStack Style="justify-content:center; margin-top:15px">
-			<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit" Icon="save" Style="background:#3498db; color:white; border:none; border-radius:6px; padding:10px 20px;"></RadzenButton>
-		</RadzenStack>
-	
-</RadzenTemplateForm> 
+		<div class="text-center mt-4">
+			<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit" Icon="save" Style="width:30%; margin-left:18px;" class="radzen-button" />
+			<RadzenButton Text="İptal" Click="@İptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin-left:35px;" class="radzen-button"></RadzenButton>
+		</div>
+
+	</RadzenTemplateForm>
 </RadzenCard>
-
-
-
 @code {
 
 	[Parameter] public ItemGorev Gorev { get; set; } = new();
@@ -126,10 +127,6 @@
 			_ => DayOfWeek.Monday
 		};
 	}
-
-
-
-
 
 	private async Task OnSubmit()
 	{
@@ -250,38 +247,10 @@
 				break;
 		}
 	}
-
-	// public static void GuncelleSonrakiCalismaTarihi(ItemGorev gorev)
-	// {
-	// 	if (gorev.SonrakiCalismaTarihi == null)
-	// 	{
-	// 		gorev.SonrakiCalismaTarihi = gorev.BaslangicTarihi;
-	// 		return;
-	// 	}
-
-	// 	var aralik = gorev.TekrarAraligi ?? 1;
-	// 	var simdiki = gorev.SonrakiCalismaTarihi.Value;
-
-	// 	switch (gorev.TekrarlamaTipi)
-	// 	{
-	// 		case "Günlük":
-	// 			gorev.SonrakiCalismaTarihi = simdiki.AddDays(aralik);
-	// 			break;
-
-	// 		case "Haftalık":
-	// 			gorev.SonrakiCalismaTarihi = simdiki.AddDays(7 * aralik);
-	// 			break;
-
-	// 		case "Aylık":
-	// 			gorev.SonrakiCalismaTarihi = simdiki.AddMonths(aralik);
-	// 			break;
-
-	// 		case "Yok":
-	// 		default:
-	// 			gorev.SonrakiCalismaTarihi = null;
-	// 			break;
-	// 	}
-	// }
-	 
+	private void İptal()
+	{
+		NavigationManager.NavigateTo("/Gorevler");
+		notificationService.Notify(NotificationSeverity.Info, "Bilgi","Görev Ekleme İşleminiz İptal Edildi.");
+	}
 }
 	

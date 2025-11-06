@@ -1,5 +1,5 @@
 ﻿@layout MainLayout
-@if (kullanici == null)
+@if (kullanicilar == null)
 {
 	<RadzenCard class="text-center mt-5">
 		<RadzenLoader Visible="true" Size="LoaderSize.Large" />
@@ -11,72 +11,95 @@ else
 	<RadzenCard class="max-width:600px; margin:auto; padding:20px;">
 		
 			<h3 class="card-title text-center mb-4">Kullanıcı Düzenle</h3>
-			<RadzenTemplateForm Data="@kullanici" TItem="User" Submit="@Kaydet">
+		<RadzenTemplateForm  Data="@kullanicilar" TItem="User" Submit="@Kaydet">
 				<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 					<DataAnnotationsValidator />
-					<ValidationSummary />
 					<RadzenLabel class="form-label">Adı</RadzenLabel>
-					<RadzenTextBox class="form-control" @bind-Value="kullanici.Adi" placeholder="Adı girin" />
+				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Adi" Name="Adi" placeholder="Adı girin" />
 					<RadzenLabel class="form-label">Soyadı</RadzenLabel>
-					<RadzenTextBox class="form-control" @bind-Value="kullanici.Soyadi" placeholder="Soyadı girin" />
+				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Soyadi" Name="Soyadi" placeholder="Soyadı girin" />
 					<RadzenLabel class="form-label">E-Posta</RadzenLabel>
-					<RadzenTextBox class="form-control" @bind-Value="kullanici.EPosta" placeholder="E-Posta girin" />
+				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.EPosta" Name="EPosta" placeholder="E-Posta girin" />
 					<RadzenLabel class="form-label">Şifre</RadzenLabel>
-					<RadzenTextBox type="password" class="form-control" @bind-Value="kullanici.Sifre" placeholder="Şifreyi girin" />
+				<RadzenTextBox type="password" class="form-control" @bind-Value="kullanicilar.Sifre" Name="Sifre" placeholder="Şifreyi girin" />
 					<RadzenCard class="btn-group">
-						<RadzenButton Text="Kaydet" Icon="save" Click="@Kaydet" Style="width:30%; margin:auto;" class="radzen-button" Type="submit"></RadzenButton>
+						<RadzenButton Text="Kaydet" Icon="save" Click="@Kaydet" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
 						<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
 					</RadzenCard>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
-		
 	</RadzenCard>
 }
 @code {
 	[Parameter]
 	public int id { get; set; }
-
-	// 1️⃣ Her zaman null olmayan bir nesne oluştur
-	private User kullanici = new User();
+	private User kullanicilar = new User();
+	private User originalKullanici;
+	[Parameter]
+	public int KullaniciId{ get; set; }
 
 	protected override async Task OnInitializedAsync()
 	{
-		kullanici = await _kullaniciRepo.GetByIDAsync(id) ?? new User();
+		if (KullaniciId != 0)
+		{
+			kullanicilar = await _kullaniciRepo.GetByIDAsync(KullaniciId) ?? new User();
+		}
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 		if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("geri", out var geri))
 		{
 			geriUrl = geri;
 		}
+		originalKullanici = kullanicilar.Clone();
 	}
 
 	private async Task Kaydet()
 	{
-		// ID kontrolü yap
-		if (kullanici.ID == 0)
+		if (kullanicilar == null || kullanicilar.ID == 0)
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Kullanıcı bulunamadı.");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz kullanıcı bilgisi.");
 			return;
 		}
 
-		// Console.WriteLine($"Güncellenen ID: {kullanici.ID}");
-		bool sonuc = await _kullaniciRepo.UpdateAsync(kullanici);
+		bool sonuc = await _kullaniciRepo.UpdateAsync(kullanicilar);
 		if (sonuc)
 		{
-			kullanici = await _kullaniciRepo.GetByIDAsync(id);
-			notificationService.Notify(NotificationSeverity.Success, "Güncelleme Başarılı.");
-			NavigationManager.NavigateTo("/kullanicilar");
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Düzenleme işleminiz başarıyla tamamlandı.");
+			NavigationManager.NavigateTo("/kullanicilar", true); // Sayfayı tam yenile
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Güncelleme Başarısız...");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Düzenleme işleminiz başarısız!");
 		}
 	}
 
-	private void Iptal()
+	private async Task Iptal()
 	{
-		NavigationManager.NavigateTo(geriUrl);
+		if (HasChanges(kullanicilar, originalKullanici))
+		{
+			var confirmed = await DialogService.Confirm("Formda yaptığınız değişiklikler kaybolacak. Çıkmak istediğinize emin misiniz?", "İptal Onayı",
+						new ConfirmOptions() { OkButtonText = "Evet", CancelButtonText = "Hayır" });
+			if(!confirmed==true)
+			{
+				return;
+			}
+			else
+			{
+				NavigationManager.NavigateTo(geriUrl);
+			}
+		}
+		else
+		{
+			NavigationManager.NavigateTo(geriUrl);
+			notificationService.Notify(NotificationSeverity.Info, "Uyarı", "Düzenleme İşleminiz İptal Edildi.");
+		}
 	}
 	private string geriUrl = "/kullanicilar";
 
-
+	private bool HasChanges(User current, User original)
+	{
+		return current.Adi != original.Adi
+			|| current.Soyadi != original.Soyadi
+			|| current.EPosta != original.EPosta
+			|| current.Sifre  != original.Sifre;
+	}
 }

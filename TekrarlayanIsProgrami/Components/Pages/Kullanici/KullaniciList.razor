@@ -1,46 +1,44 @@
 ﻿@page "/kullanicilar"
 @layout MainLayout
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 @*[Authorize(Roles = "Admin")] belirli roller erişebildiğini bellitiyoruz.*@ 
 <RadzenDialog></RadzenDialog>
 
-<RadzenCard class="container mt-4">
+<RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
     <h2 class="text-center mb-4">Kullanıcılar Listesi</h2>
 
     <RadzenCard style="margin-left:950px; margin-bottom:3px;">
-        <!--class="text-end mb-3-->
+      
         <RadzenButton Text="Yeni Kullanıcı Ekle" Style="background-color:royalblue;" Click="@OpenRegisterDialog"> </RadzenButton>
     </RadzenCard>
 
-    <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" TItem="User" RowSelect="@OnRowSelect"
+    <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name"  TItem="User" RowSelect="@OnRowSelect"
                     AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="true"
                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                     class="text-center align-middle">
 
         <Columns>
-            <RadzenDataGridColumn TItem="User" Property="ID" Title="Id" Width="50px" />
+            <RadzenDataGridColumn TItem="User" Property="ID" Title="Id" />
             <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" />
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" />
-            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" />
+            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" Width="250px;" />
             <RadzenDataGridColumn TItem="User" Property="Sifre" Title="Şifre" />
             <RadzenDataGridColumn TItem="User" Property="KullaniciTip_ID" Title="Rol" />
 
             <RadzenDataGridColumn TItem="User" Title="Durum">
                 <Template Context="k">
-                    @if (k.Aktif)
-                    {
-                        <RadzenBadge Text="Aktif" Severity="Severity.Success" />
-                    }
-                    else
-                    {
-                        <RadzenBadge Text="Pasif" Severity="Severity.Secondary" />
-                    }
+                    <span style="cursor:pointer;" @onclick="@(async () => await ToggleDurum(k))">
+                        <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
+                                     Style="@(k.Aktif
+                                                 ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
+                                                 : "background-color:red;color:white;padding:5px 10px;border-radius:10px;")" />
+                    </span>
                 </Template>
             </RadzenDataGridColumn>
 
             <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="180px">
                 <Template Context="user">
-                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@OpenEditDialog" Style="margin-right:5px;" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
                     <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
                 </Template>
             </RadzenDataGridColumn>
@@ -51,61 +49,41 @@
 @code {
     private List<User>? kullanicilar=new List<User>();
     private RadzenDataGrid<User> kullaniciGrid;
-
+    private User user = new User();
     protected override async Task OnInitializedAsync()
     {
         kullanicilar = await _kullaniciRepo.GetAllAsync();
     }
-    [Inject]
-    DialogService dialogService { get; set; }
-
-    void OpenRegisterDialog()
+    //Popuplar.
+    private async Task OpenRegisterDialog()
     {
-        dialogService.Open<KayitOl>(" ", new Dictionary<string, object>());
+        var result = await DialogService.OpenAsync<KayitOl>(" ", null, new DialogOptions { Width = "600px", Height = "auto" });
+
+        if (result == true) 
+        {
+            kullanicilar = await _kullaniciRepo.GetAllAsync(); 
+            StateHasChanged(); 
+        }
     }
-    //Popup sayfası açmak için.
-    void OpenEditDialog()
+    [Parameter]
+    public int KullaniciId { get; set; }
+    bool isDialogOpen{ get; set; }
+
+    private async Task OpenEditDialog(int id)
     {
-        dialogService.Open<KullaniciTnm>(" ",new Dictionary<string, object>());
+        await DialogService.OpenAsync<KullaniciTnm>(
+             " ",
+             new Dictionary<string, object>() { { "KullaniciId", id } },
+             new DialogOptions() {Width = "600px", Height = "auto" }
+         );
     }
+    //
 
-    private void Duzenle(int id)
-    {
-        // Düzenleme sayfasına yönlendirme
-        NavigationManager.NavigateTo($"/kullanicilar/edit/{id}?geri=/kullanicilar");
-    }
-
-    // private async void Sil(int id)
-    //  {
-    //      var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
-    //      if (kullanici == null) return;
-
-    //      if (await Js.InvokeAsync<bool>("confirm", $"'{kullanici.Adi}' silinsin mi?"))
-    //      {
-    //          await _kullaniciRepo.DeleteAsync(kullanici.ID);
-    //          kullanicilar = await _kullaniciRepo.GetAllAsync();
-    //      }
-    //  }
-
-    private void YeniKullanici()
-    {
-        // Yeni kullanıcı ekleme sayfasına yönlendirme
-        NavigationManager.NavigateTo("/KayitOl");
-    }
     void OnRowSelect(User selectedKullanici)
     {
-        // Seçilen satırdaki kullanıcı bilgisi burada
         Console.WriteLine($"Seçilen kullanıcı: {selectedKullanici.Adi} {selectedKullanici.Soyadi}");
-
-        // Örnek: Detay sayfasına yönlendirme
-        // NavigationManager.NavigateTo($"/kullanici-detay/{selectedKullanici.ID}");
     }
-
-    void Yenile()
-    {
-        kullaniciGrid.Reload();
-    }
-
+    //Silme İşlemi.
     private async Task ConfirmDelete(User user)
     {
         bool? result = await DialogService.Confirm(
@@ -116,20 +94,63 @@
 
         if (result == true)
         {
-            await DeleteUser(user);
+            await Sil(user.ID);
+            notificationService.Notify(NotificationSeverity.Success,"Başarılı" ,"Silme İşlemi Başarıyla Tamamlandı.");
         }
         else
         {
-            // Kullanıcı “Hayır” dedi → işlem iptal
-            Console.WriteLine("Silme işlemi iptal edildi.");
+            notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Silme İşleminiz İptal Edildi.");
         }
     }
 
-    private async Task DeleteUser(User user)
+    private async Task Sil(int id)
     {
-        // Repository veya Dapper ile sil
-        kullanicilar.Remove(user); // listeyi güncelle
-        notificationService.Notify(NotificationSeverity.Success,"Başarılı",$"{user.Adi} Adlı Kullanıcı Silindi.");
+        var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
+        if (kullanici == null) return;
+
+        int currentUserId = await GetCurrentUserId(); // Oturumdaki kullanıcı ID'si
+        await _kullaniciRepo.DeleteAsync(kullanici.ID, currentUserId); // Soft delete
+
+        kullanicilar = await _kullaniciRepo.GetAllAsync(); // Silinmemişleri getir
+        await kullaniciGrid.Reload();
+
+        notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kullanıcı silindi.");
     }
 
+    private async Task<int> GetCurrentUserId()
+    {
+        var authState = await girisSaglayici.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            return int.Parse(user.FindFirst("UserId")?.Value ?? "0");
+        }
+        return 0; // Giriş yapılmamışsa varsayılan
+    }
+
+    private async Task ToggleDurum(User user)
+    {
+        user.Aktif = !user.Aktif;
+
+        var sonuc = await _kullaniciRepo.UpdateAsync(user);
+        if (sonuc)
+        {
+            // Sadece bu kullanıcıyı yeniden al
+            var updatedUser = await _kullaniciRepo.GetByIDAsync(user.ID);
+
+            // Listede güncel halini yerine yerleştir
+            var index = kullanicilar.FindIndex(k => k.ID == user.ID);
+            if (index >= 0)
+            {
+                kullanicilar[index] = updatedUser;
+            }
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Durum Başarıyla Güncellendi.");
+            StateHasChanged();
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Durum güncellenemedi.");
+        }
+    }
 }

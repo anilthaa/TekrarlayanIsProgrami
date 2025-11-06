@@ -1,4 +1,5 @@
-﻿using System.Net.Mail;
+﻿using System.Net;
+using System.Net.Mail;
 
 namespace TekrarlayanIsProgrami.Services
 {
@@ -6,27 +7,31 @@ namespace TekrarlayanIsProgrami.Services
     {
         public static async Task<bool> SifreSifirlamaMailiGonder(string email, string token)
         {
-            try
-            {
-                var mail = new MailMessage();
-                mail.To.Add(email);
-                mail.From = new MailAddress("noreply@seninsite.com");
-                mail.Subject = "Şifre Sıfırlama Bağlantısı";
-                mail.Body = $"Şifrenizi sıfırlamak için tıklayın:\nhttps://seninsite.com/sifre-sifirla?token={token}";
+            string link = $"https://localhost:7014/sifre-sifirla?token={token}";
+            Console.WriteLine($"[TEST] {email} adresi için sıfırlama bağlantısı: {link}");
+            await Task.CompletedTask;
+            return true;
+            //try
+            //{
+            //    var mail = new MailMessage();
+            //    mail.From = new MailAddress("ankapromosyon@gmail.com");
+            //    mail.To.Add(email);
+            //    mail.Subject = "Şifre Sıfırlama Bağlantısı";
+            //    mail.Body = $"Şifreni sıfırlamak için tıkla: https://localhost:7014/sifre-sifirla?token={token}";
+            //    mail.IsBodyHtml = true;
 
-                using var smtp = new SmtpClient("smtp.gmail.com", 587)
-                {
-                    Credentials = new System.Net.NetworkCredential("noreply@seninsite.com", "mail_sifresi"),
-                    EnableSsl = true
-                };
+            //    var smtp = new SmtpClient("smtp.gmail.com", 587);
+            //    smtp.Credentials = new NetworkCredential("ejejehdhdj78@gmail.com", "uygulama_sifresi"); //Gerçek projede burda gerçek google hesabımız olcak ve şifre kendi şifremiz değil farklı bir şifre alcaz.
+            //    smtp.EnableSsl = true;
 
-                await smtp.SendMailAsync(mail);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            //    await smtp.SendMailAsync(mail);
+            //    return true;
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine("Mail gönderim hatası: " + ex.Message);
+            //    return false;
+            //}
         }
     }
 }

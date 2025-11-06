@@ -10,7 +10,7 @@
     @if (!NavigationManager.Uri.Contains("/GirisYap"))
     {
         <RadzenSidebar>
-            @if (NavigationManager.Uri.Contains("/dashboard") || NavigationManager.Uri.Contains("/kategori") || NavigationManager.Uri.Contains("/kullanicilar") || NavigationManager.Uri.Contains("/gorevler"))
+            @if (NavigationManager.Uri.Contains("/dashboard") || NavigationManager.Uri.Contains("/kategori") || NavigationManager.Uri.Contains("/kullanicilar") || NavigationManager.Uri.Contains("/Gorevler"))
             {
                 <RadzenCard class="dashboard-nav">
                     <h3>📊 Dashboard</h3>
@@ -37,7 +37,7 @@
     }
     private async void CikisYap()
     {
-        ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
+        await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
        // await girisSaglayici.CikisYapAsync();
         NavigationManager.NavigateTo("/GirisYap", true);
     }
