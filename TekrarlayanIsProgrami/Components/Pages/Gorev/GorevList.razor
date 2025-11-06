@@ -1,5 +1,6 @@
 ﻿@page "/gorevler"
 @layout MainLayout
+@attribute [Authorize]
 
 @* <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-md" Style="margin:20px 0 0 20px;">
 	<RadzenCard Style="width:250px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => SelectedTabIndex = 0)">

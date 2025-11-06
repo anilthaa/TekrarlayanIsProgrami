@@ -7,10 +7,11 @@
 <RadzenDialog></RadzenDialog>
 <RadzenNotification></RadzenNotification>
 <RadzenLayout>
-    @if (!NavigationManager.Uri.Contains("/GirisYap"))
+    @{ var uri = NavigationManager.Uri.ToLower(); }
+    @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (NavigationManager.Uri.Contains("/dashboard") || NavigationManager.Uri.Contains("/kategori") || NavigationManager.Uri.Contains("/kullanicilar") || NavigationManager.Uri.Contains("/Gorevler"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler"))
             {
                 <RadzenCard class="dashboard-nav">
                     <h3>📊 Dashboard</h3>
@@ -32,13 +33,27 @@
     {
         if (firstRender)
         {
-            await ((CustomAuthenticationStateProvider)girisSaglayici).LoadUserFromLocalStorageAsync();
+            // await ((CustomAuthenticationStateProvider)girisSaglayici).LoadUserFromLocalStorageAsync();
+            var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+            var token = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
+
+            if (!string.IsNullOrEmpty(userJson) && !string.IsNullOrEmpty(token))
+            {
+                await ((CustomAuthenticationStateProvider)girisSaglayici).LoadUserFromLocalStorageAsync();
+            }
+            else
+            {
+                await Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
+                await Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
+            }
         }
     }
     private async void CikisYap()
     {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var target = string.IsNullOrEmpty(relative) ? "/" : "/" + relative;
+        var encoded = Uri.EscapeDataString(target);
         await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
-       // await girisSaglayici.CikisYapAsync();
-        NavigationManager.NavigateTo("/GirisYap", true);
+        NavigationManager.NavigateTo($"/GirisYap?returnUrl={encoded}", true);
     }
 }
