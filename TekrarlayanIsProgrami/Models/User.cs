@@ -32,5 +32,16 @@ namespace TekrarlayanIsProgrami.Models
         public DateTime DelDate { get; set; }
         public string? ResetToken {  get; set; }
         public DateTime? ResetTokenExpiry {  get; set; }
+        public User Clone()
+        {
+            return new User
+            {
+                ID = this.ID,
+                Adi = this.Adi,
+                Soyadi = this.Soyadi,
+                EPosta = this.EPosta,
+                Sifre = this.Sifre
+            };
+        }
     }
 }

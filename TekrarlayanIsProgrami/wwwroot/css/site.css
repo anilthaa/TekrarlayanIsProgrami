@@ -223,13 +223,12 @@ footer {
     font-weight: bold;
 }
 .sifreBaglanti {
-    color: mediumpurple;
-    background-color:transparent;
+   
 }
 .sifreBaglanti:hover{
     color:rebeccapurple;
     text-decoration:underline;
-    text-shadow:2px 2px 5px gray;
+    text-shadow:1px 1px 3px purple;
 }
 
 .radzen-textbox,
