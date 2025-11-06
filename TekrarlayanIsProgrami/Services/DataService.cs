@@ -42,10 +42,15 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<ItemGorev[]> GetGorevler()
         {
-            
             return (await SQLQueryAsync<ItemGorev>($@"
-                Select * From ""Gorev""
-                Where ""DelDate"" Is Null Order By ""BaslangicTarihi""")).ToArray();
+                Select g.""ID"", g.""Kullanici_ID"", g.""Baslik"", g.""Kategori_ID"", g.""OnemDerecesi"",
+                       g.""BaslangicTarihi"", g.""BitisTarihi"", g.""TekrarlamaTipi"", g.""Aktif"", g.""Kilitli"",
+                       g.""TekrarAraligi"", g.""HaftaninGunu"", g.""AyinGunu"", g.""SonrakiCalismaTarihi"", g.""Tamamlandi"",
+                       g.""CreUser"", g.""CreDate"", g.""UpdUser"", g.""UpdDate"", g.""DelUser"", g.""DelDate""
+                From ""Gorev"" g
+                Where g.""DelDate"" Is Null
+                Order By g.""BaslangicTarihi""
+            ")).ToArray();
         }
 
         public async Task<ItemGorev[]> YaklasanGorevlerAdmin()

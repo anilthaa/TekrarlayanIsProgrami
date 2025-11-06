@@ -156,14 +156,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<AuthResult> KayitOlAsync(User user)
         {
-            if (await _kullaniciRepo.EpostaVarMiAsync(user.EPosta))
-            {
-                return new AuthResult
-                {
-                    Basarili = false,
-                    Mesaj = $"Bu E-posta Zaten Kayıtlı!"
-                };
-            }
+            // E-posta kontrolünü API/DB tarafına bırakalım; silinmiş kayıtlar yeniden kullanılabilsin
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult

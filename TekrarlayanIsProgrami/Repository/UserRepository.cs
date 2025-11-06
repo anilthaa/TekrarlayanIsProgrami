@@ -34,7 +34,7 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task<User?> GetByEmailAsync(string EPosta, string Sifre)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
-            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre";
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta, Sifre});
         }
 
@@ -81,14 +81,14 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task DeleteAsync(int id, int delUser)
         {
             using var conn = GetConnection();
-            var sql = @"Update ""Kullanici"" Set ""DelUser""=@ID, ""DelDate""=now() Where ""ID""=@ID";
+            var sql = @"Update ""Kullanici"" Set ""DelUser""=@DelUser, ""DelDate""=now() Where ""ID""=@ID";
             await conn.ExecuteAsync(sql, new { ID = id , DelUser=delUser});
         }
 
         public async Task<User?> GirisYapAsync(string eposta, string sifre)
         {
             using var conn=GetConnection();
-            var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true";
+            var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
         }
 
@@ -133,7 +133,7 @@ namespace TekrarlayanIsProgrami.Repository
         {
             using var conn = new NpgsqlConnection(_connectionString);
             var sql = await conn.QueryFirstOrDefaultAsync<User>(
-               @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta", new { EPosta = EPosta });
+               @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta AND ""DelDate"" IS NULL", new { EPosta = EPosta });
             return sql != null;
         }
         //Bu bizim şifremizi değiştirdiğimiz zaman tokenimizi değiştirmek için yazdık.

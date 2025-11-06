@@ -21,7 +21,7 @@ namespace TekrarlayanIsProgrami.Api
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
-            var user = await _userRepository.GetByEmailAsync(model.Email, model.Password);
+            var user = await _userRepository.GirisYapAsync(model.Email, model.Password);
             if (user == null)
             {
                 return Unauthorized(new AuthResult { Basarili = false, Mesaj = "Geçersiz giriş bilgileri" });
