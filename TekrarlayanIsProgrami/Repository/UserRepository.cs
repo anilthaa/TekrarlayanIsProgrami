@@ -21,7 +21,7 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task<List<User>> GetAllAsync()
         {
             using var conn=GetConnection();
-            var sql = @"Select * From ""Kullanici""";
+            var sql = @"Select * From ""Kullanici"" WHERE ""DelDate"" IS NULL";
             var result=await conn.QueryAsync<User>(sql);
             return result.ToList();
         }
@@ -30,7 +30,6 @@ namespace TekrarlayanIsProgrami.Repository
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""ID"" = @ID";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID= ID });
-            
         }
         public async Task<User?> GetByEmailAsync(string EPosta, string Sifre)
         {
@@ -43,19 +42,26 @@ namespace TekrarlayanIsProgrami.Repository
         {
             using var conn = new NpgsqlConnection(_connectionString);
             string sql = @"UPDATE ""Kullanici""
-                   SET ""Adi""=@Adi,
-                       ""Soyadi""=@Soyadi,
-                       ""EPosta""=@EPosta,
-                       ""Sifre""=@Sifre
-                   WHERE ""ID""=@ID";
+           SET ""Adi""=@Adi,
+               ""Soyadi""=@Soyadi,
+               ""EPosta""=@EPosta,
+               ""Sifre""=@Sifre,
+               ""Aktif""=@Aktif,
+               ""UpdUser""=@UpdUser,
+               ""UpdDate""=NOW()
+           WHERE ""ID""=@ID";
+
             var result = await conn.ExecuteAsync(sql, new
             {
                 user.Adi,
                 user.Soyadi,
                 user.EPosta,
                 user.Sifre,
+                user.Aktif,
+                user.UpdUser, // Burada eksik olan parametre eklendi
                 user.ID
             });
+
             return result > 0;
         }
         public async Task<bool> SifreGuncelle(string Token, string YeniSifre)
@@ -72,11 +78,11 @@ namespace TekrarlayanIsProgrami.Repository
             return true;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, int delUser)
         {
             using var conn = GetConnection();
-            var sql = @"DELETE FROM ""Kullanici"" WHERE ""ID""=@ID";
-            await conn.ExecuteAsync(sql, new { ID = id });
+            var sql = @"Update ""Kullanici"" Set ""DelUser""=@ID, ""DelDate""=now() Where ""ID""=@ID";
+            await conn.ExecuteAsync(sql, new { ID = id , DelUser=delUser});
         }
 
         public async Task<User?> GirisYapAsync(string eposta, string sifre)

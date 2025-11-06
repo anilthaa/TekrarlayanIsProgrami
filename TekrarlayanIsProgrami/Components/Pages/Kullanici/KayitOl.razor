@@ -1,5 +1,4 @@
 ﻿@layout MainLayout
-<!-- Arka plan ve sayfa ortalama -->
 
 <RadzenCard class="max-width:600px; margin:auto; padding:20px;">
 
@@ -7,15 +6,30 @@
 	<RadzenTemplateForm Data="@newUser" TItem="User" Submit="@OnSubmit">
 		<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 			<DataAnnotationsValidator />
-			<ValidationSummary /> 
-			<RadzenLabel class="form-label">Adı</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="newUser.Adi" placeholder="Adı girin" />
-			<RadzenLabel class="form-label">Soyadı</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="newUser.Soyadi" placeholder="Soyadı girin" />
-			<RadzenLabel class="form-label">E-Posta</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="newUser.EPosta" placeholder="E-Posta girin" />
-			<RadzenLabel class="form-label">Şifre</RadzenLabel>
-			<RadzenTextBox type="password" class="form-control" @bind-Value="newUser.Sifre" placeholder="Şifreyi girin" />
+			<RadzenFormField Text="Ad" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenTextBox class="form-control" @bind-Value="newUser.Adi" />
+			</RadzenFormField>
+			<ValidationMessage For="@(() => newUser.Adi)"></ValidationMessage>
+
+			<RadzenFormField Text="Soyad" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenTextBox class="form-control" @bind-Value="newUser.Soyadi"/>
+			</RadzenFormField>
+			<ValidationMessage For="@(()=> newUser.Soyadi)"></ValidationMessage>
+
+			<RadzenFormField Text="E-posta" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenTextBox class="form-control" @bind-Value="newUser.EPosta" />
+			</RadzenFormField>
+			<ValidationMessage For="@(() => newUser.EPosta)"></ValidationMessage>
+
+			<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenPassword class="form-control" @bind-Value="newUser.Sifre" />
+			</RadzenFormField>
+			<ValidationMessage For="@(() => newUser.Sifre)"></ValidationMessage>
+
+			<RadzenFormField Text="Şifre Tekrar" Style="width:85%; margin-left:41px; margin-top:4px;">
+			<RadzenPassword type="password" @bind-Value="newUser.SifreTekrar"/>
+			</RadzenFormField>
+			<ValidationMessage For="@(() => newUser.SifreTekrar)"></ValidationMessage>
 			<RadzenCard class="btn-group">
 				<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
 				<RadzenButton Text="İptal"  Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
@@ -24,9 +38,6 @@
 	</RadzenTemplateForm>
 
 </RadzenCard>
-
-
-
 
 @code {
 	private User newUser = new User
@@ -38,20 +49,45 @@
 
 	private async Task OnSubmit()
 	{
+		if (!EpostaGecerliMi(newUser.EPosta))
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
+			return;
+		}
+
+		if(newUser.Sifre!= newUser.SifreTekrar)
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda.");
+			return;
+		}
+
 		var result = await girisSaglayici.KayitOlAsync(newUser);
 		if (result.Basarili)
 		{
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", result.Mesaj);
-			NavigationManager.NavigateTo("/GirisYap");
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
+			NavigationManager.NavigateTo("/kullanicilar");
+			StateHasChanged();
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
+			notificationService.Notify(NotificationSeverity.Error,"Hata","Kayıt Sırasında Bir Hta Oluştu.");
 		}
+		DialogService.Close(true);
 	}
+	private bool EpostaGecerliMi(string eposta)
+	{
+		if (string.IsNullOrWhiteSpace(eposta))
+			return false;
+
+		var desen = @"^[\w\.-]+@(gmail\.com|hotmail\.com)$";
+		return Regex.IsMatch(eposta, desen, RegexOptions.IgnoreCase);
+	}
+
+
 	private void Iptal()
 	{
 		NavigationManager.NavigateTo(geriUrl);
+		notificationService.Notify(NotificationSeverity.Warning, "UYARI", "Kayıt İşleminiz İptal Edildi.");
 	}
 	private string geriUrl = "/kullanicilar";
 }

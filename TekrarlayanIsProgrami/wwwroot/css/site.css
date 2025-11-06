@@ -43,7 +43,6 @@
     }
 
 .form-control {
-
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -117,19 +116,12 @@
         color: #fff !important;
         font-weight: bold;
     }
-    /*
+ 
 .container {
-    max-width: 1200px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 0 16px;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
 }
-*/
 footer {
     text-align: center;
     padding: 20px;
@@ -317,4 +309,49 @@ footer {
     align-items: center; /* içerik ortalanır */
     padding: 20px; /* üst-alt boşluk */
     box-sizing: border-box;
+}
+.pw-toggle {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 0;
+}
+
+/*Görev İçin CSS*/
+.gorev-card {
+    max-width: 650px;
+    margin: auto;
+    padding: 25px;
+}
+
+.card-heading {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.fieldset-spacing .rz-fieldset-content {
+    padding: 15px 0;
+}
+
+.checkbox-label {
+    margin-left: 8px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.save-button {
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px 24px;
 }

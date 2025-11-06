@@ -25,7 +25,7 @@
 				<RadzenDataGridColumn TItem="ItemKategori" Title="İşlemler" Width="150px">
 					<Template Context="data">
 						<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:5px"
-									  Click="@(() => Duzenle(data))" />
+									  Click="@(() => Duzenle(data))" ButtonStyle="ButtonStyle.Success" />
 						<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
 									  Click="@(() => Sil(data))" />
 					</Template>
@@ -33,8 +33,6 @@
 			</Columns>
 		</RadzenDataGrid>
 	}
-
-
 </RadzenCard>
 
 @code {
@@ -47,7 +45,6 @@
 
 	}
 
-	
 	private async Task YukleDataAsync()
 	{
 		try
@@ -69,8 +66,6 @@
 	{
 		try
 		{
-			Console.WriteLine("Ekle butonu tıklandı - Dialog açılıyor...");
-
 			if (DialogService==null)
 			{
 				throw new InvalidOperationException("DialogService inject edilemedi");
@@ -82,10 +77,9 @@
 				UpdUser=0,
 				DelUser=0
 			};
+
 			var dialogResult = await DialogService.OpenAsync<KategoriTnm>("Kategori Ekle",
 				new Dictionary<string, object> { { "ItemData", newItem } }, new DialogOptions { Width = "500px", Height = "300px" });
-
-
 			if (dialogResult is ItemKategori result && result != null)
 			{
 				DataList.Insert(0, result);
@@ -96,37 +90,19 @@
 
 				StateHasChanged();
 				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori eklendi!");
-
 			}
-			else
 
-			{
-				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "İşlem iptal edildi.");
-			}
 		}
 		catch (Exception ex)
-
 		{
 			Console.WriteLine($"Ekleme hatası: {ex.Message}");
 			notificationService.Notify(NotificationSeverity.Error, "Hata", $"Ekleme sırasında hata: {ex.Message}");
 		}
-
-		// ItemKategori newItem = new(){CreUser=1};
-		// ItemKategori result = await DialogService.OpenAsync<KategoriEkleDuzenle>("Kategori Ekle",
-		// 	new Dictionary<string, object> { { "Kategori", newItem } },
-		// 	new DialogOptions { Width = "500px", Height = "300px" });
-
-		// if (result != null)
-		// {
-		// 	DataList.Insert(0, result);// Son Eklenenin sayfayı yenilemeden en başa gelmesi için
-		// 	await GrdData.Reload();
-		// 	StateHasChanged();
-		// }
 	}
 
 	private async Task Duzenle(ItemKategori item)
 	{
-		item.UpdUser = 1;//Daha sonra giriş yapmış kullanıcının ıd si basılacak
+		item.UpdUser = 1;
 		ItemKategori result = await DialogService.OpenAsync<KategoriTnm>("Kategori Düzenle",
 			new Dictionary<string, object> { { "ItemData", item } },
 			new DialogOptions { Width = "500px", Height = "300px" });
@@ -150,15 +126,23 @@
 
 		if (onay == true)
 		{
-			item.DelUser = 1;// kullanıcı ıd gelecek
+			item.DelUser = 1;
 			var wsCvp = await DataService.SetKategori(item);
 			if (wsCvp.Data > 0)
 			{
 				DataList.Remove(item);
 				await GrdData.Reload();
 				StateHasChanged();
-				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori silindi!");
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori Başarıyla Silindi!");
 			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Ekleme İşleminiz Başarısız.");
+			}
+		}
+		else
+		{
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Silme İşleminiz İptal Edildi.");
 		}
 	}
 

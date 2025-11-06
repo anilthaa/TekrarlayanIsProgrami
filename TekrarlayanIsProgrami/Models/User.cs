@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
 
 namespace TekrarlayanIsProgrami.Models
 {
@@ -11,8 +12,8 @@ namespace TekrarlayanIsProgrami.Models
         [Required(ErrorMessage = "Bu Alan Zorunludur.")]
         public string Soyadi { get; set; }
 
-        [Required(ErrorMessage="Bu Alan Zorunludur.")]
-        [EmailAddress(ErrorMessage = "Geçerli bir e-posta girin.")]
+        [Required(ErrorMessage = "Bu Alan Zorunludur.")]
+        [EmailAddress(ErrorMessage = "Lütfen Geçerli E-posta Giriniz.")]
         public string EPosta { get; set; }
         public int KullaniciTip_ID { get; set; }
 

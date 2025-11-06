@@ -10,13 +10,8 @@
 			{
 				<div style="color: red; margin-bottom:10px;">@ErrorMessage</div>
 			}
-
-			<div style="text-align:right;">
-				<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit"
-							  Style="margin-right:10px; background:#27ae60; color:white"></RadzenButton>
-				<RadzenButton Text="İptal" Click="Iptal"
-							  Style="background:#e74c3c; color:white" ButtonType="ButtonType.Button"></RadzenButton>
-			</div>
+				<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin-left:48px;" class="radzen-button" ButtonType="ButtonType.Submit"></RadzenButton>
+				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin-left:58px; margin-top:20px;" class="radzen-button" ButtonType="ButtonType.Button"></RadzenButton>
 		</ChildContent>
 	</RadzenTemplateForm>
 </RadzenCard>
@@ -106,6 +101,7 @@
 
 			if (onay != true)
 				return;
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Silme İşleminiz İptal Edildi.");
 
 		}
 
