@@ -15,7 +15,7 @@
 			@*<a href="/sifremi-unuttum" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti">🔁Şifrenimi Unuttun?</a>*@
 			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" class="sifreBaglanti"></RadzenButton>
 
-			<RadzenButton Click="() => OnLogin(loginModel)" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
+			<RadzenButton ButtonType="ButtonType.Submit" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
 		</EditForm>
 	</div>
 	<!-- Kayıt Formu -->
@@ -56,7 +56,7 @@
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.SifreTekrar)" />
 				</div>
-				<RadzenButton Click="OnSubmit" Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
+				<RadzenButton Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
 			</div>
 		</EditForm>
 	</div>
@@ -89,16 +89,39 @@
 
 		if (result.Basarili) //Eğer sonuç başarılı ise.
 		{
-			var user = new User { EPosta = model.E_Posta, ResetToken = result.Token };
-			await girisSaglayici.MarkUserAsAuthenticated(user);
-
-			// Tarayıcıya token kaydet
-			await Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-
-			// Kontrol için console'a yazdır
+			// Sağlayıcı zaten token'ı ve kullanıcıyı set ediyor; eksikse tamamlayalım
+			if (result.User != null)
+			{
+				await girisSaglayici.MarkUserAsAuthenticated(result.User);
+			}
 			var storedToken = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
-			notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
-			NavigationManager.NavigateTo("/dashboard");
+			if (string.IsNullOrEmpty(storedToken) && !string.IsNullOrEmpty(result.Token))
+			{
+				await Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
+			}
+            notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+            var uri = new Uri(NavigationManager.Uri);
+            var query = QueryHelpers.ParseQuery(uri.Query);
+            if (query.TryGetValue("returnUrl", out var returnUrls) && returnUrls.Count > 0)
+            {
+                var decoded = Uri.UnescapeDataString(returnUrls[0]);
+                // güvenli: sadece uygulama içi göreli yollara izin ver
+                if (!string.IsNullOrWhiteSpace(decoded) && decoded.StartsWith("/"))
+                {
+                    NavigationManager.NavigateTo(decoded, forceLoad: false, replace: true);
+                    return;
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/dashboard", forceLoad: false, replace: true);
+                    return;
+                }
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/dashboard", forceLoad: false, replace: true);
+                return;
+            }
 		}
 		else
 		{

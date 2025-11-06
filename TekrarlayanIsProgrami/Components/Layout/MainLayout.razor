@@ -7,10 +7,11 @@
 <RadzenDialog></RadzenDialog>
 <RadzenNotification></RadzenNotification>
 <RadzenLayout>
-    @if (!NavigationManager.Uri.Contains("/GirisYap"))
+    @{ var uri = NavigationManager.Uri.ToLower(); }
+    @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (NavigationManager.Uri.Contains("/dashboard") || NavigationManager.Uri.Contains("/kategori") || NavigationManager.Uri.Contains("/kullanicilar") || NavigationManager.Uri.Contains("/gorevler"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler"))
             {
                 <RadzenCard class="dashboard-nav">
                     <h3>📊 Dashboard</h3>
@@ -49,8 +50,10 @@
     }
     private async void CikisYap()
     {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var target = string.IsNullOrEmpty(relative) ? "/" : "/" + relative;
+        var encoded = Uri.EscapeDataString(target);
         await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
-       // await girisSaglayici.CikisYapAsync();
-        NavigationManager.NavigateTo("/GirisYap", true);
+        NavigationManager.NavigateTo($"/GirisYap?returnUrl={encoded}", true);
     }
 }

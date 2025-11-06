@@ -2,6 +2,9 @@
 @code {
     protected override void OnInitialized()
     {
-        NavigationManager.NavigateTo("/dashboard");
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var target = string.IsNullOrEmpty(relative) ? "/" : "/" + relative;
+        var encoded = Uri.EscapeDataString(target);
+        NavigationManager.NavigateTo($"/GirisYap?returnUrl={encoded}", false);
     }
 }

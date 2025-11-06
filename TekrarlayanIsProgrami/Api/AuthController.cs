@@ -27,6 +27,10 @@ namespace TekrarlayanIsProgrami.Api
                 return Unauthorized(new AuthResult { Basarili = false, Mesaj = "Geçersiz giriş bilgileri" });
             }
 
+            // Güvenlik: parola alanlarını asla dışarı döndürmeyelim
+            user.Sifre = null;
+            user.SifreTekrar = null;
+
             var token = _jwtService.GenerateToken(user.EPosta);
             return Ok(new AuthResult
             {

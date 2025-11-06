@@ -29,17 +29,34 @@ namespace TekrarlayanIsProgrami.Services
             _http = http;
         }
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            // Eğer _currentUser yoksa localStorage'dan yükle
+            if (_currentUser == null)
+            {
+                try
+                {
+                    var userJson = await _Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+                    if (!string.IsNullOrEmpty(userJson))
+                    {
+                        _currentUser = JsonSerializer.Deserialize<User>(userJson);
+                    }
+                }
+                catch
+                {
+                    // localStorage'a erişilemezse sessizce devam et
+                }
+            }
+
             ClaimsIdentity identity;
             if (_currentUser != null)
             {
                 identity = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
-                new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
-                new Claim(ClaimTypes.Email, _currentUser.EPosta)
-            }, "apiauth_type");
+                    new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
+                    new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
+                    new Claim(ClaimTypes.Email, _currentUser.EPosta)
+                }, "apiauth_type");
             }
             else
             {
@@ -47,7 +64,7 @@ namespace TekrarlayanIsProgrami.Services
             }
 
             var user = new ClaimsPrincipal(identity);
-            return Task.FromResult(new AuthenticationState(user));
+            return new AuthenticationState(user);
         }
         //Kullanıcının giriş yaptığını sisteme bildirmek.
         public async Task MarkUserAsAuthenticated(User user)

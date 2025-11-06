@@ -9,6 +9,7 @@ using TekrarlayanIsProgrami.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Components;
 var builder = WebApplication.CreateBuilder(args);
+Console.OutputEncoding = System.Text.Encoding.UTF8;
 //var jwtService= new JwtService(); //JwtServive nesnesi oluştur.
 //string token = jwtService.GenerateToken("Kullanici1"); //token oluştur.
 //Console.WriteLine("Oluşturulan Token:");//Console ekranında oluşturulan token i yazcak.
@@ -75,6 +76,9 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.MapRazorComponents<App>()

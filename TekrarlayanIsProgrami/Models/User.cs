@@ -29,7 +29,7 @@ namespace TekrarlayanIsProgrami.Models
         public DateTime UpdDate { get; set; }
         public int DelUser { get; set; }
         public DateTime DelDate { get; set; }
-        public string ResetToken {  get; set; }
-        public DateTime ResetTokenExpiry {  get; set; }
+        public string? ResetToken {  get; set; }
+        public DateTime? ResetTokenExpiry {  get; set; }
     }
 }
