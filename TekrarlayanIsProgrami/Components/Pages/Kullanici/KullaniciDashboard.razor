@@ -30,18 +30,30 @@ else{
 @code {
     private User? currentUser;
     private bool loading = true;
-    protected override async Task OnInitializedAsync()
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadUserFromLocalStorageAsync();
-    }
-    private async Task LoadUserFromLocalStorageAsync()
-    {
-        var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "currentUser");
-        if (!string.IsNullOrEmpty(userJson))
+        if (firstRender)
         {
-            currentUser = JsonSerializer.Deserialize<User>(userJson);
+            await LoadUserFromLocalStorageAsync();
+            loading = false;
+            StateHasChanged();
         }
     }
 
-  
+    private async Task LoadUserFromLocalStorageAsync()
+    {
+        try
+        {
+            var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+            if (!string.IsNullOrEmpty(userJson))
+            {
+                currentUser = JsonSerializer.Deserialize<User>(userJson);
+            }
+        }
+        catch
+        {
+            // JS interop hazır değilse ilk render sonrasına bırakıyoruz
+        }
+    }
 }

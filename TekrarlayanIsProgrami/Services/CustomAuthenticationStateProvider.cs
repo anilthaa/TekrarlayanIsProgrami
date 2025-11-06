@@ -3,6 +3,7 @@ using Microsoft.JSInterop;
 using Npgsql;
 using Radzen;
 using Radzen.Blazor.Markdown;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -28,17 +29,34 @@ namespace TekrarlayanIsProgrami.Services
             _http = http;
         }
 
-        public override Task<AuthenticationState> GetAuthenticationStateAsync()
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            // Eğer _currentUser yoksa localStorage'dan yükle
+            if (_currentUser == null)
+            {
+                try
+                {
+                    var userJson = await _Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+                    if (!string.IsNullOrEmpty(userJson))
+                    {
+                        _currentUser = JsonSerializer.Deserialize<User>(userJson);
+                    }
+                }
+                catch
+                {
+                    // localStorage'a erişilemezse sessizce devam et
+                }
+            }
+
             ClaimsIdentity identity;
             if (_currentUser != null)
             {
                 identity = new ClaimsIdentity(new[]
                 {
-                new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
-                new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
-                new Claim(ClaimTypes.Email, _currentUser.EPosta)
-            }, "apiauth_type");
+                    new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
+                    new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
+                    new Claim(ClaimTypes.Email, _currentUser.EPosta)
+                }, "apiauth_type");
             }
             else
             {
@@ -46,7 +64,7 @@ namespace TekrarlayanIsProgrami.Services
             }
 
             var user = new ClaimsPrincipal(identity);
-            return Task.FromResult(new AuthenticationState(user));
+            return new AuthenticationState(user);
         }
         //Kullanıcının giriş yaptığını sisteme bildirmek.
         public async Task MarkUserAsAuthenticated(User user)
@@ -61,6 +79,7 @@ namespace TekrarlayanIsProgrami.Services
         {
             _currentUser = null;
             await _Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
+            await _Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
         //
@@ -69,43 +88,71 @@ namespace TekrarlayanIsProgrami.Services
             var userJson = await _Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
             if (!string.IsNullOrEmpty(userJson))
             {
-                var user = JsonSerializer.Deserialize<User>(userJson);
-                if (user != null)
-                {
-                    _currentUser = user;
-                    NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-                }
+                _currentUser = JsonSerializer.Deserialize<User>(userJson);
+                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
             }
         }
 
-        public async Task<AuthResult> GirisYapAsync(string eposta ,string sifre)
+        public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
         {
-            var Kullanici = await _kullaniciRepo.GetByEmailAsync(eposta,sifre);
-            if (Kullanici == null || Kullanici.Sifre!=sifre || Kullanici.EPosta!=eposta)
-            {
-                return new AuthResult
-                {
-                    Basarili = false,
-                    Mesaj = $"E-posta veya Şifre Hatalı!"
-                };
-            }
-            else
-            {
-                var identity = new ClaimsIdentity(new[]
-                {
-                new Claim(ClaimTypes.Name, Kullanici.Adi + " " + Kullanici.Soyadi),
-                new Claim(ClaimTypes.Email, Kullanici.EPosta),
-                new Claim(ClaimTypes.NameIdentifier, Kullanici.ID.ToString())
-                }, "apiauth_type");
+            //var Kullanici = await _kullaniciRepo.GetByEmailAsync(eposta, sifre);
+            //if (Kullanici == null || Kullanici.Sifre != sifre || Kullanici.EPosta != eposta)
+            //{
+            //    return new AuthResult
+            //    {
+            //        Basarili = false,
+            //        Mesaj = $"E-posta veya Şifre Hatalı!"
+            //    };
 
-                var kullaniciPrincipal = new ClaimsPrincipal(identity);//Blazor, AuthenticationStateProvider üzerinden principal ile kullanıcının giriş durumunu bilir.
-                NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(kullaniciPrincipal)));//Bu satır, uygulamanın diğer bileşenlerine kullanıcının artık giriş yaptığını bildirir.
-                return new AuthResult
-                {
-                    Basarili = true,
-                    Mesaj = $"Hoşgeldiniz {Kullanici.Adi}!"
-                };
+
+
+
+            //}
+            //await MarkUserAsAuthenticated(Kullanici);
+
+
+            //var identity = new ClaimsIdentity(new[]
+            //{
+            //    new Claim(ClaimTypes.Name, Kullanici.Adi + " " + Kullanici.Soyadi),
+            //    new Claim(ClaimTypes.Email, Kullanici.EPosta),
+            //    new Claim(ClaimTypes.NameIdentifier, Kullanici.ID.ToString())
+            //    }, "apiauth_type");
+
+            //var kullaniciPrincipal = new ClaimsPrincipal(identity);//Blazor, AuthenticationStateProvider üzerinden principal ile kullanıcının giriş durumunu bilir.
+            //NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(kullaniciPrincipal)));//Bu satır, uygulamanın diğer bileşenlerine kullanıcının artık giriş yaptığını bildirir.
+            //return new AuthResult
+            //{
+            //    Basarili = true,
+            //    Mesaj = $"Hoşgeldiniz {Kullanici.Adi}!"
+            //};
+
+            var response=await _http.PostAsJsonAsync("api/auth/login", new {Email=eposta, Password=sifre});
+            var rawLoginResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] Login Response: {response.StatusCode} - {rawLoginResponse}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new AuthResult { Basarili = false, Mesaj = "Geçersiz giriş." };
             }
+
+            var result = JsonSerializer.Deserialize<AuthResult>(rawLoginResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (result==null || !result.Basarili)
+            {
+                return new AuthResult { Basarili = false, Mesaj = "Giriş başarısız." };
+            }
+
+            await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
+
+            var kullanici=await _kullaniciRepo.GetByEmailAsync(eposta, sifre);
+            if (kullanici==null)
+            {
+                return new AuthResult { Basarili = false, Mesaj = "Kullanıcı bulunamadı." };
+            }
+
+            await MarkUserAsAuthenticated(kullanici);
+
+            return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {kullanici.Adi}!" };
+
         }
 
         public async Task<AuthResult> KayitOlAsync(User user)
@@ -127,46 +174,71 @@ namespace TekrarlayanIsProgrami.Services
                     Mesaj = $"Bu E-posta Zaten Kayıtlı!"
                 };
             }
-            else if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
+            if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult
                 {
                     Basarili = false,
-                    Mesaj =$"Şifre en az 8 karakter olmalıdır."
+                    Mesaj = $"Şifre en az 8 karakter olmalıdır."
                 };
             }
-            else { 
-                try
-                {
-                    // Repo metodunu User döndürecek şekilde dönüyor.
-                    User kayitliUser = await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre, user.SifreTekrar);
-                    if (kayitliUser != null)
-                    {
-                        return new AuthResult
-                        {
 
-                            Basarili = true,
-                            Mesaj = "Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın."
-                        };
+            try
+            {
+                // Repo metodunu User döndürecek şekilde dönüyor.
+                //User kayitliUser = await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre, user.SifreTekrar);
+                //if (kayitliUser != null)
+                //{
+                //    return new AuthResult
+                //    {
+
+                //        Basarili = true,
+                //        Mesaj = "Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın."
+                //    };
+                //}
+
+                var response = await _http.PostAsJsonAsync("api/auth/register", user);
+
+                var responseContent=await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[DEBUG] Register Response: {response.StatusCode} - {responseContent}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error=await response.Content.ReadFromJsonAsync<AuthResult>();
+                    return error ?? new AuthResult { Basarili = false, Mesaj = "Kayıt başarısız." };
+                }
+
+                var result = await response.Content.ReadFromJsonAsync<AuthResult>();
+                if (result.Basarili && !string.IsNullOrEmpty(result.Token))
+                {
+                    await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
+                    // Kullanıcıyı anında oturum açmış kabul et (mevcut kullanıcı bilgisiyle)
+                    var yeni = await _kullaniciRepo.GetByEmailAsync(user.EPosta, user.Sifre);
+                    if (yeni != null)
+                    {
+                        await MarkUserAsAuthenticated(yeni);
                     }
+                }
 
-                }
-                catch (Exception ex)
+                return result ?? new AuthResult { Basarili = false, Mesaj = "Sunucudan yanıt alınamadı." };
+
+            }
+            catch (Exception ex)
+            {
+                return new AuthResult
                 {
-                    return new AuthResult
-                    {
-                        Basarili = false,
-                        Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
-                    };
-                }
-            return default;
-                }
+                    Basarili = false,
+                    Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
+                };
+            }
+            
+
         }
 
         public async Task<AuthResult> UpdateAsync(User user)
         {
-            var kullanici = await _kullaniciRepo.GetByEmailAsync(user.EPosta,user.Sifre);
-            if (kullanici == null) 
+            var kullanici = await _kullaniciRepo.GetByEmailAsync(user.EPosta, user.Sifre);
+            if (kullanici == null)
             {
             }
 
@@ -177,8 +249,10 @@ namespace TekrarlayanIsProgrami.Services
             new Claim(ClaimTypes.Name, kullanici.Adi + " " + kullanici.Soyadi),
             new Claim(ClaimTypes.Email, kullanici.EPosta)
         }, "apiauth");
-            return new AuthResult {
-                Basarili = true, Mesaj = "Giriş başarılı" 
+            return new AuthResult
+            {
+                Basarili = true,
+                Mesaj = "Giriş başarılı"
             };
         }
 
@@ -187,18 +261,18 @@ namespace TekrarlayanIsProgrami.Services
             var authState = await GetAuthenticationStateAsync();
             var user = authState.User;
 
-            if (user.Identity is not null && user.Identity.IsAuthenticated)
+            if (user.Identity?.IsAuthenticated == true)
             {
                 return new User
                 {
-                    ID = int.TryParse(user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0,
-                    Adi = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value?.Split(' ').FirstOrDefault() ?? "",
-                    Soyadi = user.FindFirst(c => c.Type == ClaimTypes.Name)?.Value?.Split(' ').Skip(1).FirstOrDefault() ?? "",
-                    EPosta = user.FindFirst(c => c.Type == ClaimTypes.Email)?.Value ?? ""
+                    ID = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0,
+                    Adi = user.FindFirst(ClaimTypes.Name)?.Value?.Split(' ').FirstOrDefault() ?? "",
+                    Soyadi = user.FindFirst(ClaimTypes.Name)?.Value?.Split(' ').Skip(1).FirstOrDefault() ?? "",
+                    EPosta = user.FindFirst(ClaimTypes.Email)?.Value ?? ""
                 };
             }
 
-           return null;
+            return null;
         }
         //Tarayıcıda kullanıcının token ı gelsin diye yazdık.
         public async Task<AuthResult> Login(string eposta, string sifre)
@@ -209,17 +283,22 @@ namespace TekrarlayanIsProgrami.Services
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<AuthResult>();
-                return result; // AuthResult içinde Token var
+                if (result.Basarili)
+                {
+                    await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
+                }
+                return result;
             }
 
-            return null;
+            return new AuthResult { Basarili = false, Mesaj = "Hata" };
         }
-        public Task CikisYapAsync()
+        public async Task CikisYapAsync()
         {
             _currentUser = null;
-            _user = anonymous;
+            await _Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
+            await _Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-            return Task.CompletedTask;
+            
         }
     }
 }
