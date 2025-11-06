@@ -1,7 +1,7 @@
 ﻿@layout MainLayout
 @attribute [AllowAnonymous]
-<RadzenCard Class="mx-auto mt-5" Style="max-width:400px; text-align:center;">
-    <h3>Şifremi Unuttum</h3>
+<RadzenCard Class="mx-auto mt-5" Style="max-width:400px;">
+    <h3 style="text-align:center;">Şifremi Unuttum</h3>
     <p class="text-muted">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
     <div class="col-sm-12 col-lg-12 container">
         <RadzenFormField Text="E-posta" Style="width:100%">
@@ -9,12 +9,7 @@
 					</RadzenFormField>
 					<RadzenRequiredValidator Component="txteposta" Text="Ad zorunludur."></RadzenRequiredValidator>
   </div>
-    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" Click="@OnSubmit" />
-
-   @*  @if (!string.IsNullOrEmpty(bilgiMesaji))
-    {
-        <RadzenAlert Severity="Info" Summary="Bilgi" Detail="@bilgiMesaji" Class="mt-3" />
-    } *@
+    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" style="margin-top:5px;" Click="@OnSubmit" />
 </RadzenCard>
 
 @code {
@@ -31,10 +26,7 @@
             return;
         }
 
-        // Token oluştur
         var token = Guid.NewGuid().ToString(); 
-
-        // Mail gönder
         bool basarili = await SifreService.SifreSifirlamaMailiGonder(kullanici.EPosta, token);
         if (basarili)
         {

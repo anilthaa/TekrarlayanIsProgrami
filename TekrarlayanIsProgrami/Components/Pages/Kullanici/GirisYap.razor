@@ -9,11 +9,13 @@
 		<EditForm Model="@loginModel" OnValidSubmit="() => OnLogin(loginModel)">
 			<h3>🔐Giriş Yap</h3>
 			<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
-
-			<RadzenTextBox @bind-Value="loginModel.E_Posta" Style="width:100%;" Placeholder="✉E-posta" />
-			<RadzenPassword @bind-Value="loginModel.Sifre" Style="width:100%; margin-top:9px;" Placeholder="🔑Şifre" Icon="@eyeIcon" />
-			@*<a href="/sifremi-unuttum" @onclick="OpenSifreSifirlaDialog" class="sifreBaglanti">🔁Şifrenimi Unuttun?</a>*@
-			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" class="sifreBaglanti"></RadzenButton>
+			<RadzenFormField Text="✉E-posta" Style="width:100%;">
+			<RadzenTextBox @bind-Value="loginModel.E_Posta" />
+			</RadzenFormField>
+			<RadzenFormField Text="🔑Şifre" Style="width:100%; margin-top:9px;">
+			<RadzenPassword @bind-Value="loginModel.Sifre"/>
+			</RadzenFormField>
+ 			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" style="background-color:transparent; color:mediumpurple; margin-top:15px;" class="sifreBaglanti"></RadzenButton>
 
 			<RadzenButton ButtonType="ButtonType.Submit" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
 		</EditForm>
@@ -124,7 +126,7 @@
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Giriş Hatası", result.Mesaj);
+			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
 		}
 	}
 

@@ -95,9 +95,8 @@
         if (result == true)
         {
             await Sil(user.ID);
-            notificationService.Notify(NotificationSeverity.Success,"Başarılı" ,"Silme İşlemi Başarıyla Tamamlandı.");
         }
-        else
+    else
         {
             notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Silme İşleminiz İptal Edildi.");
         }

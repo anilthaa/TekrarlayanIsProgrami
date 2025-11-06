@@ -132,7 +132,7 @@ namespace TekrarlayanIsProgrami.Services
 
             if (!response.IsSuccessStatusCode)
             {
-                return new AuthResult { Basarili = false, Mesaj = "Geçersiz giriş." };
+                return new AuthResult { Basarili = false, Mesaj = "E-posta veya Şifre Hatalı." };
             }
 
             var result = JsonSerializer.Deserialize<AuthResult>(rawLoginResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -152,20 +152,10 @@ namespace TekrarlayanIsProgrami.Services
             await MarkUserAsAuthenticated(kullanici);
 
             return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {kullanici.Adi}!" };
-
         }
 
         public async Task<AuthResult> KayitOlAsync(User user)
         {
-            //var kullanici =await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre, user.SifreTekrar);
-            //if(kullanici==null)
-            //{
-            //    return new AuthResult
-            //    {
-            //        Basarili = false,
-            //        Mesaj=$"Lütfen Bilgilerinizi Doldurunuz!"
-            //    };
-            //}
             if (await _kullaniciRepo.EpostaVarMiAsync(user.EPosta))
             {
                 return new AuthResult
@@ -185,18 +175,6 @@ namespace TekrarlayanIsProgrami.Services
 
             try
             {
-                // Repo metodunu User döndürecek şekilde dönüyor.
-                //User kayitliUser = await _kullaniciRepo.KayitOlAsync(user.Adi, user.Soyadi, user.EPosta, user.Sifre, user.SifreTekrar);
-                //if (kayitliUser != null)
-                //{
-                //    return new AuthResult
-                //    {
-
-                //        Basarili = true,
-                //        Mesaj = "Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın."
-                //    };
-                //}
-
                 var response = await _http.PostAsJsonAsync("api/auth/register", user);
 
                 var responseContent=await response.Content.ReadAsStringAsync();
@@ -218,10 +196,9 @@ namespace TekrarlayanIsProgrami.Services
                     {
                         await MarkUserAsAuthenticated(yeni);
                     }
+                    return new AuthResult {Basarili=true,Mesaj=$"Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın." };
                 }
-
-                return result ?? new AuthResult { Basarili = false, Mesaj = "Sunucudan yanıt alınamadı." };
-
+                return result;
             }
             catch (Exception ex)
             {
@@ -231,8 +208,6 @@ namespace TekrarlayanIsProgrami.Services
                     Mesaj = $"Kayıt sırasında bir hata oluştu: {ex.Message}"
                 };
             }
-            
-
         }
 
         public async Task<AuthResult> UpdateAsync(User user)
