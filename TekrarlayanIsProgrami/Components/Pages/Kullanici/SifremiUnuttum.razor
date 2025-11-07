@@ -2,19 +2,20 @@
 @attribute [AllowAnonymous]
 <RadzenCard Class="mx-auto mt-5" Style="max-width:400px;">
     <h3 style="text-align:center;">Şifremi Unuttum</h3>
-    <p class="text-muted">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
+    <p class="text-muted" style="text-align:center;">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
     <div class="col-sm-12 col-lg-12 container">
         <RadzenFormField Text="E-posta" Style="width:100%">
 						<RadzenTextBox Name="txteposta" @bind-Value="model.Eposta" style="width:100%;" />
 					</RadzenFormField>
 					<RadzenRequiredValidator Component="txteposta" Text="Ad zorunludur."></RadzenRequiredValidator>
   </div>
-    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" style="margin-top:5px;" Click="@OnSubmit" />
+    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" style="margin-top:5px; margin-left:85px;" Click="@OnSubmit" />
 </RadzenCard>
 
 @code {
     private SifreUnuttumModel model = new();
     private string bilgiMesaji;
+
 
     private async Task OnSubmit()
     {
@@ -22,24 +23,40 @@
         if (kullanici == null)
         {
             notificationService.Notify(NotificationSeverity.Error, "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
-            // bilgiMesaji = "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.";
             return;
         }
 
-        var token = Guid.NewGuid().ToString(); 
-        bool basarili = await SifreService.SifreSifirlamaMailiGonder(kullanici.EPosta, token);
-        if (basarili)
-        {
-            notificationService.Notify(NotificationSeverity.Success,"Gönderildi");
-            StateHasChanged();
-            await Task.Delay(1000); // Mesaj gösterildikten sonra yönlendirme
-            NavigationManager.NavigateTo("/sifre-sifirla");
-        }
-        else
-        {
-            notificationService.Notify(NotificationSeverity.Error, "Gönderilemedi");
-        }
+        var token = Guid.NewGuid().ToString();
+        await _kullaniciRepo.SifreSifirlamaTokenKaydet(kullanici.ID, token, DateTime.UtcNow.AddHours(1));
+
+        await EpostaService.SendResetEpostaAsync(kullanici.EPosta, token, kullanici.Adi);
+
+        notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
     }
+    // private async Task OnSubmit()
+    // {
+    //     var kullanici = await _kullaniciRepo.SifreEmailAsync(model.Eposta);
+    //     if (kullanici == null)
+    //     {
+    //         notificationService.Notify(NotificationSeverity.Error, "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
+    //         return;
+    //     }
+
+    //     var token = Guid.NewGuid().ToString();
+    //     await _kullaniciRepo.SifreSifirlamaTokenKaydet(kullanici.ID, token, DateTime.UtcNow.AddHours(1));
+    //     var link = $"https://localhost:7014/sifre-sifirla?token={token}";
+
+    //     bool basarili = await SifreService.SifreSifirlamaMailiGonder(kullanici.EPosta, link);
+    //     if (basarili)
+    //     {
+    //         await EpostaService.SendResetEpostaAsync(model.Eposta, token, kullanici.Adi);
+    //         notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
+    //     }
+    //     else
+    //     {
+    //         notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta gönderilemedi.");
+    //     }
+  
 
     public class SifreUnuttumModel
     {

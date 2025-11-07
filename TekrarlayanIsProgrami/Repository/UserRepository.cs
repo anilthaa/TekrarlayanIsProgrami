@@ -64,19 +64,31 @@ namespace TekrarlayanIsProgrami.Repository
 
             return result > 0;
         }
-        public async Task<bool> SifreGuncelle(string Token, string YeniSifre)
+        public async Task<bool> SifreGuncelle(string token, string yeniSifre)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
-            // TODO: Token veritabanında doğrula ve kullanıcıyı bul
-            var kullanici = await baglanti.QueryFirstOrDefaultAsync<User>("SELECT * FROM \"Kullanici\" WHERE \"ResetToken\" = @token", new { Token });
-            if (kullanici == null)
-            return false;
 
-            var sql = @"UPDATE ""Kullanici"" SET ""Sifre"" = @sifre, ""ResetToken"" = NULL WHERE ""ID"" = @id";
-            await baglanti.ExecuteAsync(sql, new { sifre = YeniSifre, id = kullanici.ID });
+            var kullanici = await baglanti.QueryFirstOrDefaultAsync<User>(
+                @"SELECT * FROM ""Kullanici"" WHERE ""ResetToken"" = @token and ""ResetTokenExpiry""> now()",
+                new { token }
+            );
+
+            if (kullanici == null)
+                return false;
+
+            // Şifreyi hashle
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(yeniSifre);
+
+            // Şifreyi ve token'ı güncelle
+            var sql = @"UPDATE ""Kullanici"" 
+                SET ""Sifre"" = @sifre, ""ResetToken"" = NULL 
+                WHERE ""ID"" = @id";
+
+            await baglanti.ExecuteAsync(sql, new { sifre = hashedPassword, id = kullanici.ID });
 
             return true;
         }
+
 
         public async Task DeleteAsync(int id, int delUser)
         {
@@ -150,6 +162,15 @@ namespace TekrarlayanIsProgrami.Repository
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta });
+        }
+        public async Task SifreSifirlamaTokenKaydet(int id, string token, DateTime expiry)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            var sql = @"UPDATE ""Kullanici""
+                SET ""ResetToken"" = @token,
+                    ""ResetTokenExpiry"" = @expiry
+                WHERE ""ID"" = @id";
+            await baglanti.ExecuteAsync(sql, new { id, token, expiry });
         }
     }
 }
