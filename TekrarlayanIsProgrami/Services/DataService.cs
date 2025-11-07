@@ -18,6 +18,7 @@ namespace TekrarlayanIsProgrami.Services
         {(ID > 0 ? $@"and ""ID"" = {ID}" : "")} 
         ORDER BY ""ID"" ")).ToArray();
         }
+
         public async Task<DataResult<int>> SetKategori(ItemKategori item)
         {
             if (item.ID.Equals(0) && item.DelUser.Equals(0))
@@ -37,8 +38,9 @@ namespace TekrarlayanIsProgrami.Services
                      SET ""DelUser"" = @DelUser, ""DelDate"" = now() 
                      WHERE ""ID"" = @ID", item);
             }
-            return new(){ Data = item.ID };
+            return new() { Data = item.ID };
         }
+
 
         public async Task<ItemGorev[]> GetGorevler()
         {
@@ -55,7 +57,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<ItemGorev[]> YaklasanGorevlerAdmin()
         {
-            
+
 
             return (await SQLQueryAsync<ItemGorev>($@"
                 Select * From ""Gorev"" Where ""DelDate"" Is Null
@@ -64,7 +66,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<ItemGorev[]> GecmisGorevlerAdmin()
         {
-            
+
             return (await SQLQueryAsync<ItemGorev>($@"
                 Select * From ""Gorev""
                 Where ""DelDate"" Is Null
@@ -74,7 +76,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<DataResult<int>> SetGorev(ItemGorev item)
         {
-            
+
 
             if (item.ID.Equals(0) && item.DelUser.Equals(0))
             {
@@ -105,7 +107,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<(int aktif, int silinen, int tamamlanan)> GetIstatistik()
         {
-            
+
             var sql = @"
                 Select
                     Count(*) Filter (Where ""Aktif""=True And ""DelDate"" Is Null) As aktif,
@@ -120,8 +122,8 @@ namespace TekrarlayanIsProgrami.Services
 
         private async Task CheckAdminRole()
         {
-            var authState=await _stateProvider.GetAuthenticationStateAsync();
-            var user=authState.User;
+            var authState = await _stateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
             if (!user.Identity.IsAuthenticated)
             {
@@ -132,6 +134,43 @@ namespace TekrarlayanIsProgrami.Services
             {
                 throw new UnauthorizedAccessException("Bu verilere erişim yetkiniz yok.");
             }
+        }
+
+        public async Task<ItemKullaniciTip[]> GetKullaniciTipleri(int ID = 0)
+        {
+            return (await SQLQueryAsync<ItemKullaniciTip>($@"
+                select ""ID"", ""Adi"", ""Aktif"", ""CreUser"", ""CreDate"", ""UpdUser"", ""UpdDate"", ""DelUser"", ""DelDate""
+                from ""KullaniciTip""
+                where ""DelUser"" is null
+                {(ID > 0 ? $@"and ""ID"" = {ID}" : "")}
+                order by ""ID""
+            ")).ToArray();
+        }
+        
+        public async Task<DataResult<int>> SetKullaniciTip(ItemKullaniciTip item)
+        {
+            if (item.ID.Equals(0) && item.DelUser.Equals(0))
+            {
+                item.ID = await SQLExecuteScalar<int>(@"INSERT INTO ""KullaniciTip"" (""Adi"", ""Aktif"", ""CreUser"", ""CreDate"")
+                    VALUES (@Adi, @Aktif, @CreUser, now()) RETURNING ""ID""", item);
+            }
+            else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
+            {
+                await SQLExecute(@"UPDATE ""KullaniciTip""
+                        SET ""Adi"" = @Adi,
+                            ""Aktif"" = @Aktif,
+                            ""UpdUser"" = @UpdUser,
+                            ""UpdDate"" = now()
+                        WHERE ""ID"" = @ID", item);
+            }
+            else if (!item.ID.Equals(0) && !item.DelUser.Equals(0))
+            {
+                await SQLExecute(@"UPDATE ""KullaniciTip""
+                        SET ""DelUser"" = @DelUser,
+                            ""DelDate"" = now()
+                        WHERE ""ID"" = @ID", item);
+            }
+            return new() { Data = item.ID };
         }
 
 

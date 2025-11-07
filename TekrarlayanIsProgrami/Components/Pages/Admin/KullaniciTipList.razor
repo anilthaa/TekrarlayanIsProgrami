@@ -1,0 +1,201 @@
+@page "/Admin/KullaniciTipleri"
+@layout MainLayout
+@attribute [Authorize(Roles ="Admin")]
+<AuthorizeView Roles="Admin">
+	<RadzenCard Style="margin:20px;">
+		<h3>Kullanıcı Tipleri</h3>
+
+		<RadzenButton Text="Yeni Tip" Icon="add"
+					  Style="margin-bottom:15px; background:#3498db; color:white"
+					  Click="@YeniTip" />
+
+		@if (isLoading)
+		{
+			<p>Veriler yükleniyor...</p>
+		}
+		else if (DataList == null || !DataList.Any())
+		{
+			<p>Henüz kullanıcı tipi tanımlanmamış.</p>
+		}
+		else
+		{
+			<RadzenDataGrid TItem="ItemKullaniciTip" Data="@DataList" @ref="grid"
+							AllowPaging="true" PageSize="10"
+							AllowSorting="true" AllowFiltering="true"
+							RowDoubleClick="@OnRowDoubleClick">
+				<Columns>
+					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="70px" />
+					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" />
+					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
+						<Template Context="item">
+							<RadzenCheckBox Value="item.Aktif" TValue="bool" Disabled="true" Style="margin-right:5px;" />
+							@(item.Aktif ? "Aktif" : "Pasif")
+						</Template>
+					</RadzenDataGridColumn>
+					<RadzenDataGridColumn TItem="ItemKullaniciTip" Title="İşlemler" Width="150px">
+						<Template Context="item">
+							<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:6px"
+										  ButtonStyle="ButtonStyle.Success" Click="@(() => Duzenle(item))" />
+							<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+										  Click="@(() => Sil(item))" />
+						</Template>
+					</RadzenDataGridColumn>
+				</Columns>
+			</RadzenDataGrid>
+		}
+	</RadzenCard>
+
+	@code {
+		private List<ItemKullaniciTip> DataList = new();
+		private RadzenDataGrid<ItemKullaniciTip>? grid;
+		private bool isLoading = true;
+		private int? currentUserId;
+
+		protected override async Task OnInitializedAsync()
+		{
+			await YukleKullaniciAsync();
+			await YukleDataAsync();
+		}
+
+		private async Task YukleKullaniciAsync()
+		{
+			try
+			{
+				var user = await girisSaglayici.GetCurrentUserAsync();
+				currentUserId = user?.ID;
+			}
+			catch (Exception ex)
+			{
+				notificationService.Notify(NotificationSeverity.Warning, "Uyarı", $"Kullanıcı bilgisi alınamadı: {ex.Message}");
+				currentUserId = null;
+			}
+		}
+
+		private async Task YukleDataAsync()
+		{
+			try
+			{
+				isLoading = true;
+				StateHasChanged();
+				DataList = (await DataService.GetKullaniciTipleri()).ToList();
+			}
+			catch (Exception ex)
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", $"Kullanıcı tipleri yüklenemedi: {ex.Message}");
+				DataList = new();
+			}
+			finally
+			{
+				isLoading = false;
+				StateHasChanged();
+			}
+		}
+
+		private async Task YeniTip()
+		{
+			var yeniItem = new ItemKullaniciTip
+			{
+				ID = 0,
+				Adi = string.Empty,
+				Aktif = true,
+				CreUser = currentUserId ?? 1,
+				UpdUser = 0,
+				DelUser = 0
+			};
+
+			var result = await DialogService.OpenAsync<KullaniciTipTnm>("Kullanıcı Tipi Ekle",
+			new Dictionary<string, object> { { "ItemData", yeniItem }, { "CurrentUserId", currentUserId ?? 1 } },
+			new DialogOptions { Width = "480px", Height = "auto" });
+
+			if (result is ItemKullaniciTip eklenen && eklenen.ID > 0)
+			{
+				DataList.Insert(0, eklenen);
+				if (grid != null)
+				{
+					await grid.Reload();
+				}
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kullanıcı tipi oluşturuldu.");
+				StateHasChanged();
+			}
+		}
+
+		private async Task Duzenle(ItemKullaniciTip item)
+		{
+			var payload = new ItemKullaniciTip
+			{
+				ID = item.ID,
+				Adi = item.Adi,
+				Aktif = item.Aktif,
+				CreUser = item.CreUser,
+				CreDate = item.CreDate,
+				UpdUser = currentUserId ?? 1,
+				UpdDate = item.UpdDate,
+				DelUser = item.DelUser,
+				DelDate = item.DelDate
+			};
+
+			var result = await DialogService.OpenAsync<KullaniciTipTnm>("Kullanıcı Tipini Düzenle",
+			new Dictionary<string, object> { { "ItemData", payload }, { "CurrentUserId", currentUserId ?? 1 } },
+			new DialogOptions { Width = "480px", Height = "auto" });
+
+			if (result is ItemKullaniciTip guncellenen && guncellenen.ID > 0)
+			{
+				var index = DataList.FindIndex(x => x.ID == guncellenen.ID);
+				if (index >= 0)
+				{
+					DataList[index] = guncellenen;
+				}
+				if (grid != null)
+				{
+					await grid.Reload();
+				}
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kullanıcı tipi güncellendi.");
+				StateHasChanged();
+			}
+		}
+
+		private async Task Sil(ItemKullaniciTip item)
+		{
+			bool? onay = await DialogService.Confirm($"'{item.Adi}' tipini silmek istediğinize emin misiniz?", "Onay",
+			new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır", Icon = "warning" });
+
+			if (onay == true)
+			{
+				var silinecek = new ItemKullaniciTip
+				{
+					ID = item.ID,
+					Adi = item.Adi,
+					Aktif = item.Aktif,
+					CreUser = item.CreUser,
+					CreDate = item.CreDate,
+					UpdUser = item.UpdUser,
+					UpdDate = item.UpdDate,
+					DelUser = currentUserId ?? 1,
+					DelDate = item.DelDate
+				};
+
+				var response = await DataService.SetKullaniciTip(silinecek);
+				if (response.Data > 0)
+				{
+					DataList.Remove(item);
+					if (grid != null)
+					{
+						await grid.Reload();
+					}
+					notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kullanıcı tipi silindi.");
+				}
+				else
+				{
+					notificationService.Notify(NotificationSeverity.Error, "Hata", "Silme işlemi tamamlanamadı.");
+				}
+			}
+		}
+
+		private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<ItemKullaniciTip> args)
+		{
+			await Duzenle(args.Data);
+		}
+	}
+</AuthorizeView>
+
+

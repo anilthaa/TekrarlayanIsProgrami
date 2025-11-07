@@ -40,7 +40,8 @@ namespace TekrarlayanIsProgrami.Models
                 Adi = this.Adi,
                 Soyadi = this.Soyadi,
                 EPosta = this.EPosta,
-                Sifre = this.Sifre
+                Sifre = this.Sifre,
+                KullaniciTip_ID = this.KullaniciTip_ID
             };
         }
     }
