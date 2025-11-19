@@ -7,17 +7,20 @@
 	<!-- Giriş Formu -->
 	<div class="form login-form">
 		<EditForm Model="@loginModel" OnValidSubmit="() => OnLogin(loginModel)">
-			<h3>🔐Giriş Yap</h3>
+			<h2 style="text-align:center;">Giriş Yap</h2>
 			<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
-			<RadzenFormField Text="✉E-posta" Style="width:100%;">
+			<RadzenFormField Text="E-posta" Style="width:100%;">
 			<RadzenTextBox @bind-Value="loginModel.E_Posta" />
 			</RadzenFormField>
-			<RadzenFormField Text="🔑Şifre" Style="width:100%; margin-top:9px;">
-			<RadzenPassword @bind-Value="loginModel.Sifre"/>
+			<RadzenFormField Text="Şifre" Style="width:100%; margin-top:9px;">
+			<RadzenTextBox @bind-Value="loginModel.Sifre" type="@InputType2"/>
+				<button type="button" @onclick="@TogglePasswordAgain" style=" position:absolute; right:2px; top:8px; transform:translate(-50%); border:none; background:transparent;">
+				<RadzenIcon Icon="@Icon2" Style="color:gray;"></RadzenIcon>
+			</button>
 			</RadzenFormField>
- 			<RadzenButton Text="🔁 Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" style="background-color:transparent; color:mediumpurple; margin-top:15px;"></RadzenButton>
+ 			<RadzenButton Text=" Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" style="background-color:transparent; color:mediumpurple; margin-top:15px;"></RadzenButton>
 
-			<RadzenButton ButtonType="ButtonType.Submit" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class=" radzen-button" Icon="login"></RadzenButton>
+			<RadzenButton ButtonType="ButtonType.Submit" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class="girisButton" Icon="login"></RadzenButton>
 		</EditForm>
 	</div>
 	<!-- Kayıt Formu -->
@@ -26,7 +29,7 @@
 		<EditForm Model="@newUser" OnValidSubmit="@OnSubmit">
 			<DataAnnotationsValidator />
 			<div class="row">
-				<h3>Hesap Oluştur</h3>
+				<h2 style="text-align:center">Hesap Oluştur</h2>
 				<p style="color:rebeccapurple; margin-left:5px; margin-bottom:5px;">Lütfen bilgilerinizi girin</p>
 				<div class="col-sm-12">
 					<RadzenFormField Text="Ad" Style="width:85%; margin-left:45px;">
@@ -48,7 +51,10 @@
 				</div>
 				<div class="col-sm-12">
 					<RadzenFormField Text="Şifre" Style="width:85%; margin-left:45px; margin-top:4px;">
-							<RadzenPassword @bind-Value="newUser.Sifre" />
+							<RadzenTextBox @bind-Value="newUser.Sifre" type="@InputType" />
+						<button type="button" @onclick="@TogglePassword" style="position:absolute; right:2px; top:8px; transform:translate(-50%); border:none; background:transparent;">
+								<RadzenIcon Icon="@Icon" Style="color:gray;"></RadzenIcon>
+							</button>
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.Sifre)" />
 				</div>
@@ -58,24 +64,25 @@
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.SifreTekrar)" />
 				</div>
-				<RadzenButton Style="width:100%; margin-top:20px;" class="radzen-button" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
+				<RadzenButton Style="width:100%; margin-top:20px;" class="girisButton" Text="Kayıt Ol" ButtonStyle="ButtonStyle.Info" ButtonType="ButtonType.Submit"></RadzenButton>
 			</div>
 		</EditForm>
 	</div>
 	<!-- Slider Panel -->
 	<div class="slider-panel">
+		@* # 8968cd *@
 		<RadzenCard class="slider-content">
 			@if (!isRegisterActive)
 			{
 				<h2>Merhabalar!</h2>
 				<p>Tüm site özelliklerini kullanmak için kişisel bilgilerinizle kayıt olun.</p>
-				<RadzenButton Click="@(() => isRegisterActive = true)" Text="KAYIT OL" Style="background-color: white;color: #2196f3; margin-top:10px;" />
+				<RadzenButton Click="@(() => isRegisterActive = true)" Text="KAYIT OL" Style="background-color: white;color:rebeccapurple; margin-top:10px;" />
 			}
 			else
 			{
 				<h2>Tekrar Hoş Geldiniz!</h2>
 				<p>Zaten hesabınız var mı? Giriş yapın.</p>
-				<RadzenButton Click="@(() => isRegisterActive = false)" Text="GİRİŞ YAP" Style="background-color: white; color: #2196f3; margin-top:10px;" />
+				<RadzenButton Click="@(() => isRegisterActive = false)" Text="GİRİŞ YAP" Style="background-color: white; color:rebeccapurple; margin-top:10px;" />
 			}
 		</RadzenCard>
 	</div>
@@ -184,19 +191,35 @@
 	}
 
 	private string InputType { get; set; } = "password";
-	private string Icon { get; set; } = "visibility"; // göz açık
+	private string Icon { get; set; } = "visibility_off"; // göz açık
 
 	void TogglePassword()
 	{
 		if (InputType == "password")
 		{
 			InputType = "text";
-			Icon = "visibility_off"; // göz kapalı
+			Icon = "visibility"; // göz kapalı
 		}
 		else
 		{
 			InputType = "password";
-			Icon = "visibility";
+			Icon = "visibility_off";
+		}
+	}
+	private string InputType2 { get; set; } = "password";
+	private string Icon2 { get; set; } = "visibility_off"; // göz açık
+
+	void TogglePasswordAgain()
+	{
+		if (InputType2 == "password")
+		{
+			InputType2 = "text";
+			Icon2 = "visibility"; // göz kapalı
+		}
+		else
+		{
+			InputType2 = "password";
+			Icon2 = "visibility_off";
 		}
 	}
 }

@@ -17,9 +17,9 @@
                     class="text-center align-middle">
 
         <Columns>
-            <RadzenDataGridColumn TItem="User" Property="ID" Title="Id" />
-            <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" />
-            <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" />
+            <RadzenDataGridColumn TItem="User" Property="ID" Title="Id" Width="150px" />
+            <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="150px" />
+            <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px"/>
             <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" Width="250px;" />
             <RadzenDataGridColumn TItem="User" Property="Sifre" Title="Şifre" />
             <RadzenDataGridColumn TItem="User" Title="Rol" Width="180px">
@@ -28,7 +28,7 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="User" Title="Durum">
+            <RadzenDataGridColumn TItem="User" Title="Durum" Width="150px">
                 <Template Context="k">
                     <span style="cursor:pointer;" @onclick="@(async () => await ToggleDurum(k))">
                         <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
@@ -77,7 +77,7 @@
     private async Task OpenEditDialog(int id)
     {
         var result = await DialogService.OpenAsync<KullaniciTnm>(
-             "Kullanıcı Düzenle",
+             " ",
              new Dictionary<string, object>() { { "KullaniciId", id } },
              new DialogOptions() {Width = "600px", Height = "auto" }
          );

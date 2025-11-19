@@ -22,12 +22,20 @@
 			<ValidationMessage For="@(() => newUser.EPosta)"></ValidationMessage>
 
 			<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
-			<RadzenPassword class="form-control" @bind-Value="newUser.Sifre" />
+			<RadzenTextBox class="form-control" @bind-Value="newUser.Sifre" type="@InputType" />
+			<button type="button" @onclick="TogglePassword"
+				style="position:absolute; right:18px; top:50%; transform:translateY(-50%); border:none; background:transparent;">
+				<RadzenIcon Icon="@Icon" Style="color:gray;"></RadzenIcon>
+			</button>
 			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.Sifre)"></ValidationMessage>
 
 			<RadzenFormField Text="Şifre Tekrar" Style="width:85%; margin-left:41px; margin-top:4px;">
-			<RadzenPassword type="password" @bind-Value="newUser.SifreTekrar"/>
+				<RadzenTextBox @bind-Value="newUser.SifreTekrar" type="@InputType2" />
+				<button type="button" @onclick="@TogglePasswordAgain"
+					style="position:absolute; right:1px; top:8px; transform:translate(-50%); border:none; background:transparent;">
+					<RadzenIcon Icon="@Icon2" Style="color:gray;"></RadzenIcon>
+				</button>
 			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.SifreTekrar)"></ValidationMessage>
             <RadzenCard class="btn-group">
@@ -90,4 +98,37 @@
 		notificationService.Notify(NotificationSeverity.Warning, "Uyarı!", "Kayıt İşleminiz İptal Edildi.");
 	}
 	private string geriUrl = "/kullanicilar";
+
+	private string InputType { get; set; } = "password";
+	private string Icon { get; set; } = "visibility_off"; // göz kapalı
+
+	void TogglePassword()
+	{
+		if (InputType == "password")
+		{
+			InputType = "text";
+			Icon = "visibility"; // göz açık
+		}
+		else
+		{
+			InputType = "password";
+			Icon = "visibility_off";
+		}
+	}
+	private string InputType2 { get; set; } = "password";
+	private string Icon2 { get; set; } = "visibility_off"; // göz kapalı
+
+	void TogglePasswordAgain()
+	{
+		if (InputType2 == "password")
+		{
+			InputType2 = "text";
+			Icon2 = "visibility"; // göz açık
+		}
+		else
+		{
+			InputType2 = "password";
+			Icon2 = "visibility_off";
+		}
+	}
 }

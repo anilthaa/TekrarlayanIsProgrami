@@ -99,12 +99,12 @@
 							@(string.IsNullOrWhiteSpace(g.TekrarlamaTipi) ? "Yok" : g.TekrarlamaTipi)
 						</Template>
 					</RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı">
+					<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı" Width="200px">
 						<Template Context="g">
 							@(g.TekrarAraligi.HasValue? g.TekrarAraligi.ToString() : "Yok")
 						</Template>
 					</RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü">
+					<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü" width="200px">
 						<Template Context="g">
 							@(string.IsNullOrWhiteSpace(g.HaftaninGunu) ? "Yok" : g.HaftaninGunu)
 						</Template>
@@ -117,13 +117,13 @@
 					<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç" FormatString="{0:dd.MM.yyyy HH:mm}">
 					</RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
+					<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="220px"></RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="Kilitli" Title="Kilitli Mi?">
 						<Template Context="g">
 							@(g.Kilitli ? "Evet" : "Hayır")
 						</Template>
 					</RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="110px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
+					<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="150px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
 						<Template Context="gorev">
 							<RadzenCheckBox @bind-Value="gorev.Tamamlandi" TValue="bool" Change=@(() => ToggleTamamlandi(gorev))></RadzenCheckBox>
 						</Template>

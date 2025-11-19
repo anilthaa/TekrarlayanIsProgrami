@@ -31,12 +31,12 @@ else
 					@bind-Value="kullanicilar.KullaniciTip_ID" />
 			@* <RadzenRequiredValidator Component="KullaniciTip" Text="Kullanıcı tipi seçmek zorunludur." Popup="false" /> *@
 
-			<div class="d-flex justify-content-between mt-4">
+			<RadzenCard class="btn-group">
 				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
-					Style="width:48%;" class="radzen-button" Disabled="@isSaving" />
+							  Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
 				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
-					Style="width:48%;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
-			</div>
+							  Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+			</RadzenCard>
 		</RadzenTemplateForm>
 	</RadzenCard>
 }
