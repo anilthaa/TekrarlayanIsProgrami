@@ -1,7 +1,6 @@
 ﻿@page "/kullanicilar"
 @layout MainLayout
-@* @attribute [Authorize] *@
-@*[Authorize(Roles = "Admin")] belirli roller erişebildiğini bellitiyoruz.*@ 
+@attribute [Authorize(Roles = "Admin")]
 <RadzenDialog></RadzenDialog>
 
 <RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
@@ -23,7 +22,11 @@
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" />
             <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" Width="250px;" />
             <RadzenDataGridColumn TItem="User" Property="Sifre" Title="Şifre" />
-            <RadzenDataGridColumn TItem="User" Property="KullaniciTip_ID" Title="Rol" />
+            <RadzenDataGridColumn TItem="User" Title="Rol" Width="180px">
+                <Template Context="k">
+                    @GetKullaniciTipAdi(k.KullaniciTip_ID)
+                </Template>
+            </RadzenDataGridColumn>
 
             <RadzenDataGridColumn TItem="User" Title="Durum">
                 <Template Context="k">
@@ -47,12 +50,14 @@
     </RadzenDataGrid>
 </RadzenCard>
 @code {
-    private List<User>? kullanicilar=new List<User>();
+    private List<User>? kullanicilar=new();
+    private List<ItemKullaniciTip> kullaniciTipleri = new();
     private RadzenDataGrid<User> kullaniciGrid;
     private User user = new User();
     protected override async Task OnInitializedAsync()
     {
         kullanicilar = await _kullaniciRepo.GetAllAsync();
+        kullaniciTipleri = (await DataService.GetKullaniciTipleri()).ToList();
     }
     //Popuplar.
     private async Task OpenRegisterDialog()
@@ -71,11 +76,27 @@
 
     private async Task OpenEditDialog(int id)
     {
-        await DialogService.OpenAsync<KullaniciTnm>(
-             " ",
+        var result = await DialogService.OpenAsync<KullaniciTnm>(
+             "Kullanıcı Düzenle",
              new Dictionary<string, object>() { { "KullaniciId", id } },
              new DialogOptions() {Width = "600px", Height = "auto" }
          );
+
+        if (result is User updatedUser)
+        {
+            var index = kullanicilar.FindIndex(k => k.ID == updatedUser.ID);
+            if (index >= 0)
+            {
+                kullanicilar[index] = updatedUser;
+            }
+            else
+            {
+                kullanicilar.Add(updatedUser);
+            }
+
+            await kullaniciGrid.Reload();
+            StateHasChanged();
+        }
     }
     //
 
@@ -151,5 +172,16 @@
         {
             notificationService.Notify(NotificationSeverity.Error, "Hata", "Durum güncellenemedi.");
         }
+    }
+
+    private string GetKullaniciTipAdi(int tipId)
+    {
+        if (tipId == 0 || kullaniciTipleri == null || !kullaniciTipleri.Any())
+        {
+            return "—";
+        }
+
+        var tip = kullaniciTipleri.FirstOrDefault(t => t.ID == tipId);
+        return tip?.Adi ?? "—";
     }
 }

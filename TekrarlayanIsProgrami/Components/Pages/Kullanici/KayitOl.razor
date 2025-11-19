@@ -30,8 +30,8 @@
 			<RadzenPassword type="password" @bind-Value="newUser.SifreTekrar"/>
 			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.SifreTekrar)"></ValidationMessage>
-			<RadzenCard class="btn-group">
-				<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
+            <RadzenCard class="btn-group">
+                <RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
 				<RadzenButton Text="İptal"  Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
 			</RadzenCard>
 		</RadzenFieldset>

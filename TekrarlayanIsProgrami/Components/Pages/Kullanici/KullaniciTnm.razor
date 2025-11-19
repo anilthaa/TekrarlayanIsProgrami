@@ -1,70 +1,109 @@
-﻿@layout MainLayout
-@if (kullanicilar == null)
+﻿@if (isLoading || kullanicilar == null)
 {
 	<RadzenCard class="text-center mt-5">
-		<RadzenLoader Visible="true" Size="LoaderSize.Large" />
+		<RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:220px;" />
 		<p class="mt-2">Kullanıcı bilgileri yükleniyor...</p>
 	</RadzenCard>
 }
 else
 {
-	<RadzenCard class="max-width:600px; margin:auto; padding:20px;">
-		
-			<h3 class="card-title text-center mb-4">Kullanıcı Düzenle</h3>
-		<RadzenTemplateForm  Data="@kullanicilar" TItem="User" Submit="@Kaydet">
-				<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
-					<DataAnnotationsValidator />
-					<RadzenLabel class="form-label">Adı</RadzenLabel>
-				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Adi" Name="Adi" placeholder="Adı girin" />
-					<RadzenLabel class="form-label">Soyadı</RadzenLabel>
-				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Soyadi" Name="Soyadi" placeholder="Soyadı girin" />
-					<RadzenLabel class="form-label">E-Posta</RadzenLabel>
-				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.EPosta" Name="EPosta" placeholder="E-Posta girin" />
-					<RadzenLabel class="form-label">Şifre</RadzenLabel>
-				<RadzenTextBox type="password" class="form-control" @bind-Value="kullanicilar.Sifre" Name="Sifre" placeholder="Şifreyi girin" />
-					<RadzenCard class="btn-group">
-						<RadzenButton Text="Kaydet" Icon="save" Click="@Kaydet" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
-						<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
-					</RadzenCard>
-				</RadzenFieldset>
-			</RadzenTemplateForm>
+	<RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
+		<h3 class="text-center mb-4">Kullanıcı Düzenle</h3>
+		<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@Kaydet">
+			@* <DataAnnotationsValidator /> *@
+
+			<RadzenLabel class="form-label">Adı</RadzenLabel>
+			<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Adi" Name="Adi" placeholder="Adı girin" />
+
+			<RadzenLabel class="form-label">Soyadı</RadzenLabel>
+			<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Soyadi" Name="Soyadi" placeholder="Soyadı girin" />
+
+			<RadzenLabel class="form-label">E-Posta</RadzenLabel>
+			<RadzenTextBox class="form-control" @bind-Value="kullanicilar.EPosta" Name="EPosta" placeholder="E-Posta girin" />
+
+			<RadzenLabel class="form-label">Şifre</RadzenLabel>
+			<RadzenTextBox type="password" class="form-control" @bind-Value="kullanicilar.Sifre" Name="Sifre" placeholder="Şifreyi girin" />
+
+			<RadzenLabel class="form-label">Kullanıcı Tipi</RadzenLabel>
+			<RadzenDropDown Name="KullaniciTip" Data="@kullaniciTipleri" TextProperty="Adi" ValueProperty="ID"
+					Style="width:100%; margin-bottom:15px;"
+					Placeholder="Kullanıcı tipi seçin"
+					@bind-Value="kullanicilar.KullaniciTip_ID" />
+			@* <RadzenRequiredValidator Component="KullaniciTip" Text="Kullanıcı tipi seçmek zorunludur." Popup="false" /> *@
+
+			<div class="d-flex justify-content-between mt-4">
+				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
+					Style="width:48%;" class="radzen-button" Disabled="@isSaving" />
+				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
+					Style="width:48%;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+			</div>
+		</RadzenTemplateForm>
 	</RadzenCard>
 }
 @code {
 	[Parameter]
 	public int id { get; set; }
-	private User kullanicilar = new User();
+	private User kullanicilar = new();
 	private User originalKullanici;
 	[Parameter]
 	public int KullaniciId{ get; set; }
+	private List<ItemKullaniciTip> kullaniciTipleri = new();
+	private bool isLoading = true;
+	private bool isSaving;
 
 	protected override async Task OnInitializedAsync()
 	{
-		if (KullaniciId != 0)
+		try
 		{
-			kullanicilar = await _kullaniciRepo.GetByIDAsync(KullaniciId) ?? new User();
+			kullaniciTipleri = (await DataService.GetKullaniciTipleri()).Where(t => t.Aktif).ToList();
+
+			if (KullaniciId != 0)
+			{
+				kullanicilar = await _kullaniciRepo.GetByIDAsync(KullaniciId) ?? new User();
+			}
+
+			if (kullanicilar.KullaniciTip_ID == 0 && kullaniciTipleri.Any())
+			{
+				kullanicilar.KullaniciTip_ID = kullaniciTipleri.First().ID;
+			}
+
+			var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+			if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("geri", out var geri))
+			{
+				geriUrl = geri;
+			}
+
+			originalKullanici = kullanicilar.Clone();
 		}
-		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-		if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("geri", out var geri))
+		finally
 		{
-			geriUrl = geri;
+			isLoading = false;
 		}
-		originalKullanici = kullanicilar.Clone();
 	}
 
 	private async Task Kaydet()
 	{
+		Console.WriteLine("Kaydet metodu çağrıldı.");
+		if (isSaving)
+		{
+			return;
+		}
 		if (kullanicilar == null || kullanicilar.ID == 0)
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz kullanıcı bilgisi.");
 			return;
 		}
 
+		isSaving = true;
+		var currentUser = await girisSaglayici.GetCurrentUserAsync();
+		kullanicilar.UpdUser = currentUser?.ID ?? 0;
+
 		bool sonuc = await _kullaniciRepo.UpdateAsync(kullanicilar);
+		isSaving = false;
 		if (sonuc)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Düzenleme işleminiz başarıyla tamamlandı.");
-			NavigationManager.NavigateTo("/kullanicilar",true); // Sayfayı tam yenile
+			DialogService.Close(kullanicilar);
 		}
 		else
 		{
@@ -84,12 +123,12 @@ else
 			}
 			else
 			{
-				NavigationManager.NavigateTo(geriUrl);
+				DialogService.Close(null);
 			}
 		}
 		else
 		{
-			NavigationManager.NavigateTo(geriUrl);
+			DialogService.Close(null);
 			notificationService.Notify(NotificationSeverity.Info, "Uyarı", "Düzenleme İşleminiz İptal Edildi.");
 		}
 	}
@@ -100,6 +139,7 @@ else
 		return current.Adi != original.Adi
 			|| current.Soyadi != original.Soyadi
 			|| current.EPosta != original.EPosta
-			|| current.Sifre  != original.Sifre;
+			|| current.Sifre  != original.Sifre
+			|| current.KullaniciTip_ID != original.KullaniciTip_ID;
 	}
 }

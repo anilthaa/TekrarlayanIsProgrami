@@ -20,22 +20,22 @@ namespace TekrarlayanIsProgrami.Repository
 
         public async Task<List<User>> GetAllAsync()
         {
-            using var conn=GetConnection();
+            using var conn = GetConnection();
             var sql = @"Select * From ""Kullanici"" WHERE ""DelDate"" IS NULL";
-            var result=await conn.QueryAsync<User>(sql);
+            var result = await conn.QueryAsync<User>(sql);
             return result.ToList();
         }
         public async Task<User?> GetByIDAsync(int ID)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""ID"" = @ID";
-            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID= ID });
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID = ID });
         }
         public async Task<User?> GetByEmailAsync(string EPosta, string Sifre)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
-            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre";
-            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta, Sifre});
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta, Sifre });
         }
 
         public async Task<bool> UpdateAsync(User user)
@@ -47,6 +47,7 @@ namespace TekrarlayanIsProgrami.Repository
                ""EPosta""=@EPosta,
                ""Sifre""=@Sifre,
                ""Aktif""=@Aktif,
+               ""KullaniciTip_ID""=@KullaniciTip_ID,
                ""UpdUser""=@UpdUser,
                ""UpdDate""=NOW()
            WHERE ""ID""=@ID";
@@ -58,6 +59,7 @@ namespace TekrarlayanIsProgrami.Repository
                 user.EPosta,
                 user.Sifre,
                 user.Aktif,
+                user.KullaniciTip_ID,
                 user.UpdUser, // Burada eksik olan parametre eklendi
                 user.ID
             });
@@ -70,7 +72,7 @@ namespace TekrarlayanIsProgrami.Repository
             // TODO: Token veritabanında doğrula ve kullanıcıyı bul
             var kullanici = await baglanti.QueryFirstOrDefaultAsync<User>("SELECT * FROM \"Kullanici\" WHERE \"ResetToken\" = @token", new { Token });
             if (kullanici == null)
-            return false;
+                return false;
 
             var sql = @"UPDATE ""Kullanici"" SET ""Sifre"" = @sifre, ""ResetToken"" = NULL WHERE ""ID"" = @id";
             await baglanti.ExecuteAsync(sql, new { sifre = YeniSifre, id = kullanici.ID });
@@ -81,18 +83,18 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task DeleteAsync(int id, int delUser)
         {
             using var conn = GetConnection();
-            var sql = @"Update ""Kullanici"" Set ""DelUser""=@ID, ""DelDate""=now() Where ""ID""=@ID";
-            await conn.ExecuteAsync(sql, new { ID = id , DelUser=delUser});
+            var sql = @"Update ""Kullanici"" Set ""DelUser""=@DelUser, ""DelDate""=now() Where ""ID""=@ID";
+            await conn.ExecuteAsync(sql, new { ID = id, DelUser = delUser });
         }
 
         public async Task<User?> GirisYapAsync(string eposta, string sifre)
         {
-            using var conn=GetConnection();
-            var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true";
-            return await conn.QueryFirstOrDefaultAsync<User>(sql, new {EPosta=eposta, Sifre=sifre});
+            using var conn = GetConnection();
+            var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
+            return await conn.QueryFirstOrDefaultAsync<User>(sql, new { EPosta = eposta, Sifre = sifre });
         }
 
-        public async Task<User> KayitOlAsync(string Adi, string Soyadi,string EPosta,string Sifre ,string SifreTekrar, string? ResetToken)
+        public async Task<User> KayitOlAsync(string Adi, string Soyadi, string EPosta, string Sifre, string SifreTekrar, string? ResetToken)
         {
             using var conn = GetConnection();
 
@@ -133,7 +135,7 @@ namespace TekrarlayanIsProgrami.Repository
         {
             using var conn = new NpgsqlConnection(_connectionString);
             var sql = await conn.QueryFirstOrDefaultAsync<User>(
-               @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta", new { EPosta = EPosta });
+               @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta AND ""DelDate"" IS NULL", new { EPosta = EPosta });
             return sql != null;
         }
         //Bu bizim şifremizi değiştirdiğimiz zaman tokenimizi değiştirmek için yazdık.
