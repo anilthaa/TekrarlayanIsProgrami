@@ -1,59 +1,137 @@
 ﻿@page "/dashboard"
 @layout MainLayout
-@attribute [Authorize] 
-@if (loading)
-{
-    <p>Yükleniyor...</p>
-}
-else if (currentUser == null)
-{
-    <p>Kullanıcı bulunamadı. Giriş sayfasına yönlendiriliyorsunuz...</p>
-    @* Yönlendirme *@
-    NavigationManager.NavigateTo("/GirisYap");
-}
-else{
-    <h2>Hoş geldin, @currentUser?.Adi!</h2>
+@attribute [Authorize]
 
-    <RadzenCard>
-        <h4>📊 Kontrol Paneli</h4>
-        <p>Burada istatistikler, bildirimler veya kullanıcı bilgileri yer alacak.</p>
-    </RadzenCard>
-}
+<RadzenStack Gap="20px" Style="padding:20px;">
+
+    @if (loading)
+    {
+        <p>Yükleniyor...</p>
+    }
+    else if (currentUser == null)
+    {
+        <p>Kullanıcı bulunamadı. Giriş sayfasına yönlendiriliyorsunuz...</p>
+        NavigationManager.NavigateTo("/GirisYap");
+    }
+    else
+    {
+        <RadzenCard Class="rz-shadow-lg rz-p-4">
+            <h2 class="text-2xl font-bold">Hoş geldin, @currentUser?.Adi!</h2>
+            <p class="text-gray-600">Kontrol Paneli</p>
+        </RadzenCard>
+
+        <!-- KİLİTLİ GÖREVLER -->
+         <h3>Kilitli Görevlerim</h3>
+        <RadzenDataGrid Data="@KilitliGorevler" TItem="ItemGorev" AllowPaging="false" Class="rz-datagrid-slim"
+                        RowStyle="@((ItemGorev g) => $"border-left:4px solid #e53935")">
+            <Columns>
+                <RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="40%" />
+                <RadzenDataGridColumn TItem="ItemGorev" Title="İşlem" Width="15%">
+                    <Template Context="gorev">
+                        <RadzenButton Text="Tamamla" Click="@(() => GoreviTamamla(gorev.ID))" Disabled="@gorev.Tamamlandi" Style="background:#e53935; color:white;" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid> 
+
+         <h3>Herkese Açık Görevler</h3>
+        <RadzenDataGrid Data="@HerkeseAcikGorevler" TItem="ItemGorev" RowStyle="@((ItemGorev g) => $"border-left:4px solid #1e88e5;")" AllowPaging="false" Class="rz-datagrid-slim">
+            <Columns>
+                <RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="40%" />
+                <RadzenDataGridColumn TItem="ItemGorev" Title="İşlem" Width="15%">
+                    <Template Context="gorev">
+                        <RadzenButton Text="Görevi Al" Click="@(() => GorevAta(gorev.ID))" Style="background:#1e88e5; color:white;" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid> 
+
+         <h3>Benim Aldığım Görevler</h3>
+        <RadzenDataGrid Data="@BenimAldigimGorevler" TItem="ItemGorev" RowStyle="@((ItemGorev g) => $"border-left:4px solid #43a047;")" AllowPaging="false" Class="rz-datagrid-slim">
+            <Columns>
+                <RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="40%" />
+                <RadzenDataGridColumn TItem="ItemGorev" Title="İşlem" Width="15%">
+                    <Template Context="gorev">
+                        <RadzenButton Text="Tamamla" Click="@(() => GoreviTamamla(gorev.ID))" Disabled="@gorev.Tamamlandi" Style="background:#43a047; color:white;"  />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid> 
+
+
+        <!-- TAKVİM -->
+        <h3 class="text-xl font-semibold mt-6">📆 Görev Takvimi</h3>
+
+        <RadzenScheduler Data="@TumTakvimGorevleri"
+                         StartProperty="BaslangicTarihi"
+                         EndProperty="BitisTarihi"
+                         TextProperty="Baslik"
+                         View="SchedulerView.Month"
+                         Style="height: 650px;">
+        </RadzenScheduler>
+
+    }
+</RadzenStack>
 
 
 
-   @*
 
-    <footer>
-        &copy; 2025 Tekrarlayan İş Programı
-    </footer> *@
 @code {
+
     private User? currentUser;
     private bool loading = true;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private List<ItemGorev> KilitliGorevler = new();
+    private List<ItemGorev> HerkeseAcikGorevler = new();
+    private List<ItemGorev> BenimAldigimGorevler = new();
+    private List<ItemGorev> TumTakvimGorevleri = new();
+
+
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            await LoadUserFromLocalStorageAsync();
-            loading = false;
-            StateHasChanged();
-        }
+        await LoadUser();
+        await LoadGorevler();
+        loading = false;
     }
 
-    private async Task LoadUserFromLocalStorageAsync()
+    private async Task LoadUser()
     {
         try
         {
-            var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
-            if (!string.IsNullOrEmpty(userJson))
-            {
-                currentUser = JsonSerializer.Deserialize<User>(userJson);
-            }
+            var json = await Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+            if (!string.IsNullOrEmpty(json))
+                currentUser = JsonSerializer.Deserialize<User>(json);
         }
-        catch
-        {
-            // JS interop hazır değilse ilk render sonrasına bırakıyoruz
-        }
+        catch { }
     }
+
+
+    private async Task LoadGorevler()
+    {
+        if (currentUser == null) return;
+
+        var tum = await DataService.GetGorevler();
+
+        KilitliGorevler = tum.Where(g => g.Kilitli && g.Kullanici_ID == currentUser.ID).ToList();
+
+        HerkeseAcikGorevler = tum.Where(g => !g.Kilitli && g.Kullanici_ID == null).ToList();
+
+        BenimAldigimGorevler = tum.Where(g => !g.Kilitli && g.Kullanici_ID == currentUser.ID).ToList();
+
+        // TAKVİM → hepsi
+        TumTakvimGorevleri = tum.ToList();
+    }
+
+
+    private async Task GorevAta(int id)
+    {
+         await DataService.GoreviKullaniciyaAta(id, currentUser.ID);
+         await LoadGorevler();
+     }
+
+     private async Task GoreviTamamla(int id)
+    {
+         await DataService.GoreviTamamla(id);
+         await LoadGorevler();
+     }
 }

@@ -100,7 +100,21 @@
 			{
 				await Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
 			}
-            notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+			notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+
+			var authstate = await girisSaglayici.GetAuthenticationStateAsync();
+			var user = authstate.User;
+
+			if (user.IsInRole("Admin"))
+			{
+				NavigationManager.NavigateTo("admin/admindashboard", forceLoad: false);
+				return;
+			}
+			else
+			{
+				NavigationManager.NavigateTo("dashboard", forceLoad: false);
+				return;
+			}
             var uri = new Uri(NavigationManager.Uri);
             var query = QueryHelpers.ParseQuery(uri.Query);
             if (query.TryGetValue("returnUrl", out var returnUrls) && returnUrls.Count > 0)
