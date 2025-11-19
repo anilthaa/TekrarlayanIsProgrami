@@ -27,37 +27,14 @@
         }
 
         var token = Guid.NewGuid().ToString();
-        await _kullaniciRepo.SifreSifirlamaTokenKaydet(kullanici.ID, token, DateTime.UtcNow.AddHours(1));
+        var expiry = DateTime.UtcNow.AddMinutes(3);
+        await _kullaniciRepo.SifreSifirlamaTokenKaydet(kullanici.ID, token,expiry);
 
         await EpostaService.SendResetEpostaAsync(kullanici.EPosta, token, kullanici.Adi);
 
         notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
     }
-    // private async Task OnSubmit()
-    // {
-    //     var kullanici = await _kullaniciRepo.SifreEmailAsync(model.Eposta);
-    //     if (kullanici == null)
-    //     {
-    //         notificationService.Notify(NotificationSeverity.Error, "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
-    //         return;
-    //     }
-
-    //     var token = Guid.NewGuid().ToString();
-    //     await _kullaniciRepo.SifreSifirlamaTokenKaydet(kullanici.ID, token, DateTime.UtcNow.AddHours(1));
-    //     var link = $"https://localhost:7014/sifre-sifirla?token={token}";
-
-    //     bool basarili = await SifreService.SifreSifirlamaMailiGonder(kullanici.EPosta, link);
-    //     if (basarili)
-    //     {
-    //         await EpostaService.SendResetEpostaAsync(model.Eposta, token, kullanici.Adi);
-    //         notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
-    //     }
-    //     else
-    //     {
-    //         notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta gönderilemedi.");
-    //     }
   
-
     public class SifreUnuttumModel
     {
         public string Eposta { get; set; }

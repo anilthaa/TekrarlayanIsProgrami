@@ -21,7 +21,7 @@ namespace TekrarlayanIsProgrami.Services
             string body =
                 $"Merhaba {kullaniciAdi},\n\n" +
                 $"Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:\n{link}\n\n" +
-                $"Bu bağlantı 30 dakika boyunca geçerlidir.\n\n" +
+                $"Bu bağlantı 3 dakika boyunca geçerlidir.\n\n" +
                 $"İyi günler dileriz.";
 
             using var message = new MailMessage(_fromEposta, toEposta, subject, body);

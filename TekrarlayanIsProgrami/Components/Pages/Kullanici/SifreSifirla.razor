@@ -7,52 +7,78 @@
     <h3 style="text-align:center;">Yeni Şifre Belirle</h3>
    <EditForm Model="@model" OnValidSubmit="@OnSubmit">
         <RadzenFormField Text="Yeni Şifre" Style="width:100%">
-        <RadzenTextBox @bind-Value="model.YeniSifre" Name="YeniSifre" Type="Password" Style="width:100%;" />
+            <RadzenPassword @bind-Value="model.YeniSifre" /> @*Name="YeniSifre"*@
         </RadzenFormField>
-        <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:100%">
-        <RadzenTextBox @bind-Value="model.YeniSifreTekrar" Name="YeniSifreTekrar" Placeholder="Yeni şifre tekrar" Type="Password" Style="width:100%;" />
+        <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:100%" >
+            <RadzenPassword @bind-Value="model.YeniSifreTekrar" /> @* Name="YeniSifreTekrar"*@
         </RadzenFormField>
-        <RadzenButton Text="Şifreyi Kaydet" ButtonStyle="ButtonStyle.Primary" Type="Submit" Class="mt-3 w-100" />
+        <RadzenButton Text="Şifreyi Kaydet" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Class="mt-3 w-100" />
     </EditForm>
 
 </RadzenCard>
 
 @code {
-    private string token;
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string token{ get; set; }
     private SifreSifirlaModel model = new();
     private string bilgiMesaji;
+    public User kullanici = new User();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var uri = new Uri(NavigationManager.Uri);
         var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
 
         if (query.TryGetValue("token", out var tokenValue))
-            token = tokenValue;
-
+            token = System.Net.WebUtility.UrlDecode(tokenValue.ToString());
         Console.WriteLine($"UI Token: {token}");
+
+        if (string.IsNullOrEmpty(token))
+        {
+            notificationService.Notify(NotificationSeverity.Warning, "Token eksik veya geçersiz.");
+            token = null;
+            return;
+        }
+        var kullanicii = await _kullaniciRepo.GetByTokenAsync(token);
+        if (kullanicii == null || kullanicii.ResetTokenExpiry <= DateTime.UtcNow)
+        {
+            notificationService.Notify(NotificationSeverity.Info, "Süreniz Dolmuştur!");
+            token = null;
+        }
     }
 
     private async Task OnSubmit()
     {
         if (string.IsNullOrEmpty(token))
         {
-            notificationService.Notify(NotificationSeverity.Warning,"Token boş!");
+            notificationService.Notify(NotificationSeverity.Warning, "Token boş!");
+            return;
+        }
+
+        if(kullanici.Sifre==model.YeniSifre)
+        {
+            Console.WriteLine("Şifreniz eskisiyle aynı");
+            return;
+        }
+
+        if (model.YeniSifre!=model.YeniSifreTekrar)
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda!");
             return;
         }
 
         bool basarili = await _kullaniciRepo.SifreGuncelle(token, model.YeniSifre);
-
         if (basarili)
         {
-            notificationService.Notify(NotificationSeverity.Success,"Başarılı","Şifreniz Başarıyla Değiştirildi.");
-             await Task.Delay(1000);
-             NavigationManager.NavigateTo("/GirisYap");
-         }
-         else
-         {
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Şifreniz Başarıyla Değiştirildi.");
+            await Task.Delay(1000);
+            NavigationManager.NavigateTo("/GirisYap");
+        }
+        else
+        {
             notificationService.Notify(NotificationSeverity.Error, "Başarısız", "Token geçersiz veya şifre değiştirilemedi.");
-         }
+        }
     }
 
     public class SifreSifirlaModel
@@ -60,5 +86,20 @@
         public string YeniSifre { get; set; }
         public string YeniSifreTekrar { get; set; }
     }
-}
+    private string InputType { get; set; } = "password";
+    private string Icon { get; set; } = "visibility"; // göz açık
 
+    void TogglePassword()
+    {
+        if (InputType == "password")
+        {
+            InputType = "text";
+            Icon = "visibility_off"; // göz kapalı
+        }
+        else
+        {
+            InputType = "password";
+            Icon = "visibility";
+        }
+    }
+}

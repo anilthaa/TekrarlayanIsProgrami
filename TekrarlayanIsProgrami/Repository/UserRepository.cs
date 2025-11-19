@@ -37,6 +37,13 @@ namespace TekrarlayanIsProgrami.Repository
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta, Sifre});
         }
+        public async Task<User?> GetByTokenAsync(string token)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            var sql = @"SELECT * FROM ""Kullanici"" 
+                WHERE ""ResetToken"" = @token";
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { token });
+        }
 
         public async Task<bool> UpdateAsync(User user)
         {
@@ -69,26 +76,22 @@ namespace TekrarlayanIsProgrami.Repository
             using var baglanti = new NpgsqlConnection(_connectionString);
 
             var kullanici = await baglanti.QueryFirstOrDefaultAsync<User>(
-                @"SELECT * FROM ""Kullanici"" WHERE ""ResetToken"" = @token and ""ResetTokenExpiry""> now()",
+                @"SELECT * FROM ""Kullanici"" WHERE ""ResetToken"" = @token and ""ResetTokenExpiry"" > now() at time zone 'utc'",
                 new { token }
             );
+            Console.WriteLine($"Kullanıcı bulundu mu: {kullanici != null}, ID: {kullanici?.ID}");
 
             if (kullanici == null)
                 return false;
 
-            // Şifreyi hashle
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(yeniSifre);
-
-            // Şifreyi ve token'ı güncelle
             var sql = @"UPDATE ""Kullanici"" 
-                SET ""Sifre"" = @sifre, ""ResetToken"" = NULL 
+                SET ""Sifre"" = @sifre
                 WHERE ""ID"" = @id";
 
-            await baglanti.ExecuteAsync(sql, new { sifre = hashedPassword, id = kullanici.ID });
+            await baglanti.ExecuteAsync(sql, new { sifre = yeniSifre, id = kullanici.ID });
 
             return true;
         }
-
 
         public async Task DeleteAsync(int id, int delUser)
         {
@@ -160,7 +163,7 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task<User?> SifreEmailAsync(string EPosta)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
-            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
+            var sql = @"SELECT ""ID"", ""EPosta"", ""Adi"", ""Sifre"" FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta });
         }
         public async Task SifreSifirlamaTokenKaydet(int id, string token, DateTime expiry)
