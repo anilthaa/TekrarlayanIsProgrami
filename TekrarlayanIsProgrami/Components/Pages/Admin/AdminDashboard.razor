@@ -1,5 +1,5 @@
 ﻿@page "/Admin/AdminDashboard"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
 @layout MainLayout
 
 <HeadContent>
@@ -152,8 +152,59 @@
 
 		</div>
 
-
-
+		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #16a085; margin-top:20px;">
+			<h5 style="color:#16a085; font-weight:600; margin-bottom:10px;">Bana Atanan Görevler</h5>
+			<p style="color:#555; font-size:14px; margin-bottom:10px;">
+				Size atanan görevlerin listesi @(currentUserId.HasValue ? $"(Kullanıcı ID: {currentUserId.Value})" : "(Kullanıcı ID yüklenemedi)")
+			</p>
+			@if (adminGorevleri != null && adminGorevleri.Any())
+			{
+				<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
+					<Columns>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
+							<Template Context="onem">
+								<span style="font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+									@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Aktif" Width="80px">
+							<Template Context="durum">
+								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									@(durum.Aktif ? "Aktif" : "Pasif")
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="100px">
+							<Template Context="durum">
+								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Tamamlandi ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									@(durum.Tamamlandi ? "Evet" : "Hayır")
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+					</Columns>
+				</RadzenDataGrid>
+			}
+			else
+			{
+				<div style="padding:20px; text-align:center; color:#888;">
+					<p>Size atanan görev bulunmuyor.</p>
+					<p style="font-size:12px; margin-top:10px;">
+						@if (!currentUserId.HasValue)
+						{
+							<span>Kullanıcı ID yüklenemedi. Lütfen giriş yaptığınızdan emin olun.</span>
+						}
+						else
+						{
+							<span>Kilitli görevler ve size atanan görevler burada görünecektir.</span>
+						}
+					</p>
+				</div>
+			}
+		</RadzenCard>
 
 		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
 			<h5 style="color:#3498db; font-weight:600; margin-bottom:10px;">Tüm Görevlerin Özeti</h5>
@@ -195,7 +246,9 @@
 	@code {
 	private List<ItemGorev> kritikGorevler = new();
 	private List<ItemGorev> GorevListt = new();
+	private List<ItemGorev> adminGorevleri = new();
 	private bool IsLoading = true;
+	private int? currentUserId = null;
 
 	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).OrderBy(g => g.BitisTarihi);
@@ -214,6 +267,7 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		await YukleKullaniciId();
 		await YukleGorevler();
 		HazirlaDashboardVerileri();
 		kritikGorevler = GorevListt.Where(g => g.OnemDerecesi?.ToLower()=="yüksek" && g.Aktif ==true && g.Tamamlandi==false && (g.BitisTarihi.HasValue==false || g.BitisTarihi.Value>=DateTime.Now)).ToList();
@@ -221,11 +275,40 @@
 		await InvokeAsync(StateHasChanged);
 	}
 
+	private async Task YukleKullaniciId()
+	{
+		try
+		{
+			var currentUser = await girisSaglayici.GetCurrentUserAsync();
+			if (currentUser != null)
+			{
+				currentUserId = currentUser.ID;
+			}
+		}
+		catch (Exception ex)
+		{
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Kullanıcı bilgisi yüklenirken bir hata oluştu: " + ex.Message);
+		}
+	}
+
 	private async Task YukleGorevler()
 	{
 		try
 		{
-			GorevListt = (await DataService.GetGorevler()).ToList();
+			var tumGorevler = (await DataService.GetGorevler()).ToList();
+			
+			// Admin'e atanan görevleri ayrı bir listede tut
+			if (currentUserId.HasValue)
+			{
+				adminGorevleri = tumGorevler.Where(g => g.Kilitli && g.Kullanici_ID == currentUserId.Value && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value>=DateTime.Now) && !g.Tamamlandi).ToList();
+			}
+			else
+			{
+				adminGorevleri = new List<ItemGorev>();
+			}
+			
+			// Tüm görevleri birleştir ve tekrarları kaldır
+			GorevListt = tumGorevler.Union(adminGorevleri).GroupBy(g => g.ID).Select(g => g.First()).ToList();
 		}
 		catch (Exception ex)
 		{

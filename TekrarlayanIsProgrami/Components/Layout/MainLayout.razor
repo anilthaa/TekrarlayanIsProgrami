@@ -8,7 +8,9 @@
 <RadzenDialog></RadzenDialog>
 <RadzenNotification></RadzenNotification>
 <RadzenLayout>
-    @{ var uri = NavigationManager.Uri.ToLower(); }
+    @{
+        var uri = NavigationManager.Uri.ToLower();
+    }
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
@@ -30,7 +32,7 @@
         @Body
     </RadzenBody>
 </RadzenLayout>
-@code{
+@code {
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

@@ -1,6 +1,6 @@
 ﻿@page "/Kategori"
 @layout MainLayout
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
 <RadzenCard Style="margin:20px;">
 	<h3>Kategori Listesi</h3>
 

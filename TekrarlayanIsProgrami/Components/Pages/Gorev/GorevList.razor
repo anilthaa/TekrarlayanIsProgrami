@@ -1,6 +1,6 @@
 ﻿@page "/gorevler"
 @layout MainLayout
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Admin")]
 
 @* <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-md" Style="margin:20px 0 0 20px;">
 	<RadzenCard Style="width:250px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => SelectedTabIndex = 0)">
@@ -78,13 +78,18 @@
 				<Columns>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="70px"></RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true"></RadzenDataGridColumn>
+					<RadzenDataGridColumn TItem="ItemGorev" Title="Atanan Kişi">
+						<Template Context="g">
+							@GetAtananKullaniciAdi(g.Kullanici_ID, g.Kilitli)
+						</Template>
+					</RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="Kategori_ID" Title="Kategori"></RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem">
 						<Template Context="g">
 							@(string.IsNullOrWhiteSpace(g.OnemDerecesi) ? "Yok" : g.OnemDerecesi)
 						</Template>
 						<Template Context="onem">
-							<span style="font-size:12px; padding:3px 8px; border-radius:6px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+                            <span style="font-size:12px; padding:3px 8px; border-radius:6px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi ?? string.Empty)">
 								@onem.OnemDerecesi
 							</span>
 						</Template>
@@ -146,10 +151,11 @@
 </RadzenCard>
 
 @code {
-	private List<ItemGorev> GorevListt = new();
+    private List<ItemGorev> GorevListt = new();
 	private RadzenDataGrid<ItemGorev>? GrdGorev;
 	private int SelectedTabIndex { get; set; } = 0;
 	private ItemGorev gorevler = new ItemGorev();
+	private List<User> TumKullanicilar = new();
 
 	[SupplyParameterFromQuery(Name = "tab")]
 	public int QueryTabIndex { get; set; } = 0;
@@ -186,7 +192,13 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		await YukleKullanicilar();
 		await YukleGorevler();
+	}
+
+	private async Task YukleKullanicilar()
+	{
+		TumKullanicilar = await _kullaniciRepo.GetAllAsync();
 	}
 
 	private async Task YukleGorevler()
@@ -201,7 +213,7 @@
 			notificationService.Notify(NotificationSeverity.Error, "Hata", ex.Message);
 		}
 	}
-	private async Task YeniGorev()
+    private async Task YeniGorev()
 	{
 
 		var result = await DialogService.OpenAsync<GorevTnm>(" ",
@@ -221,6 +233,23 @@
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev Başarıyla Eklendi!");
 		}
 
+	}
+
+	private MarkupString GetAtananKullaniciAdi(int kullaniciId, bool kilitli)
+	{
+		if (!kilitli)
+		{
+			return (MarkupString)"—";
+		}
+
+		var kullanici = TumKullanicilar.FirstOrDefault(x => x.ID == kullaniciId);
+		if (kullanici == null)
+		{
+			return (MarkupString)"—";
+		}
+
+		var adSoyad = $"{kullanici.Adi} {kullanici.Soyadi}".Trim();
+		return (MarkupString)adSoyad;
 	}
 
 
@@ -278,7 +307,7 @@
 	{
 		await Duzenle(args.Data);
 	}
-	private async Task ToggleDurum(ItemGorev item)
+    private async Task ToggleDurum(ItemGorev item)
 	{
 		try
 		{
@@ -296,8 +325,11 @@
 			{
 				notificationService.Notify(NotificationSeverity.Success, "Durum Güncellendi", item.Aktif ? "Görev aktif hale getirildi." : "Görev pasif hale getirildi.");
 
-				GorevListt = (await DataService.GetGorevler()).ToList();
-				await GrdGorev.Reload();
+                GorevListt = (await DataService.GetGorevler()).ToList();
+                if (GrdGorev != null)
+                {
+                    await GrdGorev.Reload();
+                }
 			}
 			else
 			{
@@ -363,15 +395,15 @@
 		}
 
 	}
-	private string GetOnemRengi(string onem)
+    private string GetOnemRengi(string onem)
 	{
-		return onem?.ToLower() switch
-		{
-			"yüksek" => "#e74c3c",
-			"orta" => "#f1c40f",
-			"düşük" => "#2ecc71"
-
-		};
+        return onem?.ToLower() switch
+        {
+            "yüksek" => "#e74c3c",
+            "orta" => "#f1c40f",
+            "düşük" => "#2ecc71",
+            _ => "#95a5a6" // varsayılan gri ton
+        };
 	}
 }
 

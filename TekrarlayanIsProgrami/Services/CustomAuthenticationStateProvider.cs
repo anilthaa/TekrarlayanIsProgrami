@@ -55,7 +55,8 @@ namespace TekrarlayanIsProgrami.Services
                 {
                     new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
                     new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
-                    new Claim(ClaimTypes.Email, _currentUser.EPosta)
+                    new Claim(ClaimTypes.Email, _currentUser.EPosta),
+                    new Claim(ClaimTypes.Role, _currentUser.KullaniciTip_ID==1 ? "Admin" : "User")
                 }, "apiauth_type");
             }
             else
@@ -156,14 +157,7 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<AuthResult> KayitOlAsync(User user)
         {
-            if (await _kullaniciRepo.EpostaVarMiAsync(user.EPosta))
-            {
-                return new AuthResult
-                {
-                    Basarili = false,
-                    Mesaj = $"Bu E-posta Zaten Kayıtlı!"
-                };
-            }
+            // E-posta kontrolünü API/DB tarafına bırakalım; silinmiş kayıtlar yeniden kullanılabilsin
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult
