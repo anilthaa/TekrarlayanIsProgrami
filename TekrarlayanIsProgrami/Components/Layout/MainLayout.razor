@@ -1,23 +1,26 @@
 ﻿@inherits LayoutComponentBase
 <RadzenComponents @rendermode="InteractiveServer"></RadzenComponents>
 
- <HeadContent>
-  <link href="css/site.css" rel="stylesheet" />
+<HeadContent>
+    <link href="css/site.css" rel="stylesheet" />
 </HeadContent>
 <RadzenDialog></RadzenDialog>
 <RadzenNotification></RadzenNotification>
 <RadzenLayout>
-    @{ var uri = NavigationManager.Uri.ToLower(); }
+    @{
+        var uri = NavigationManager.Uri.ToLower();
+    }
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri"))
             {
                 <RadzenCard class="dashboard-nav">
                     <h3>📊 Dashboard</h3>
                     <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
                     <NavLink href="/kategori" class="nav-link">Kategoriler</NavLink>
                     <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
+                    <NavLink href="/Admin/KullaniciTipleri" class="nav-link">Kullanıcı Tipleri</NavLink>
                     <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%" class="radzen-button" />
                 </RadzenCard>
             }
@@ -28,7 +31,7 @@
         @Body
     </RadzenBody>
 </RadzenLayout>
-@code{
+@code {
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
