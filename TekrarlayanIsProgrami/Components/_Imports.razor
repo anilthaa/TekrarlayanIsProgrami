@@ -26,6 +26,7 @@
 @using System.Text.Json
 @using System.Text.RegularExpressions
 @using Devart.Data.PostgreSql
+@using BCrypt.Net
 @inject NotificationService notificationService
 @inject UserRepository _kullaniciRepo
 @inject NavigationManager NavigationManager
@@ -35,3 +36,4 @@
 @inject DataService DataService
 @inject IJSRuntime Js
 @inject AuthService AuthService 
+@inject EPostaService EpostaService

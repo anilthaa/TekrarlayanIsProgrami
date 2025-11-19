@@ -128,8 +128,8 @@ else
 		}
 		else
 		{
-			DialogService.Close(null);
-			notificationService.Notify(NotificationSeverity.Info, "Uyarı", "Düzenleme İşleminiz İptal Edildi.");
+			NavigationManager.NavigateTo(geriUrl);
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
 		}
 	}
 	private string geriUrl = "/kullanicilar";

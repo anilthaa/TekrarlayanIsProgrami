@@ -1,8 +1,9 @@
 ﻿@inherits LayoutComponentBase
 <RadzenComponents @rendermode="InteractiveServer"></RadzenComponents>
 
-<HeadContent>
-    <link href="css/site.css" rel="stylesheet" />
+ <HeadContent>
+  <link href="css/site.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/js/site.js"/>
 </HeadContent>
 <RadzenDialog></RadzenDialog>
 <RadzenNotification></RadzenNotification>
@@ -13,14 +14,14 @@
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/Admin/AdminDashboard"))
             {
                 <RadzenCard class="dashboard-nav">
                     <h3>📊 Dashboard</h3>
                     <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
                     <NavLink href="/kategori" class="nav-link">Kategoriler</NavLink>
                     <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
-                    <NavLink href="/Admin/KullaniciTipleri" class="nav-link">Kullanıcı Tipleri</NavLink>
+                    <NavLink href="/Admin/AdminDashboard" class="nav-link">Admin Dashboard</NavLink>
                     <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%" class="radzen-button" />
                 </RadzenCard>
             }
