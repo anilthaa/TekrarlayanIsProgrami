@@ -53,6 +53,7 @@ builder.Services.AddScoped<GorevLoglariRepository>();
 builder.Services.AddScoped<SifreService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EPostaService>();
+builder.Services.AddScoped<PermissionService>();
 builder.Services.AddScoped<DataService>(serviceProvider =>
     new DataService(builder.Configuration.GetConnectionString("PostgreSqlConnection"),
     stateProvider:serviceProvider.GetRequiredService<AuthenticationStateProvider>()
