@@ -170,11 +170,11 @@
 		if (yeniKayıt)
 		{
 			Gorev.Aktif = true;
-			Gorev.CreUser = 1;
+			// Gorev.CreUser = 1;
 		}
 		else
 		{
-			Gorev.UpdUser = 1;
+			// Gorev.UpdUser = 1;
 		}
 
 		var sonuc = await DataService.SetGorev(Gorev);

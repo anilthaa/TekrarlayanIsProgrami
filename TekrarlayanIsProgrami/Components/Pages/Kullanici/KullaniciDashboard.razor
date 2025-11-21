@@ -1,59 +1,562 @@
 ﻿@page "/dashboard"
 @layout MainLayout
 @attribute [Authorize] 
-@if (loading)
+@if(kullaniciTip != null && kullaniciTip.Adi == "Admin")
 {
-    <p>Yükleniyor...</p>
+	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
+		<RadzenText Text="Admin Kontrol Paneli" TextStyle="TextStyle.H3" TagName="@TagName.H1" class="rz-mb-0"></RadzenText>
+
+		@if (IsLoading)
+		{
+			<p>Veriler yükleniyor...</p>
+			<RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:300px;"></RadzenProgressBar>
+
+			<div class="row mt-4">
+				<div class="col-md-6">
+					<div class="shimmer-wrapper" style="height:	300px; border-radius:6px;"></div>
+				</div>
+				<div class="col-md-6">
+					<div class="shimmer-wrapper" style="height:	320px; border-radius:6px;"></div>
+				</div>
+			</div>
+		}
+		else
+		{
+			<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1.5rem">
+				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => NavigateToGorevler(0))">
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<div>
+							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Tüm Aktif Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(aktifGorevler.Count())</RadzenText>
+						</div>
+						<RadzenIcon Icon="list" Style=" font-size:32px; color:#3498db; opacity:0.6;"></RadzenIcon>
+					</div>
+				</RadzenCard>
+				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left: 5px solid #f1c40f; cursor:pointer;" @onclick="@(() => NavigateToGorevler(1))">
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<div>
+							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Yaklaşan Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(yaklasanGorevler.Count())</RadzenText>
+						</div>
+						<RadzenIcon Icon="schedule" Style=" font-size:32px; opacity:0.6; color:#f1c40f; "></RadzenIcon>
+					</div>
+				</RadzenCard>
+
+				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left: 5px solid #9b59b6; cursor:pointer;" @onclick="@(() => NavigateToGorevler(2))">
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<div>
+							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Tamamlanan Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(tamamlananGorevler.Count())</RadzenText>
+						</div>
+						<RadzenIcon Icon="done_all" Style="font-size:32px; opacity:0.6; color:#9b59b6;"></RadzenIcon>
+					</div>
+				</RadzenCard>
+
+				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left:5px solid #e74c3c; cursor:pointer;" @onclick="@(() => NavigateToGorevler(3))">
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<div>
+							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Süresi Dolan Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(gecmisGorevler.Count())</RadzenText>
+						</div>
+					</div>
+					<RadzenIcon Icon="alarm_off" Style="font-size:32px; opacity:0.6; color:#e74c3c;"></RadzenIcon>
+				</RadzenCard>
+
+				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left:5px solid #f39c12; cursor:pointer;" @onclick="@(() => NavigateToGorevler(4))">
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<div>
+							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Pasif Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4"  class="rz-mb-0">@(pasifGorevler.Count())</RadzenText>
+						</div>
+					</div>
+					<RadzenIcon Icon="pause_circle_outline" Style=" font-size:32px; color:#f39c12; opacity:0.6;"></RadzenIcon>
+				</RadzenCard>
+
+
+
+			</RadzenStack>
+
+			<div class="row">
+				<div class="col-md-6">
+					<RadzenChart Style="height:300px; transition: all 0.4s ease-in-out;"
+								 Palette="@(new[] { "#3498db", "#9b59b6", "#e74c3c", "#f39c12" })">
+
+						<RadzenPieSeries Data="@GorevDurumData"
+										 ValueProperty="Value"
+										 CategoryProperty="Category"
+										 Title="Görev Durum Dağılımı">
+							<TooltipTemplate Context="data">
+								<div style="padding:4px 8px; font-size:13px;">
+									<strong>@data.Category:</strong> @data.Value görev
+								</div>
+							</TooltipTemplate>
+
+						</RadzenPieSeries>
+						<RadzenLegend Position="LegendPosition.Right"></RadzenLegend>
+					</RadzenChart>
+				</div>
+
+				<div class="col-md-6">
+					<RadzenChart Style="height:320px; transition:all 0.4s ease-in-out;" Palette="@(new[] { "#3498db", "#9b59b6", "#e74c3c", "#f39c12" })">
+						<RadzenColumnSeries Data="@GorevDurumData" CategoryProperty="Category" ValueProperty="Value" Title="Görev Sayısı">
+							<TooltipTemplate Context="data">
+								<div style="padding:4px 8px; font-size:13px;">
+									<strong>@data.Category:</strong> @data.Value görev
+								</div>
+							</TooltipTemplate>
+
+						</RadzenColumnSeries>
+
+						<RadzenCategoryAxis Padding="20"></RadzenCategoryAxis>
+						<RadzenValueAxis></RadzenValueAxis>
+						<RadzenLegend Position="LegendPosition.Right"></RadzenLegend>
+					</RadzenChart>
+				</div>
+			</div>
+
+			<div class="row mt-4">
+				<div class="col-md-12">
+					<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0,0.1); border-left:5px solid #e74c3c;">
+						<h5 style="color:#e74c3c; font-weight:600; margin-bottom:10px;">Kritik Aktif Görevler </h5>
+						<p style="color:#555; font-size:14px; margin-bottom:10px;">
+							Yüksek öneme sahip aktif görevlerin listesi
+						</p>
+
+						@if (kritikGorevler != null && kritikGorevler.Any())
+						{
+							<RadzenDataGrid Data="@kritikGorevler" TItem="ItemGorev" Style="max-height:250px; overflow-y:auto;">
+								<Columns>
+									<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
+									<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
+									<RadzenDataGridColumn TItem="ItemGorev" Title="Önem">
+										<Template Context="g">
+											<span style="background-color:@GetOnemRengi(g.OnemDerecesi); font-size:12px; padding:3px 8px; border-radius:6px; color:white;">@g.OnemDerecesi</span>
+										</Template>
+									</RadzenDataGridColumn>
+									<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Durum">
+										<Template Context="durum">
+											<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+												@(durum.Aktif ? "Aktif" : "Pasif")
+											</span>
+										</Template>
+									</RadzenDataGridColumn>
+								</Columns>
+							</RadzenDataGrid>
+						}
+						else
+						{
+							<div style="padding:10px; color:#888;">Kritik aktif görev bulunmuyor.</div>
+						}
+
+					</RadzenCard>
+				</div>
+
+			</div>
+
+			<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #16a085; margin-top:20px;">
+				<h5 style="color:#16a085; font-weight:600; margin-bottom:10px;">Bana Atanan Görevler</h5>
+				<p style="color:#555; font-size:14px; margin-bottom:10px;">
+					Size Özel Görevlerin listesi @(currentUserId.HasValue ? $"(Kullanıcı ID: {currentUserId.Value})" : "(Kullanıcı ID yüklenemedi)")
+				</p>
+				@if (adminGorevleri != null && adminGorevleri.Any())
+				{
+					<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
+						<Columns>
+							<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
+								<Template Context="onem">
+									<span style="font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+										@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+									</span>
+								</Template>
+							</RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Aktif" Width="80px">
+								<Template Context="durum">
+									<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+										@(durum.Aktif ? "Aktif" : "Pasif")
+									</span>
+								</Template>
+							</RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="100px">
+								<Template Context="durum">
+									<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Tamamlandi ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+										@(durum.Tamamlandi ? "Evet" : "Hayır")
+									</span>
+								</Template>
+							</RadzenDataGridColumn>
+						</Columns>
+					</RadzenDataGrid>
+				}
+				else
+				{
+					<div style="padding:20px; text-align:center; color:#888;">
+						<p>Size atanan görev bulunmuyor.</p>
+						<p style="font-size:12px; margin-top:10px;">
+							@if (!currentUserId.HasValue)
+							{
+								<span>Kullanıcı ID yüklenemedi. Lütfen giriş yaptığınızdan emin olun.</span>
+							}
+							else
+							{
+								<span>Kilitli görevler ve size atanan görevler burada görünecektir.</span>
+							}
+						</p>
+					</div>
+				}
+			</RadzenCard>
+
+			<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
+				<h5 style="color:#3498db; font-weight:600; margin-bottom:10px;">Tüm Görevlerin Özeti</h5>
+				<p style="color:#555; font-size:14px; margin-bottom:10px;">
+					Sistemdeki tüm görevlerin genel durumu
+				</p>
+				<RadzenDataGrid Data="@GorevListt" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
+					<Columns>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
+							<Template Context="onem">
+								<span style="font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+									@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+								</span>
+							</Template>
+
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Aktif" Width="80px">
+							<Template Context="durum">
+								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									@(durum.Aktif ? "Aktif" : "Pasif")
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="100px">
+							<Template Context="durum">
+								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Tamamlandi ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									@(durum.Tamamlandi ? "Evet" : "Hayır")
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+
+					</Columns>
+				</RadzenDataGrid>
+			</RadzenCard>
+		}
+	</RadzenStack>
+
 }
-else if (currentUser == null)
+else
 {
-    <p>Kullanıcı bulunamadı. Giriş sayfasına yönlendiriliyorsunuz...</p>
-    @* Yönlendirme *@
-    NavigationManager.NavigateTo("/GirisYap");
+	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
+
+		<RadzenText Text="Gösterge Paneli" TextStyle="TextStyle.H3" TagName="@TagName.H1" class="rz-mb-0" />
+
+		<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
+
+			<RadzenCard class="radzen-hover-effect"
+						Style="width:230px; border-left:5px solid #3498db;">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Toplam Görev</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@toplamGorev</RadzenText>
+					</div>
+					<RadzenIcon Icon="list" Style="font-size:32px; color:#3498db; opacity:0.6;" />
+				</div>
+			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect"
+						Style="width:230px; border-left:5px solid #27ae60;">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Aktif Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@aktifGorev</RadzenText>
+					</div>
+					<RadzenIcon Icon="play_circle" Style="font-size:32px; color:#27ae60; opacity:0.6;" />
+				</div>
+			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect"
+						Style="width:230px; border-left:5px solid #f39c12;">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Bugünkü Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@bugunkuGorev</RadzenText>
+					</div>
+					<RadzenIcon Icon="schedule" Style="font-size:32px; color:#f39c12; opacity:0.6;" />
+				</div>
+			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect"
+						Style="width:230px; border-left:5px solid #9b59b6;">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Tamamlanan</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@tamamlananGorev</RadzenText>
+					</div>
+					<RadzenIcon Icon="done_all" Style="font-size:32px; color:#9b59b6; opacity:0.6;" />
+				</div>
+			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect"
+						Style="width:230px; border-left:5px solid pink;">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Size Özel Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@SizeOzelGorevler.Count()</RadzenText>
+					</div>
+					<RadzenIcon Icon="lock" Style="font-size:32px; color:pink; opacity:0.6;" />
+				</div>
+			</RadzenCard>
+
+		</RadzenStack>
+
+		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid lightskyblue; margin-top:20px;">
+			<h5 style="color:lightskyblue; font-weight:600; margin-bottom:10px;">Bana Atanan Görevler</h5>
+			<p style="color:#555; font-size:14px; margin-bottom:10px;">
+				Size Özel Görevlerin listesi @(currentUserId.HasValue ? $"(Kullanıcı ID: {currentUserId.Value})" : "(Kullanıcı ID yüklenemedi)")
+			</p>
+			@if (adminGorevleri != null && adminGorevleri.Any())
+			{
+				<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
+					<Columns>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
+							<Template Context="onem">
+								<span style="font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+									@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Aktif" Width="80px">
+							<Template Context="durum">
+								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									@(durum.Aktif ? "Aktif" : "Pasif")
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="100px">
+							<Template Context="durum">
+								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Tamamlandi ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									@(durum.Tamamlandi ? "Evet" : "Hayır")
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+					</Columns>
+				</RadzenDataGrid>
+			}
+			else
+			{
+				<div style="padding:20px; text-align:center; color:#888;">
+					<p >Size atanan görev bulunmuyor.</p>
+					<p style="font-size:12px; margin-top:10px;">
+						@if (!currentUserId.HasValue)
+						{
+							<span>Kullanıcı ID yüklenemedi. Lütfen giriş yaptığınızdan emin olun.</span>
+						}
+						else
+						{
+							<span>Kilitli görevler ve size atanan görevler burada görünecektir.</span>
+						}
+					</p>
+				</div>
+			}
+		</RadzenCard>
+
+		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #16a085; margin-top:20px;">
+			<h5 style="font-weight:600; margin-bottom:10px; color:#16a085;">Görevlerim</h5>
+
+			<RadzenDataGrid Data="@kullaniciGorevler"
+							TItem="ItemGorev"
+							AllowPaging="true"
+							PageSize="5"
+							AllowSorting="true">
+				<Columns>
+					<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Görev" />
+					<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş"
+										  FormatString="{0:dd.MM.yyyy HH:mm}" />
+
+					<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Durum">
+						<Template Context="item">
+							<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(item.Tamamlandi ? "#4caf50" : "#e53935")}; color:white;")">
+								@(item.Tamamlandi ? "Tamamlandı" : "Devam Ediyor")
+							</span>
+						</Template>
+					</RadzenDataGridColumn>
+
+				</Columns>
+			</RadzenDataGrid>
+		</RadzenCard>
+
+	</RadzenStack>
 }
-else{
-    <h2>Hoş geldin, @currentUser?.Adi!</h2>
-
-    <RadzenCard>
-        <h4>📊 Kontrol Paneli</h4>
-        <p>Burada istatistikler, bildirimler veya kullanıcı bilgileri yer alacak.</p>
-    </RadzenCard>
-}
 
 
-
-   @*
-
-    <footer>
-        &copy; 2025 Tekrarlayan İş Programı
-    </footer> *@
 @code {
-    private User? currentUser;
-    private bool loading = true;
+	private ItemKullaniciTip kullaniciTip=new ItemKullaniciTip();
+	private int toplamGorev = 0;
+	private int aktifGorev = 0;
+	private int bugunkuGorev = 0;
+	private int tamamlananGorev = 0;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await LoadUserFromLocalStorageAsync();
-            loading = false;
-            StateHasChanged();
-        }
-    }
+	private List<ItemGorev> kullaniciGorevler = new();
+	//Admin Dashboard Alanı
+	private List<ItemGorev> kritikGorevler = new();
+	private List<ItemGorev> GorevListt = new();
+	private List<ItemGorev> adminGorevleri = new();
+	private bool IsLoading = true;
+	private int? currentUserId = null;
 
-    private async Task LoadUserFromLocalStorageAsync()
-    {
-        try
-        {
-            var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
-            if (!string.IsNullOrEmpty(userJson))
-            {
-                currentUser = JsonSerializer.Deserialize<User>(userJson);
-            }
-        }
-        catch
-        {
-            // JS interop hazır değilse ilk render sonrasına bırakıyoruz
-        }
-    }
+	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).OrderBy(g => g.BitisTarihi);
+	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
+	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
+	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> SizeOzelGorevler =>
+		GorevListt.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif);
+	private IEnumerable<ItemGorev> yuksekOnemliGorevler => aktifGorevler.Where(g => g.OnemDerecesi?.ToLower() == "yüksek").OrderBy(g => g.BitisTarihi);
+
+	class GorevDurum
+	{
+		public string Category { get; set; } = string.Empty;
+		public double Value { get; set; }
+	}
+	private List<GorevDurum> GorevDurumData = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		IsLoading = true;
+
+		await YukleKullaniciId();
+		Console.WriteLine($"CurrentUserId: {currentUserId}");
+		kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
+		if (kullaniciTip == null)
+		{
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Kullanıcı tipi bulunamadı.");
+			IsLoading = false;
+			return;
+		}
+
+
+
+		await YukleGorevler();
+
+		kullaniciGorevler = GorevListt
+			.Where(x => x.Kullanici_ID == currentUserId)
+			.ToList();
+
+		toplamGorev = kullaniciGorevler.Count;
+		aktifGorev = kullaniciGorevler.Count(x => x.Aktif && !x.Tamamlandi);
+		bugunkuGorev = kullaniciGorevler.Count(x => x.BitisTarihi?.Date == DateTime.Today);
+		tamamlananGorev = kullaniciGorevler.Count(x => x.Tamamlandi);
+
+		HazirlaDashboardVerileri();
+
+		kritikGorevler = GorevListt
+			.Where(g => g.OnemDerecesi?.ToLower() == "yüksek"
+					 && g.Aktif == true
+					 && g.Tamamlandi == false
+					 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Now))
+			.ToList();
+
+		IsLoading = false;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task YukleKullaniciId()
+	{
+		try
+		{
+			var currentUser = await girisSaglayici.GetCurrentUserAsync();
+			if (currentUser != null)
+			{
+				currentUserId = currentUser.ID;
+			}
+		}
+		catch (Exception ex)
+		{
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Kullanıcı bilgisi yüklenirken bir hata oluştu: " + ex.Message);
+		}
+	}
+
+	private async Task YukleGorevler()
+	{
+		try
+		{
+			var tumGorevler = (await DataService.GetGorevler()).ToList();
+
+			// Admin'e atanan görevleri ayrı bir listede tut
+			if (currentUserId.HasValue)
+			{
+				adminGorevleri = tumGorevler.Where(g => g.Kilitli && g.Kullanici_ID == currentUserId.Value && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Now) && !g.Tamamlandi).ToList();
+			}
+			else
+			{
+				adminGorevleri = new List<ItemGorev>();
+			}
+
+			// Tüm görevleri birleştir ve tekrarları kaldır
+			GorevListt = tumGorevler.Union(adminGorevleri).GroupBy(g => g.ID).Select(g => g.First()).ToList();
+		}
+		catch (Exception ex)
+		{
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Görev verileri yüklenirken bir hata oluştu." + ex.Message);
+		}
+	}
+
+	private void HazirlaDashboardVerileri()
+	{
+		if (GorevListt == null || !GorevListt.Any())
+		{
+			GorevDurumData = new List<GorevDurum>();
+			return;
+		}
+		GorevDurumData.Clear();
+		var list = new List<GorevDurum>
+			{
+				new GorevDurum { Category = "Aktif", Value =Convert.ToDouble( aktifGorevler.Count()) },
+				new GorevDurum { Category = "Tamamlandı", Value =Convert.ToDouble( tamamlananGorevler.Count()) },
+				new GorevDurum { Category = "Süresi Dolan", Value = gecmisGorevler.Count() },
+				new GorevDurum { Category = "Pasif", Value = pasifGorevler.Count() }
+			};
+
+		GorevDurumData.AddRange(list.Where(d => d.Value > 0));
+
+		Console.WriteLine("Grafik veri sayısı: " + GorevDurumData.Count);
+		foreach (var item in GorevDurumData)
+		{
+			Console.WriteLine($"{item.Category}=> {item.Value}");
+		}
+	}
+
+	private void NavigateToGorevler(int tabIndex)
+	{
+		NavigationManager.NavigateTo($"/Gorevler?tab={tabIndex}");
+	}
+
+
+	private string GetOnemRengi(string onem)
+	{
+		return onem?.ToLower() switch
+		{
+			"yüksek" => "#e74c3c",
+			"orta" => "#f1c40f",
+			"düşük" => "#2ecc71"
+
+		};
+	}
+	private string GetDurumRengi(string durum)
+	{
+		return durum?.ToLower() switch
+		{
+			"evet" => "#4caf50",
+			"hayır" => "#e53935"
+		};
+	}
+	//Bitti.
+	
+	
+
 }

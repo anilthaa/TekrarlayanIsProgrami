@@ -397,15 +397,17 @@ button RadzenIcon {
 .girisButton:hover {
     background-color: rebeccapurple !important;
 }
-    /**//**/
+/*Standart Tip Kartları*/
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
 
-/*body {*/
-    /*  margin: 0;
-    padding: 0;
-    background: linear-gradient(135deg, #1d2b64, #f8cdda);
-    font-family: 'Segoe UI', sans-serif;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;*/
+.card {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+}
 

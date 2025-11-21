@@ -21,6 +21,16 @@
 			</RadzenFormField>
 			<ValidationMessage For="@(() => newUser.EPosta)"></ValidationMessage>
 
+			<RadzenFormField Text="Tip Seçin" Style="width:85%; margin-left:41px; margin-top:4px;">
+				<RadzenDropDown @bind-Value="secilenTipId"
+				                TValue="int"
+								Data="@kullaniciTipleri" 
+                                TextProperty="Adi" 
+                                ValueProperty="ID" 
+                                Style="width:100%;"  />
+				<ValidationMessage For="@(() => secilenTipId)" />
+			</RadzenFormField>
+
 			<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
 			<RadzenTextBox class="form-control" @bind-Value="newUser.Sifre" type="@InputType" />
 			<button type="button" @onclick="TogglePassword"
@@ -48,39 +58,56 @@
 </RadzenCard>
 
 @code {
+	private int secilenTipId=0; 
+	private List<ItemKullaniciTip> kullaniciTipleri = new();
 	private User newUser = new User
 	{
-		CreUser = 1,
 		CreDate = DateTime.Now,
 		Aktif = true
 	};
 
+	protected override async Task OnInitializedAsync()
+	{
+		kullaniciTipleri = (await DataService.GetKullaniciTipleri()).ToList();
+	}
+
 	private async Task OnSubmit()
 	{
+		Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
 		if (!EpostaGecerliMi(newUser.EPosta))
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
 			return;
 		}
 
-		if(newUser.Sifre!= newUser.SifreTekrar)
+		if (newUser.Sifre != newUser.SifreTekrar)
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda.");
 			return;
 		}
 
-		var result = await girisSaglayici.KayitOlAsync(newUser);
+		var currentUser = await girisSaglayici.GetCurrentUserAsync();
+
+		newUser.CreUser = currentUser.ID;     
+		newUser.KullaniciTip_ID = secilenTipId;
+
+
+		var result = await girisSaglayici.KayitOlAsync(newUser,newUser.KullaniciTip_ID);
+
 		if (result.Basarili)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
 			NavigationManager.NavigateTo("/kullanicilar");
 			StateHasChanged();
+			Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error,"Hata","Kayıt Sırasında Bir Hata Oluştu.");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Kayıt Sırasında Bir Hata Oluştu.");
 		}
+
 		DialogService.Close(true);
+		Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
 	}
 	private bool EpostaGecerliMi(string eposta)
 	{

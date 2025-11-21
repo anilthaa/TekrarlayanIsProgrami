@@ -1,0 +1,125 @@
+@inherits ComponentBase
+
+<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
+	<ChildContent>
+@* 		<RadzenLabel Text="Kullanıcı Tipi Adı" Component="Adi" />
+ *@		
+        <RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-bottom:15px;">
+        <RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi"  />
+		</RadzenFormField>
+		<RadzenRequiredValidator Component="Adi" Text="Bu Alan Zorunludur." Popup="false" />
+
+		<div style="display:flex; align-items:center; margin-bottom:15px;">
+			<RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
+			<span class="rz-ml-2">Aktif</span>
+		</div>
+
+		@if (!string.IsNullOrEmpty(hataMesaji))
+		{
+			<div style="color:red; margin-bottom:15px;">@hataMesaji</div>
+		}
+		<div class="btn-group">
+		<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
+						  Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
+		<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
+						  Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+		</div>
+	</ChildContent>
+</RadzenTemplateForm>
+
+@code {
+	[Parameter] public ItemKullaniciTip ItemData { get; set; } = new();
+	[Parameter] public int CurrentUserId { get; set; } = 1;
+	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
+	private ItemKullaniciTip originalTip;
+
+	private bool isSaving;
+	private string? hataMesaji;
+
+	protected override async Task OnInitializedAsync()
+	{
+		kullaniciTip = ItemData;
+		originalTip = new ItemKullaniciTip
+		{
+			ID = ItemData.ID,
+			Adi = ItemData.Adi,
+			Aktif = ItemData.Aktif,
+			UpdUser = ItemData.UpdUser,
+			UpdDate=ItemData.UpdDate
+		};
+	}
+	private async Task OnSubmit()
+	{
+		try
+		{
+			isSaving = true;
+			hataMesaji = null;
+
+			if (string.IsNullOrWhiteSpace(ItemData.Adi))
+			{
+				hataMesaji = "Bu Alan Zorunludur.";
+				return;
+			}
+
+			if (ItemData.ID == 0)
+			{
+				ItemData.CreUser = CurrentUserId;
+				ItemData.DelUser = 0;
+				ItemData.UpdUser = 0;
+			}
+			else
+			{
+				ItemData.UpdUser = CurrentUserId;
+				ItemData.DelUser = 0;
+			}
+
+			var response = await DataService.SetKullaniciTip(ItemData);
+			var yeniId = response.Data;
+			if (yeniId > 0)
+			{
+				ItemData.ID = yeniId;
+				DialogService.Close(ItemData);
+			}
+			else
+			{
+				hataMesaji = "Kayıt işlemi tamamlanamadı.";
+			}
+		}
+		catch (Exception ex)
+		{
+			hataMesaji = $"Kaydetme sırasında hata oluştu: {ex.Message}";
+		}
+		finally
+		{
+			isSaving = false;
+		}
+	}
+
+	private async Task Iptal()
+	{
+		if (HasChanges(kullaniciTip, originalTip))
+		{
+			var confirmed = await DialogService.Confirm("Formda yaptığınız değişiklikler kaybolacak. Çıkmak istediğinize emin misiniz?", "İptal Onayı",
+						new ConfirmOptions() { OkButtonText = "Evet", CancelButtonText = "Hayır" });
+			if (!confirmed == true)
+			{
+				return;
+			}
+			else
+			{
+				DialogService.Close(null);
+			}
+		}
+		else
+		{
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", " Düzenleme İşleminiz İptal Edildi.");
+			DialogService.Close(null);
+		}
+	}
+	private bool HasChanges(ItemKullaniciTip current, ItemKullaniciTip original)
+	{
+		return current.Adi != original.Adi
+			|| current.Aktif != original.Aktif;
+	}
+}
+

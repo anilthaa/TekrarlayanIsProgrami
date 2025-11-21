@@ -4,6 +4,7 @@
  <HeadContent>
   <link href="css/site.css" rel="stylesheet" />
   <link rel="stylesheet" href="/js/site.js"/>
+  <link rel="stylesheet" href="/css/AdminDashboard.css" />
 </HeadContent>
 <RadzenDialog></RadzenDialog>
 <RadzenNotification></RadzenNotification>
@@ -14,16 +15,28 @@
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/Admin/AdminDashboard"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri"))
             {
-                <RadzenCard class="dashboard-nav">
-                    <h3>📊 Dashboard</h3>
-                    <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
-                    <NavLink href="/kategori" class="nav-link">Kategoriler</NavLink>
-                    <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
-                    <NavLink href="/Admin/AdminDashboard" class="nav-link">Admin Dashboard</NavLink>
-                    <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%" class="radzen-button" />
-                </RadzenCard>
+                @if (!IsLoading && kullaniciTip != null)
+                {
+                    <RadzenCard class="dashboard-nav">
+                        <a href="/dashboard" style="text-decoration:none; color:white;"><h3>📊 Dashboard</h3></a>
+
+                        @if (kullaniciTip.Adi == "Admin")
+                        {
+                            <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
+                            <NavLink href="/kategori" class="nav-link">Kategoriler</NavLink>
+                            <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
+                            <NavLink href="/admin/kullanicitipleri" class="nav-link">Kullanıcı Tipleri</NavLink>
+                        }
+                        else
+                        {
+                            <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
+                        }
+
+                        <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%" class="radzen-button" />
+                    </RadzenCard>
+                }
             }
         </RadzenSidebar>
     }
@@ -33,11 +46,22 @@
     </RadzenBody>
 </RadzenLayout>
 @code {
+    private ItemKullaniciTip? kullaniciTip;
+    private bool IsLoading = true;
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await girisSaglayici.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUser.ID);
+        }
+        IsLoading = false;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // await ((CustomAuthenticationStateProvider)girisSaglayici).LoadUserFromLocalStorageAsync();
             var userJson = await Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
             var token = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
 
@@ -51,6 +75,7 @@
                 await Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
             }
         }
+
     }
     private async void CikisYap()
     {

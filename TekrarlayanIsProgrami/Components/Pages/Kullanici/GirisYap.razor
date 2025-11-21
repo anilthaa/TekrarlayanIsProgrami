@@ -145,7 +145,6 @@
 
 	private User newUser = new User
 	{
-		CreUser = 1,
 		CreDate = DateTime.Now,
 		Aktif = true
 	};
@@ -163,8 +162,11 @@
 		    notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda!");
 			return;   
 		}
+		var currentUser = await girisSaglayici.GetCurrentUserAsync();
+        int creUserId = currentUser?.ID ?? 1; // giriş yoksa 1 yani adimse.
+        newUser.CreUser = creUserId; 
 
-		var result = await girisSaglayici.KayitOlAsync(newUser);
+		var result = await girisSaglayici.KayitOlAsync(newUser,newUser.KullaniciTip_ID);
 	    if (result.Basarili)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı" ,result.Mesaj);
