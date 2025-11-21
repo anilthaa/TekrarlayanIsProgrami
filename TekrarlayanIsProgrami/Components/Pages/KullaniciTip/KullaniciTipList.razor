@@ -3,7 +3,7 @@
 @attribute [Authorize(Roles ="Admin")]
 <AuthorizeView Roles="Admin">
 	<RadzenCard Style="margin:20px;">
-		<h3>Kullanıcı Tipleri</h3>
+		<h3 style="text-align:center;">Kullanıcı Tipleri</h3>
 
 		<RadzenButton Text="Yeni Tip" Icon="add"
 					  Style="margin-bottom:15px; background:#3498db; color:white"
@@ -25,7 +25,7 @@
 							RowDoubleClick="@OnRowDoubleClick">
 				<Columns>
 					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="70px" />
-					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" />
+					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
 					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
 						<Template Context="item">
 							<RadzenCheckBox Value="item.Aktif" TValue="bool" Disabled="true" Style="margin-right:5px;" />

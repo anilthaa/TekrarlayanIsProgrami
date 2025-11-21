@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Dapper;
+using Microsoft.AspNetCore.Components.Authorization;
+using Npgsql;
 using TekrarlayanIsProgrami.Models;
 
 namespace TekrarlayanIsProgrami.Services
@@ -146,7 +148,7 @@ namespace TekrarlayanIsProgrami.Services
                 order by ""ID""
             ")).ToArray();
         }
-        
+
         public async Task<DataResult<int>> SetKullaniciTip(ItemKullaniciTip item)
         {
             if (item.ID.Equals(0) && item.DelUser.Equals(0))

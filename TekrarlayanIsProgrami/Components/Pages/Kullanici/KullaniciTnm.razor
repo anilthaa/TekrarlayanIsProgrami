@@ -9,34 +9,38 @@ else
 {
 	<RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
 		<h3 class="text-center mb-4">Kullanıcı Düzenle</h3>
-		<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@Kaydet">
-			@* <DataAnnotationsValidator /> *@
+		<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@Kaydet" Style="align-items:center">
 
-			<RadzenLabel class="form-label">Adı</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Adi" Name="Adi" placeholder="Adı girin" />
+			<RadzenFormField Text="Ad" Style="width:85%; margin-left:41px; margin-top:4px;">
+				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Adi" />
+			</RadzenFormField>
 
-			<RadzenLabel class="form-label">Soyadı</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Soyadi" Name="Soyadi" placeholder="Soyadı girin" />
+			<RadzenFormField Text="Soyad" Style="width:85%; margin-left:41px; margin-top:4px;">
+				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Soyadi" />
+			</RadzenFormField>
 
-			<RadzenLabel class="form-label">E-Posta</RadzenLabel>
-			<RadzenTextBox class="form-control" @bind-Value="kullanicilar.EPosta" Name="EPosta" placeholder="E-Posta girin" />
+			<RadzenFormField Text="E-posta" Style="width:85%; margin-left:41px; margin-top:4px;">
+				<RadzenTextBox class="form-control" @bind-Value="kullanicilar.EPosta" />
+			</RadzenFormField>
 
-			<RadzenLabel class="form-label">Şifre</RadzenLabel>
-			<RadzenTextBox type="password" class="form-control" @bind-Value="kullanicilar.Sifre" Name="Sifre" placeholder="Şifreyi girin" />
+			<RadzenFormField Text="Kullanıcı Tipi" Style="width:85%; margin-left:41px; margin-top:4px;">
+				<RadzenDropDown Data="@kullaniciTipleri" TextProperty="Adi" ValueProperty="ID" Style="width:100%;"
+								@bind-Value="kullanicilar.KullaniciTip_ID" />
+			</RadzenFormField>
 
-			<RadzenLabel class="form-label">Kullanıcı Tipi</RadzenLabel>
-			<RadzenDropDown Name="KullaniciTip" Data="@kullaniciTipleri" TextProperty="Adi" ValueProperty="ID"
-					Style="width:100%; margin-bottom:15px;"
-					Placeholder="Kullanıcı tipi seçin"
-					@bind-Value="kullanicilar.KullaniciTip_ID" />
-			@* <RadzenRequiredValidator Component="KullaniciTip" Text="Kullanıcı tipi seçmek zorunludur." Popup="false" /> *@
+			<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
+				<RadzenTextBox type="@InputType" class="form-control" @bind-Value="kullanicilar.Sifre" placeholder="Şifreyi girin" />
+				<button type="button" @onclick="@TogglePassword" style="position:absolute; right:1px; top:8px; transform:translate(-50%); border:none; background:transparent;">
+					<RadzenIcon Icon="@Icon" Style="color:gray;"></RadzenIcon>
+				</button>
+			</RadzenFormField>
 
-			<div class="d-flex justify-content-between mt-4">
+			<RadzenCard class="btn-group">
 				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
-					Style="width:48%;" class="radzen-button" Disabled="@isSaving" />
+							  Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
 				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
-					Style="width:48%;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
-			</div>
+							  Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+			</RadzenCard>
 		</RadzenTemplateForm>
 	</RadzenCard>
 }
@@ -141,5 +145,21 @@ else
 			|| current.EPosta != original.EPosta
 			|| current.Sifre  != original.Sifre
 			|| current.KullaniciTip_ID != original.KullaniciTip_ID;
+	}
+	private string InputType { get; set; } = "password";
+	private string Icon { get; set; } = "visibility_off"; // göz kapalı
+
+	void TogglePassword()
+	{
+		if (InputType == "password")
+		{
+			InputType = "text";
+			Icon = "visibility"; // göz açık
+		}
+		else
+		{
+			InputType = "password";
+			Icon = "visibility_off";
+		}
 	}
 }

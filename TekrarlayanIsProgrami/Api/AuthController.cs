@@ -62,7 +62,7 @@ namespace TekrarlayanIsProgrami.Api
                 return BadRequest(new AuthResult { Basarili = false, Mesaj = "Bu e-posta zaten kayıtlı" });
             }
 
-            var yeniUser = await _userRepository.KayitOlAsync(model.Adi, model.Soyadi, model.EPosta, model.Sifre, model.SifreTekrar, ResetToken: null);
+            var yeniUser = await _userRepository.KayitOlAsync(model.Adi, model.Soyadi, model.EPosta, model.Sifre, model.SifreTekrar, ResetToken: null,model.CreUser);
 
             var token = _jwtService.GenerateToken(model.EPosta);
             await _userRepository.SaveResetTokenAsync(yeniUser.ID, token);

@@ -7,10 +7,20 @@
     <h3 style="text-align:center;">Yeni Şifre Belirle</h3>
    <EditForm Model="@model" OnValidSubmit="@OnSubmit">
         <RadzenFormField Text="Yeni Şifre" Style="width:100%">
-            <RadzenPassword @bind-Value="model.YeniSifre" /> @*Name="YeniSifre"*@
+            <RadzenTextBox @bind-Value="model.YeniSifre" type="@InputType" /> 
+            <button type="button"
+                    @onclick="TogglePassword"
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:transparent;">
+                <RadzenIcon Icon="@Icon" Style="color:gray;" />
+            </button>
         </RadzenFormField>
         <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:100%" >
-            <RadzenPassword @bind-Value="model.YeniSifreTekrar" /> @* Name="YeniSifreTekrar"*@
+            <RadzenTextBox @bind-Value="model.YeniSifreTekrar" type="@InputType2" />
+            <button type="button"
+                    @onclick="TogglePasswordAgain"
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:transparent;">
+                <RadzenIcon Icon="@Icon2" Style="color:gray;"/>
+            </button>
         </RadzenFormField>
         <RadzenButton Text="Şifreyi Kaydet" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Class="mt-3 w-100" />
     </EditForm>
@@ -87,19 +97,35 @@
         public string YeniSifreTekrar { get; set; }
     }
     private string InputType { get; set; } = "password";
-    private string Icon { get; set; } = "visibility"; // göz açık
+    private string Icon { get; set; } = "visibility_off"; // göz açık
 
     void TogglePassword()
     {
         if (InputType == "password")
         {
             InputType = "text";
-            Icon = "visibility_off"; // göz kapalı
+            Icon = "visibility"; // göz kapalı
         }
         else
         {
             InputType = "password";
-            Icon = "visibility";
+            Icon = "visibility_off";
+        }
+    }
+    private string InputType2 { get; set; } = "password";
+    private string Icon2 { get; set; } = "visibility_off"; // göz açık
+
+    void TogglePasswordAgain()
+    {
+        if (InputType2 == "password")
+        {
+            InputType2 = "text";
+            Icon2 = "visibility"; // göz açık
+        }
+        else
+        {
+            InputType2 = "password";
+            Icon2 = "visibility_off";
         }
     }
 }
