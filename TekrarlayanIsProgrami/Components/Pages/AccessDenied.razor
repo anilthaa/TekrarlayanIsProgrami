@@ -1,0 +1,12 @@
+@page "/AccessDenied"
+@layout MainLayout
+
+<RadzenCard class="rz-m-4" Style="max-width:640px; margin:auto; margin-top:10vh;">
+    <div class="d-flex flex-column align-items-center text-center">
+        <RadzenIcon Icon="lock" Style="font-size:48px; color:#c0392b;"></RadzenIcon>
+        <h3 class="mt-3">Erişim Engellendi</h3>
+        <p>Bu sayfaya erişim yetkiniz bulunmuyor. Yardım için yöneticinizle iletişime geçebilirsiniz.</p>
+        <RadzenButton Text="Ana sayfaya dön" Icon="home" Click="@(() => NavigationManager.NavigateTo("/"))" Style="margin-top:12px;" />
+    </div>
+</RadzenCard>
+

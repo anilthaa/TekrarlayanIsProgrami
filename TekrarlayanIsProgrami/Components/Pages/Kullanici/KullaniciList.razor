@@ -6,10 +6,9 @@
 <RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
     <h2 class="text-center mb-4">Kullanıcılar Listesi</h2>
 
-    <RadzenCard style="margin-left:950px; margin-bottom:3px;">
-      
+    <div class="d-flex justify-content-end gap-2 mb-3">
         <RadzenButton Text="Yeni Kullanıcı Ekle" Style="background-color:royalblue;" Click="@OpenRegisterDialog"> </RadzenButton>
-    </RadzenCard>
+    </div>
 
     <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name"  TItem="User" RowSelect="@OnRowSelect"
                     AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="true"
@@ -39,9 +38,11 @@
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="180px">
+            <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="240px">
                 <Template Context="user">
                     <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="lock" Size="ButtonSize.Small" Style="margin-right:5px;"
+                                  Click="@(() => NavigateToYetki(user.ID))" />
                     <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
                 </Template>
             </RadzenDataGridColumn>
@@ -184,4 +185,10 @@
         var tip = kullaniciTipleri.FirstOrDefault(t => t.ID == tipId);
         return tip?.Adi ?? "—";
     }
+
+    private void NavigateToYetki(int kullaniciId)
+    {
+        NavigationManager.NavigateTo($"/admin/kullanici-yetkileri/{kullaniciId}");
+    }
+
 }

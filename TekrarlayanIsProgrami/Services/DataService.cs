@@ -173,6 +173,63 @@ namespace TekrarlayanIsProgrami.Services
             return new() { Data = item.ID };
         }
 
+        public async Task<ItemForm[]> GetFormsAsync(bool sadeceMenuler = false)
+        {
+           
+            var sql = $@"
+                select ""ID"",""Adi"",Coalesce(""IsMenu"", False) As ""IsMenu"", Coalesce(""Sira"", 0) As ""Sira"",""SayfaURL"",""Icon"" 
+                from ""Form""
+                where (""DelUser"" is null or ""DelUser"" = 0)
+                {(sadeceMenuler ? @"and ""IsMenu"" = true" : string.Empty)}
+                order by coalesce(""Sira"", 0), ""ID"";
+            ";
+
+            return (await SQLQueryAsync<ItemForm>(sql)).ToArray();
+        }
+
+        public async Task<ItemKullaniciDetay[]> GetKullaniciFormYetkileriAsync(int kullaniciId)
+        {
+            var sql = @"
+                select ""ID"", ""Form_ID"", ""Yetki"", ""Kullanici_ID"", ""CreUser"", ""CreDate"", ""UpdUser"", ""UpdDate"", ""DelUser"", ""DelDate""
+                from ""KullaniciDetay""
+                where ""Kullanici_ID"" = @KullaniciId and (""DelUser"" is null or ""DelUser"" = 0);
+            ";
+
+            return (await SQLQueryAsync<ItemKullaniciDetay>(sql, new { KullaniciId = kullaniciId })).ToArray();
+        }
+
+        public async Task<DataResult<int>> SetKullaniciFormYetkiAsync(ItemKullaniciDetay item)
+        {
+            if (item.ID.Equals(0) && item.DelUser.Equals(0))
+            {
+                item.ID = await SQLExecuteScalar<int>(
+                    @"INSERT INTO ""KullaniciDetay"" (""Form_ID"", ""Kullanici_ID"", ""Yetki"", ""CreUser"", ""CreDate"")
+                      VALUES (@Form_ID, @Kullanici_ID, @Yetki, @CreUser, now())
+                      RETURNING ""ID""",
+                    item);
+            }
+            else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
+            {
+                await SQLExecute(
+                    @"UPDATE ""KullaniciDetay""
+                      SET ""Yetki"" = @Yetki,
+                          ""UpdUser"" = @UpdUser,
+                          ""UpdDate"" = now()
+                      WHERE ""ID"" = @ID",
+                    item);
+            }
+            else if (!item.ID.Equals(0) && !item.DelUser.Equals(0))
+            {
+                await SQLExecute(
+                    @"UPDATE ""KullaniciDetay""
+                      SET ""DelUser"" = @DelUser,
+                          ""DelDate"" = now()
+                      WHERE ""ID"" = @ID",
+                    item);
+            }
+
+            return new() { Data = item.ID };
+        }
 
     }
 }

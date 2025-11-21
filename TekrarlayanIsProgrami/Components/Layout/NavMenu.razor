@@ -1,42 +1,106 @@
 ﻿
- <RadzenCard class="top-row ps-3 navbar navbar-dark">
-    <RadzenCard class="container-fluid">
+<RadzenCard class="top-row ps-3 navbar navbar-dark">
+    <RadzenCard class="container-fluid d-flex align-items-center">
         <a class="navbar-brand" href="">TekrarlayanIsProgrami</a>
+        <button class="btn btn-danger ms-auto" @onclick="Cikis">Çıkış Yap</button>
     </RadzenCard>
-</RadzenCard> 
-<button class="btn btn-danger" @onclick="@Cikis">Çıkış Yap</button>
- <input type="checkbox" title="Navigation menu" class="navbar-toggler" /> 
+</RadzenCard>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <RadzenCard class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-        <RadzenCard class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </RadzenCard>
- 
-        <RadzenCard class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </RadzenCard>
-        <RadzenCard class="nav-item px-3">
-            <NavLink class="nav-link" href="Deneme">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Deneme
-            </NavLink>
-        </RadzenCard>
-        <RadzenCard class="nav-item px-3">
-            <NavLink class="nav-link" href="Kullanicilar">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Kullanicilar
-            </NavLink>
-        </RadzenCard>
+        @if (_isMenuLoading)
+        {
+            <RadzenCard class="nav-item px-3">
+                <RadzenSkeleton Height="32px" />
+            </RadzenCard>
+        }
+        else if (!string.IsNullOrEmpty(_menuError))
+        {
+            <RadzenAlert Style="margin: 0 1rem;" Severity="AlertSeverity.Warning">
+                @_menuError
+            </RadzenAlert>
+        }
+        else if (_menuItems.Count == 0)
+        {
+            <RadzenCard class="nav-item px-3">
+                <span class="text-muted">Tanımlı menü bulunamadı.</span>
+            </RadzenCard>
+        }
+        else
+        {
+            @foreach (var item in _menuItems)
+            {
+                <RadzenCard class="nav-item px-3" @key="item.ID">
+                    <NavLink class="nav-link" href="@GetHref(item)" Match="NavLinkMatch.Prefix">
+                        <span class="@GetIcon(item)" aria-hidden="true"></span> @item.Adi
+                    </NavLink>
+                </RadzenCard>
+            }
+        }
     </nav>
-</RadzenCard> 
+</RadzenCard>
+
 @code{
+    private IReadOnlyList<ItemForm> _menuItems = Array.Empty<ItemForm>();
+    private bool _isMenuLoading = true;
+    private string? _menuError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMenuAsync();
+    }
+
+    private async Task LoadMenuAsync()
+    {
+        _menuError = null;
+        _isMenuLoading = true;
+        try
+        {
+            _menuItems = await PermissionService.GetMenuAsync();
+        }
+        catch (Exception ex)
+        {
+            _menuError = $"Menü yüklenemedi: {ex.Message}";
+            _menuItems = Array.Empty<ItemForm>();
+        }
+        finally
+        {
+            _isMenuLoading = false;
+        }
+    }
+
+    private string GetHref(ItemForm form)
+    {
+        var route = form.SayfaURL;
+        if (string.IsNullOrWhiteSpace(route))
+        {
+            route = form.Adi;
+        }
+
+        if (string.IsNullOrWhiteSpace(route))
+        {
+            return "/";
+        }
+
+        route = route.Trim();
+        if (!route.StartsWith("/", StringComparison.Ordinal))
+        {
+            route = "/" + route.TrimStart('/');
+        }
+
+        return route;
+    }
+
+    private string GetIcon(ItemForm form)
+        => string.IsNullOrWhiteSpace(form.Icon) ? "bi bi-list-nested-nav-menu" : form.Icon!;
+
     private async Task Cikis()
     {
         await girisSaglayici.CikisYapAsync();
-        NavigationManager.NavigateTo("/GirisYapAsync", true); // true: sayfayı yeniler
+        await PermissionService.RefreshAsync();
+        NavigationManager.NavigateTo("/GirisYap", true);
     }
 }
 

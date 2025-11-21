@@ -1,0 +1,186 @@
+@page "/admin/kullanici-yetkileri/{KullaniciId:int}"
+@layout MainLayout
+@attribute [Authorize(Roles = "Admin")]
+
+<RadzenCard class="container mt-4">
+    <h3>Kullanıcı Sayfa Yetkileri</h3>
+
+    @if (isLoading)
+    {
+        <RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:260px;" />
+        <p class="mt-2">Yetkiler yükleniyor...</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(hataMesaji))
+    {
+        <RadzenAlert Severity="AlertSeverity.Error">@hataMesaji</RadzenAlert>
+    }
+    else if (hedefKullanici is null)
+    {
+        <RadzenAlert Severity="AlertSeverity.Warning">Kullanıcı bulunamadı.</RadzenAlert>
+    }
+    else
+    {
+        <RadzenCard Style="margin-bottom:16px;">
+            <strong>@hedefKullanici.Adi @hedefKullanici.Soyadi</strong>
+            <div class="text-muted">@hedefKullanici.EPosta</div>
+        </RadzenCard>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted">0 = Gizli, 1 = Okuma, 2 = Okuma &amp; Yazma</span>
+            <RadzenButton Text="Değişiklikleri Kaydet"
+                          Icon="save"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Disabled="@(!HasChanges || isSaving)"
+                          Click="@KaydetAsync" />
+        </div>
+
+            <RadzenDataGrid TItem="ItemForm" Data="@formYetkileri" AllowPaging="false" AllowSorting="true" Class="mt-3">
+                <Columns>
+                    <RadzenDataGridColumn TItem="ItemForm" Property="Adi" Title="Form Adı" />
+                    <RadzenDataGridColumn TItem="ItemForm" Property="IsMenu" Title="Menüde" Width="120px">
+                        <Template Context="item">
+                            @(item.IsMenu ? "Evet" : "Hayır")
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ItemForm" Title="Yetki" Width="320px">
+                        <Template Context="item">
+                            <RadzenDropDown TValue="int"
+                                            Data="@PermissionService.PermissionOptions"
+                                            TextProperty="Label"
+                                            ValueProperty="Value"
+                                            Style="width:260px;"
+                                            Value="@GetYetki(item.ID)"
+                                            Change="@(args => OnYetkiChanged(item.ID, args is int value ? value : 0))" />
+                            <div class="text-muted small">
+                                @PermissionService.GetPermissionDescription(GetYetki(item.ID))
+                            </div>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+    }
+</RadzenCard>
+
+@code {
+    [Parameter] public int KullaniciId { get; set; }
+
+    private User? hedefKullanici;
+    private List<ItemForm> formYetkileri = new();
+    private Dictionary<int, int> mevcutYetkiler = new();
+    private Dictionary<int, int> orijinalYetkiler = new();
+    private Dictionary<int, int> detayKayitlari = new();
+    private bool isLoading = true;
+    private bool isSaving;
+    private string? hataMesaji;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await YukleAsync();
+    }
+
+    private async Task YukleAsync()
+    {
+        try
+        {
+            isLoading = true;
+            hataMesaji = null;
+
+            hedefKullanici = await _kullaniciRepo.GetByIDAsync(KullaniciId);
+            var formlar = await DataService.GetFormsAsync();
+            formYetkileri = formlar.OrderBy(f => f.Sira).ThenBy(f => f.Adi).ToList();
+
+            var detaylar = await DataService.GetKullaniciFormYetkileriAsync(KullaniciId);
+            detayKayitlari = detaylar.ToDictionary(d => d.Form_ID, d => d.ID);
+            var detayYetkileri = detaylar.ToDictionary(d => d.Form_ID, d => d.Yetki);
+
+            mevcutYetkiler = formYetkileri.ToDictionary(
+                f => f.ID,
+                f => detayYetkileri.TryGetValue(f.ID, out var yetki) ? yetki : 0);
+
+            orijinalYetkiler = new Dictionary<int, int>(mevcutYetkiler);
+        }
+        catch (Exception ex)
+        {
+            hataMesaji = $"Yetkiler yüklenemedi: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool HasChanges =>
+        formYetkileri.Any(form =>
+        {
+            var mevcut = GetYetki(form.ID);
+            var orijinal = orijinalYetkiler.TryGetValue(form.ID, out var value) ? value : 0;
+            return mevcut != orijinal;
+        });
+
+    private async Task KaydetAsync()
+    {
+        if (isSaving || !HasChanges)
+        {
+            return;
+        }
+
+        isSaving = true;
+        hataMesaji = null;
+
+        try
+        {
+            var admin = await girisSaglayici.GetCurrentUserAsync();
+            var adminId = admin?.ID ?? 0;
+
+            foreach (var form in formYetkileri)
+            {
+                var mevcutYetki = GetYetki(form.ID);
+                var orijinalYetki = orijinalYetkiler.TryGetValue(form.ID, out var value) ? value : 0;
+
+                if (mevcutYetki == orijinalYetki)
+                {
+                    continue;
+                }
+
+                var detayId = detayKayitlari.TryGetValue(form.ID, out var id) ? id : 0;
+                var kayit = new ItemKullaniciDetay
+                {
+                    ID = detayId,
+                    Form_ID = form.ID,
+                    Kullanici_ID = KullaniciId,
+                    Yetki = mevcutYetki,
+                    CreUser = adminId,
+                    UpdUser = adminId,
+                    DelUser = 0
+                };
+
+                var sonuc = await DataService.SetKullaniciFormYetkiAsync(kayit);
+                var detailId = kayit.ID != 0 ? kayit.ID : sonuc.Data;
+
+                detayKayitlari[form.ID] = detailId;
+                orijinalYetkiler[form.ID] = mevcutYetki;
+            }
+
+            notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Yetkiler güncellendi.");
+        }
+        catch (Exception ex)
+        {
+            hataMesaji = $"Kaydetme sırasında hata oluştu: {ex.Message}";
+            notificationService.Notify(NotificationSeverity.Error, "Hata", hataMesaji);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private int GetYetki(int formId)
+        => mevcutYetkiler.TryGetValue(formId, out var yetki) ? yetki : 0;
+
+    private void OnYetkiChanged(int formId, int yeniYetki)
+    {
+        mevcutYetkiler[formId] = yeniYetki;
+        StateHasChanged();
+    }
+}
+
