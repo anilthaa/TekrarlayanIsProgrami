@@ -1,9 +1,9 @@
-﻿@page "/admin/admindashboard"
+﻿@page "/Admin/AdminDashboard"
 @attribute [Authorize(Roles = "Admin")]
 @layout MainLayout
 
 <HeadContent>
-	
+	<link href="css/AdminDashboard.css" rel="stylesheet"/>
 </HeadContent>
 <RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
 	<RadzenText Text="Admin Kontrol Paneli" TextStyle="TextStyle.H3" TagName="@TagName.H1" class="rz-mb-0"></RadzenText>

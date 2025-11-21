@@ -120,34 +120,6 @@ namespace TekrarlayanIsProgrami.Services
 
         }
 
-        public async Task<(List<ItemGorev> Kilitli, List<ItemGorev> HerkeseAcik, List<ItemGorev> KullaniciAldi)> GetGorevlerByUser(int userId)
-        {
-            var gorevler = await SQLQueryAsync<ItemGorev>($@"
-                Select * From ""Gorev"" 
-                Where ""DelDate"" Is Null");
-
-            var kilitli=gorevler.Where(g => g.Kilitli && g.Kullanici_ID==userId).ToList();
-            var herkeseAcik = gorevler.Where(g => !g.Kilitli && g.Kullanici_ID==null).ToList();
-            var kullaniciAldi = gorevler.Where(g => !g.Kilitli && g.Kullanici_ID==userId).ToList();
-
-            return(kilitli, herkeseAcik, kullaniciAldi);
-        }
-
-        public async Task GoreviKullaniciyaAta(int gorevID, int kullaniciID)
-        {
-            await SQLExecute($@"
-                Update ""Gorev"" 
-                Set ""Kilitli""=true, ""Kullanici_ID""={kullaniciID}
-                Where ""ID""={gorevID}");
-        }
-
-        public async Task GoreviTamamla(int gorevID)
-        {
-           await SQLExecute($@"
-                Update ""Gorev"" 
-                Set ""Tamamlandi""=true, 
-                Where ""ID""={gorevID}");
-        }
         private async Task CheckAdminRole()
         {
             var authState = await _stateProvider.GetAuthenticationStateAsync();
@@ -174,7 +146,7 @@ namespace TekrarlayanIsProgrami.Services
                 order by ""ID""
             ")).ToArray();
         }
-
+        
         public async Task<DataResult<int>> SetKullaniciTip(ItemKullaniciTip item)
         {
             if (item.ID.Equals(0) && item.DelUser.Equals(0))
