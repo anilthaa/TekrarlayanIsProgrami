@@ -117,7 +117,7 @@ namespace TekrarlayanIsProgrami.Repository
      string SifreTekrar,
      string? ResetToken,
      int kaydedenUserId,
-     int? secilenKullaniciTipId = 0) // admin seçtiyse.
+     int KullaniciTip_ID) // admin seçtiyse.
         {
             using var conn = GetConnection();
 
@@ -130,7 +130,8 @@ namespace TekrarlayanIsProgrami.Repository
                 Aktif = true,
                 CreUser = kaydedenUserId,
                 CreDate = DateTime.Now,
-                ResetToken = ResetToken
+                ResetToken = ResetToken,
+                KullaniciTip_ID = KullaniciTip_ID
             };
 
             var sqlInsert = @"INSERT INTO ""Kullanici"" 
@@ -138,32 +139,32 @@ namespace TekrarlayanIsProgrami.Repository
  VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, @CreDate, @ResetToken)
  RETURNING ""ID"";";
 
-            int KullaniciTip_ID = 0;
-            if (secilenKullaniciTipId == null || secilenKullaniciTipId == 0)
-            {
-                Console.WriteLine("Hiç tip seçilmemiş, varsayılan tip atanacak.");
-                KullaniciTip_ID = 2; // Standart tip
-            }
-            else
-            {
-                switch (secilenKullaniciTipId)
-                {
-                    case 1: //Admin.
-                        KullaniciTip_ID = 1;
-                        break;
-                    case 2: //Standart.
-                        KullaniciTip_ID = 2;
-                        break;
-                    default:
-                        KullaniciTip_ID = 2; //Seçilmemişse yani kullanıcı kendisi giriş yaptığında bu seçilcek.
-                        break;
-                }
-            }
+            //int KullaniciTip_ID = 0;
+            //if (secilenKullaniciTipId == null || secilenKullaniciTipId == 0)
+            //{
+            //    Console.WriteLine("Hiç tip seçilmemiş, varsayılan tip atanacak.");
+            //    KullaniciTip_ID = 2; // Standart tip
+            //}
+            //else
+            //{
+            //    switch (secilenKullaniciTipId)
+            //    {
+            //        case 1: //Admin.
+            //            KullaniciTip_ID = 1;
+            //            break;
+            //        case 2: //Standart.
+            //            KullaniciTip_ID = 2;
+            //            break;
+            //        default:
+            //            KullaniciTip_ID = 2; //Seçilmemişse yani kullanıcı kendisi giriş yaptığında bu seçilcek.
+            //            break;
+            //    }
+            //}
             user.ID = await conn.ExecuteScalarAsync<int>(sqlInsert, new
             {
                 user.Adi,
                 user.Soyadi,
-                KullaniciTip_ID = KullaniciTip_ID, // admin seçtiyse onun tipini kullan, yoksa standartsecilenKullaniciTipId ?? 2    KullaniciTip_ID = user.KullaniciTip_ID !=0 ? user.KullaniciTip_ID : 2
+                user.KullaniciTip_ID, // admin seçtiyse onun tipini kullan, yoksa standartsecilenKullaniciTipId ?? 2    KullaniciTip_ID = user.KullaniciTip_ID !=0 ? user.KullaniciTip_ID : 2
                 user.EPosta,
                 user.Sifre,
                 user.Aktif,
