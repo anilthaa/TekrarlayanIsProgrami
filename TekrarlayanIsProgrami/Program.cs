@@ -47,6 +47,7 @@ builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<TooltipService>(); 
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
+builder.Services.AddScoped<KullaniciTipRepository>();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<GorevLoglariRepository>();
 builder.Services.AddScoped<SifreService>();

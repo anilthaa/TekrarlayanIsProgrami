@@ -2,13 +2,13 @@
 using Npgsql;
 using TekrarlayanIsProgrami.Models;
 using Dapper;
+using TekrarlayanIsProgrami.Services;
 
 namespace TekrarlayanIsProgrami.Repository
 {
     public class UserRepository
     {
         private readonly string _connectionString;
-
         public UserRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("PostgreSqlConnection");
@@ -67,7 +67,7 @@ namespace TekrarlayanIsProgrami.Repository
                 user.Sifre,
                 user.Aktif,
                 user.KullaniciTip_ID,
-                user.UpdUser, // Burada eksik olan parametre eklendi
+                user.UpdUser,
                 user.ID
             });
 
@@ -109,32 +109,61 @@ namespace TekrarlayanIsProgrami.Repository
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new { EPosta = eposta, Sifre = sifre });
         }
 
-        public async Task<User> KayitOlAsync(string Adi, string Soyadi, string EPosta, string Sifre, string SifreTekrar, string? ResetToken)
+        public async Task<User> KayitOlAsync(
+     string Adi,
+     string Soyadi,
+     string EPosta,
+     string Sifre,
+     string SifreTekrar,
+     string? ResetToken,
+     int kaydedenUserId,
+     int? secilenKullaniciTipId = 0) // admin seçtiyse.
         {
             using var conn = GetConnection();
 
-            var sqlInsert = @"INSERT INTO ""Kullanici"" 
-        (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
-        VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, @CreDate, @ResetToken)
-        RETURNING ""ID"";";
-
             var user = new User
             {
-                Adi = Adi, //Buraya @ eklenilcek gibi.
+                Adi = Adi,
                 Soyadi = Soyadi,
                 EPosta = EPosta,
                 Sifre = Sifre,
                 Aktif = true,
-                CreUser = 1,
+                CreUser = kaydedenUserId,
                 CreDate = DateTime.Now,
                 ResetToken = ResetToken
             };
 
+            var sqlInsert = @"INSERT INTO ""Kullanici"" 
+ (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
+ VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, @CreDate, @ResetToken)
+ RETURNING ""ID"";";
+
+            int KullaniciTip_ID = 0;
+            if (secilenKullaniciTipId == null || secilenKullaniciTipId == 0)
+            {
+                Console.WriteLine("Hiç tip seçilmemiş, varsayılan tip atanacak.");
+                KullaniciTip_ID = 2; // Standart tip
+            }
+            else
+            {
+                switch (secilenKullaniciTipId)
+                {
+                    case 1: //Admin.
+                        KullaniciTip_ID = 1;
+                        break;
+                    case 2: //Standart.
+                        KullaniciTip_ID = 2;
+                        break;
+                    default:
+                        KullaniciTip_ID = 2; //Seçilmemişse yani kullanıcı kendisi giriş yaptığında bu seçilcek.
+                        break;
+                }
+            }
             user.ID = await conn.ExecuteScalarAsync<int>(sqlInsert, new
             {
                 user.Adi,
                 user.Soyadi,
-                KullaniciTip_ID = 0,
+                KullaniciTip_ID = KullaniciTip_ID, // admin seçtiyse onun tipini kullan, yoksa standartsecilenKullaniciTipId ?? 2    KullaniciTip_ID = user.KullaniciTip_ID !=0 ? user.KullaniciTip_ID : 2
                 user.EPosta,
                 user.Sifre,
                 user.Aktif,
@@ -145,7 +174,7 @@ namespace TekrarlayanIsProgrami.Repository
 
             return user;
         }
-        //Bu kayıt Ol için bir eposta varmı kontrolu.
+
         public async Task<bool> EpostaVarMiAsync(string EPosta)
         {
             using var conn = new NpgsqlConnection(_connectionString);
@@ -153,21 +182,22 @@ namespace TekrarlayanIsProgrami.Repository
                @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta AND ""DelDate"" IS NULL", new { EPosta = EPosta });
             return sql != null;
         }
-        //Bu bizim şifremizi değiştirdiğimiz zaman tokenimizi değiştirmek için yazdık.
+
         public async Task SaveResetTokenAsync(int Id, string token)
         {
             using var conn = new NpgsqlConnection(_connectionString);
-            // ResetToken kolonu varchar(100) olduğu için uzun JWT'lerde taşma olmaması adına kısaltıyoruz
             var tokenToStore = token != null && token.Length > 100 ? token.Substring(0, 100) : token;
             var sql = @"UPDATE ""Kullanici"" SET ""ResetToken"" = @token WHERE ""ID"" = @id";
             await conn.ExecuteAsync(sql, new { token = tokenToStore, id = Id });
         }
+
         public async Task<User?> SifreEmailAsync(string EPosta)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT ""ID"", ""EPosta"", ""Adi"", ""Sifre"" FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta });
         }
+
         public async Task SifreSifirlamaTokenKaydet(int id, string token, DateTime expiry)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);

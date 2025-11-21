@@ -96,37 +96,6 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
         {
-            //var Kullanici = await _kullaniciRepo.GetByEmailAsync(eposta, sifre);
-            //if (Kullanici == null || Kullanici.Sifre != sifre || Kullanici.EPosta != eposta)
-            //{
-            //    return new AuthResult
-            //    {
-            //        Basarili = false,
-            //        Mesaj = $"E-posta veya Şifre Hatalı!"
-            //    };
-
-
-
-
-            //}
-            //await MarkUserAsAuthenticated(Kullanici);
-
-
-            //var identity = new ClaimsIdentity(new[]
-            //{
-            //    new Claim(ClaimTypes.Name, Kullanici.Adi + " " + Kullanici.Soyadi),
-            //    new Claim(ClaimTypes.Email, Kullanici.EPosta),
-            //    new Claim(ClaimTypes.NameIdentifier, Kullanici.ID.ToString())
-            //    }, "apiauth_type");
-
-            //var kullaniciPrincipal = new ClaimsPrincipal(identity);//Blazor, AuthenticationStateProvider üzerinden principal ile kullanıcının giriş durumunu bilir.
-            //NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(kullaniciPrincipal)));//Bu satır, uygulamanın diğer bileşenlerine kullanıcının artık giriş yaptığını bildirir.
-            //return new AuthResult
-            //{
-            //    Basarili = true,
-            //    Mesaj = $"Hoşgeldiniz {Kullanici.Adi}!"
-            //};
-
             var response=await _http.PostAsJsonAsync("api/auth/login", new {Email=eposta, Password=sifre});
             var rawLoginResponse = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[DEBUG] Login Response: {response.StatusCode} - {rawLoginResponse}");
@@ -155,9 +124,8 @@ namespace TekrarlayanIsProgrami.Services
             return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {kullanici.Adi}!" };
         }
 
-        public async Task<AuthResult> KayitOlAsync(User user)
+        public async Task<AuthResult> KayitOlAsync(User user,int secilenKullaniciTipId)
         {
-            // E-posta kontrolünü API/DB tarafına bırakalım; silinmiş kayıtlar yeniden kullanılabilsin
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult
@@ -184,7 +152,7 @@ namespace TekrarlayanIsProgrami.Services
                 if (result.Basarili && !string.IsNullOrEmpty(result.Token))
                 {
                     await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-                    // Kullanıcıyı anında oturum açmış kabul et (mevcut kullanıcı bilgisiyle)
+
                     var yeni = await _kullaniciRepo.GetByEmailAsync(user.EPosta, user.Sifre);
                     if (yeni != null)
                     {

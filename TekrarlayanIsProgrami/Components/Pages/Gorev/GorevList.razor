@@ -1,52 +1,13 @@
 ﻿@page "/gorevler"
 @layout MainLayout
-@attribute [Authorize(Roles = "Admin")]
-
-@* <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1rem" class="rz-p-md" Style="margin:20px 0 0 20px;">
-	<RadzenCard Style="width:250px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => SelectedTabIndex = 0)">
-		<div style="display:flex; justify-content:space-between; align-items:center;">
-			<div>
-				<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Toplam Görev</RadzenText>
-				<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(GorevListt?.Count ?? 0)</RadzenText>
-			</div>
-			<RadzenIcon Icon="list" Style="font-size:32px; color:#3498db;"></RadzenIcon>
-		</div>
-	</RadzenCard>
-	<RadzenCard Style="width:250px; border-left: 5px solid #2ecc71; cursor:pointer;" @onclick="@(() => SelectedTabIndex = 0)">
-		<div style="display:flex; justify-content:space-between; align-items:center;">
-			<div>
-				<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Aktif Görev</RadzenText>
-				<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(aktifGorevler.Count())</RadzenText>
-			</div>
-			<RadzenIcon Icon="check_circle" Style="font-size:32px; color:#2ecc71;"></RadzenIcon>
-		</div>
-	</RadzenCard>
-	<RadzenCard Style="width:250px; border-left: 5px solid #9b59b6; cursor:pointer;" @onclick="@(() => SelectedTabIndex = 2)">
-		<div style="display:flex; justify-content:space-between; align-items:center;">
-			<div>
-				<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Tamamlanan Görevler</RadzenText>
-				<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(tamamlananGorevler.Count())</RadzenText>
-			</div>
-			<RadzenIcon Icon="done_all" Style="font-size:32px; color:#9b59b6;"></RadzenIcon>
-		</div>
-	</RadzenCard>
-	<RadzenCard Style="width:250px; border-left: 5px solid #f1c40f; cursor:pointer;" @onclick="@(() => SelectedTabIndex = 1)">
-		<div style="display:flex; justify-content:space-between; align-items:center;">
-			<div>
-				<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Yaklaşan Görevler</RadzenText>
-				<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(yaklasanGorevler.Count())</RadzenText>
-			</div>
-			<RadzenIcon Icon="done_all" Style="font-size:32px; color:#f1c40f;"></RadzenIcon>
-		</div>
-	</RadzenCard>
-
-
-</RadzenStack> *@
+@attribute [Authorize]
 
 
 
+@if(kullaniciTip.Adi=="Admin")
+{
 <RadzenCard Style="margin:20px;">
-	<h3>Görev Listesi</h3>
+	<h3 style="text-align:center;">Görev Listesi</h3>
 
 	<RadzenButton Text="Yeni Görev" Icon="add_circle" Style="margin-bottom:15px; background:#27ae60; color:white" Click="@YeniGorev"></RadzenButton>
 
@@ -99,12 +60,12 @@
 							@(string.IsNullOrWhiteSpace(g.TekrarlamaTipi) ? "Yok" : g.TekrarlamaTipi)
 						</Template>
 					</RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı">
+					<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı" Width="200px">
 						<Template Context="g">
 							@(g.TekrarAraligi.HasValue? g.TekrarAraligi.ToString() : "Yok")
 						</Template>
 					</RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü">
+					<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü" width="200px">
 						<Template Context="g">
 							@(string.IsNullOrWhiteSpace(g.HaftaninGunu) ? "Yok" : g.HaftaninGunu)
 						</Template>
@@ -117,13 +78,13 @@
 					<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç" FormatString="{0:dd.MM.yyyy HH:mm}">
 					</RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
+					<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="220px"></RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="Kilitli" Title="Kilitli Mi?">
 						<Template Context="g">
 							@(g.Kilitli ? "Evet" : "Hayır")
 						</Template>
 					</RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="110px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
+					<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="150px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
 						<Template Context="gorev">
 							<RadzenCheckBox @bind-Value="gorev.Tamamlandi" TValue="bool" Change=@(() => ToggleTamamlandi(gorev))></RadzenCheckBox>
 						</Template>
@@ -148,14 +109,99 @@
 			</RadzenDataGrid>
 		}
 	}
-</RadzenCard>
+	</RadzenCard>
+}
+else
+{
+
+	<RadzenCard Style="margin:20px;">
+		<h3 style="text-align:center;">Görev Listesi</h3>
+
+		@* Standart kullanıcı yeni görev ekleyemez, buton kaldırıldı *@
+
+		@if (GorevListt == null || !GorevListt.Any())
+		{
+			<p>Veri yükleniyor... veya görev bulunamadı.</p>
+		}
+		else
+		{
+			<RadzenTabs @bind-SelectedIndex=@SelectedTabIndex Style="margin-top:15px;">
+				<Tabs>
+					<RadzenTabsItem Text="Tüm Aktif Görevler"></RadzenTabsItem>
+					<RadzenTabsItem Text="Yaklaşan Görevler"></RadzenTabsItem>
+					<RadzenTabsItem Text="Tamamlanmış Görevler"></RadzenTabsItem>
+					<RadzenTabsItem Text="Süresi Dolanlar"></RadzenTabsItem>
+					<RadzenTabsItem Text="Pasif Görevler"></RadzenTabsItem>
+					<RadzenTabsItem Text="Size Özel Görevler"></RadzenTabsItem>
+				</Tabs>
+			</RadzenTabs>
+
+			@if (!AktifListee.Any())
+			{
+				<div style="text-align:center; padding:50px;">
+					<p style="color:#7f8c8d; font-style:italic;">Kayıt bulunamadı.</p>
+				</div>
+			}
+			else
+			{
+				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListee" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" Style="width:100%; white-space:nowrap; overflow-x:auto;" ColumnWidth="150px">
+					<Columns>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="70px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Title="Atayan Kişi">
+							<Template Context="g">
+								@GetAtayanKullaniciAdi(g.CreUser)
+							</Template>
+
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Kategori_ID" Title="Kategori"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem">
+							<Template Context="g">@(!string.IsNullOrWhiteSpace(g.OnemDerecesi) ? g.OnemDerecesi : "Yok")</Template>
+							<Template Context="onem">
+								<span style="font-size:12px; padding:3px 8px; border-radius:6px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi ?? string.Empty)">
+									@onem.OnemDerecesi
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarlamaTipi" Title="Tekrarlama">
+							<Template Context="g">@(!string.IsNullOrWhiteSpace(g.TekrarlamaTipi) ? g.TekrarlamaTipi : "Yok")</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı" Width="200px">
+							<Template Context="g">@((g.TekrarAraligi.HasValue) ? g.TekrarAraligi.ToString() : "Yok")</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="150px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
+							<Template Context="gorev">
+								@* Standart kullanıcı tamamlandı checkbox’ını değiştiremez, sadece gösterim *@
+								<RadzenCheckBox @bind-Value="gorev.Tamamlandi" TValue="bool" Change="@(async (args) => await ToggleTamamlandi(gorev))"></RadzenCheckBox>
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Durum">
+							<Template Context="gorev">
+								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(gorev.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									@(gorev.Aktif ? "Aktif" : "Pasif")
+								</span>
+							</Template>
+						</RadzenDataGridColumn>
+						@* İşlem sütunu kaldırıldı, standart kullanıcı düzenleyemez/silemez *@
+					</Columns>
+				</RadzenDataGrid>
+			}
+		}
+	</RadzenCard>
+
+}
 
 @code {
-    private List<ItemGorev> GorevListt = new();
+	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
+	private bool IsLoading = true;
+	private List<ItemGorev> GorevListt = new();
 	private RadzenDataGrid<ItemGorev>? GrdGorev;
 	private int SelectedTabIndex { get; set; } = 0;
 	private ItemGorev gorevler = new ItemGorev();
 	private List<User> TumKullanicilar = new();
+	private int? currentUserId = null;
 
 	[SupplyParameterFromQuery(Name = "tab")]
 	public int QueryTabIndex { get; set; } = 0;
@@ -189,11 +235,46 @@
 	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
 	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
 	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value>=DateTime.Today));
+	private IEnumerable<ItemGorev> SizeOzelGorevler =>
+	GorevListt
+		.Where(g => g.Kilitli
+					&& g.Kullanici_ID == currentUserId
+					&& !g.Tamamlandi
+					&& g.DelUser == null) // silinmiş görevleri hariç tut
+		.OrderBy(g => g.BaslangicTarihi)
+		.ThenBy(g => g.Baslik);
 
 	protected override async Task OnInitializedAsync()
 	{
-		await YukleKullanicilar();
+		var user = await girisSaglayici.GetCurrentUserAsync();
+		currentUserId = user?.ID;
+		TumKullanicilar = await _kullaniciRepo.GetAllAsync(); // Tüm kullanıcıları al
 		await YukleGorevler();
+		await YukleKullaniciId();
+		kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
+		if (kullaniciTip == null)
+		{
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Kullanıcı tipi bulunamadı.");
+			IsLoading = false;
+			return;
+		}
+		await YukleKullanicilar();
+
+	}
+	private async Task YukleKullaniciId()
+	{
+		try
+		{
+			var currentUser = await girisSaglayici.GetCurrentUserAsync();
+			if (currentUser != null)
+			{
+				currentUserId = currentUser.ID;
+			}
+		}
+		catch (Exception ex)
+		{
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Kullanıcı bilgisi yüklenirken bir hata oluştu: " + ex.Message);
+		}
 	}
 
 	private async Task YukleKullanicilar()
@@ -213,27 +294,40 @@
 			notificationService.Notify(NotificationSeverity.Error, "Hata", ex.Message);
 		}
 	}
-    private async Task YeniGorev()
+
+	private async Task YeniGorev()
 	{
-
-		var result = await DialogService.OpenAsync<GorevTnm>(" ",
-			new Dictionary<string, object> { { "Gorev", new ItemGorev { CreUser = 1, Aktif = true } } },
-			new DialogOptions { Width = "600px", Height = "auto" });
-
-		if (result is ItemGorev g && g.ID > 0)
+		if (currentUserId == null)
 		{
-
-			GorevListt.Insert(0, g);
-			StateHasChanged();
-			if (GrdGorev != null)
-			{
-				await GrdGorev!.Reload();
-			}
-
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev Başarıyla Eklendi!");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Kullanıcı bilgisi alınamadı.");
+			return;
 		}
 
-	}
+		// Yeni görev nesnesi oluşturuluyor
+		var yeniGorev = new ItemGorev
+		{
+			CreUser = currentUserId ?? 0, // mutlaka giriş yapan kullanıcı ID'si
+			Kullanici_ID = currentUserId ?? 0, // görev kullanıcıya atanacaksa
+			Aktif = true
+		};
+
+		// Dialog'u açıyoruz
+		var result = await DialogService.OpenAsync<GorevTnm>(
+			"Görev Ekle",
+			new Dictionary<string, object> { { "Gorev", yeniGorev } },
+			new DialogOptions { Width = "600px", Height = "auto" }
+		);
+
+		// Dialog’dan dönen sonucu kontrol ediyoruz
+		if (result is ItemGorev g && g.ID > 0)
+		{
+			g.CreUser = currentUserId.Value; // Atayan kişi burada kesin setleniyor
+			GorevListt.Insert(0, g);
+			await GrdGorev.Reload();
+		}
+
+			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev başarıyla eklendi!");
+		}
 
 	private MarkupString GetAtananKullaniciAdi(int kullaniciId, bool kilitli)
 	{
@@ -261,22 +355,14 @@
 			new DialogOptions { Width = "600px", Height ="auto" });
 
 		if (result is ItemGorev guncellendi)
-		{
-			// var index = GorevList.FindIndex(x => x.ID == guncellendi.ID);
-			// if (index>=0)
-			// {
-			// 	GorevList[index] = guncellendi;
-			// }
-			// await GrdGorev!.Reload();
-			// notificationService.Notify(NotificationSeverity.Success, "Güncellendi", "Görev güncellendi!");
-
+	{
 			if (guncellendi.ID == 0)
 			{
-				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev eklendi!");
+				 // notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev eklendi!");
 			}
 			else
 			{
-				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev güncellendi!");
+				 notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev güncellendi!");
 			}
 		}
 	}
@@ -404,6 +490,51 @@
             "düşük" => "#2ecc71",
             _ => "#95a5a6" // varsayılan gri ton
         };
+	}
+	/*bunlar standart tipte olan kullanıcı*/
+	private IEnumerable<ItemGorev> AktifListee
+	{
+		get
+		{
+			return SelectedTabIndex switch
+			{
+				0 => GorevListt
+						.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi)
+						.OrderBy(g => g.BaslangicTarihi)
+						.ThenBy(g => g.Baslik),
+				1 => GorevListt
+						.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi
+								   && g.BitisTarihi.HasValue
+								   && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0
+								   && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7)
+						.OrderBy(g => g.BitisTarihi),
+				2 => GorevListt
+						.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Tamamlandi),
+				3 => GorevListt
+						.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && !g.Aktif && !g.Tamamlandi
+								   && g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now),
+				4 => GorevListt
+						.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && !g.Aktif && !g.Tamamlandi
+								   && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)),
+				6 => GorevListt .Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.DelUser == null),
+				_ => GorevListt.Where(g => g.Kullanici_ID == currentUserId || !g.Kilitli)
+			};
+		}
+	}
+
+	private MarkupString GetAtayanKullaniciAdi(int? creUserId)
+	{
+		Console.WriteLine($"CreUserId: {creUserId}");
+		Console.WriteLine($"Kullanıcı sayısı: {TumKullanicilar.Count}");
+
+		if (!creUserId.HasValue || creUserId.Value == 0)
+			return (MarkupString)"—";
+
+		var kullanici = TumKullanicilar.FirstOrDefault(x => x.ID == creUserId.Value);
+		return kullanici != null
+			? (MarkupString)($"{kullanici.Adi} {kullanici.Soyadi}")
+			: (MarkupString)"-";
+
 	}
 }
 
