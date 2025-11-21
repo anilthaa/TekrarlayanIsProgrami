@@ -1,0 +1,110 @@
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject PermissionService PermissionService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+    private readonly HashSet<string> _publicRoutes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "",
+        "/",
+        "girisyap",
+        "kayitol",
+        "sifremiunuttum",
+        "sifresifirla",
+        "accessdenied"
+    };
+
+    private bool _initialized;
+    private bool _isRedirecting;
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _initialized = true;
+            await ValidateAsync(NavigationManager.Uri);
+        }
+    }
+
+    private async void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        if (!_initialized)
+        {
+            return;
+        }
+
+        await ValidateAsync(args.Location);
+    }
+
+    private async Task ValidateAsync(string absoluteUri)
+    {
+        var relativeRoute = NormalizeRoute(absoluteUri);
+
+        if (IsPublicRoute(relativeRoute))
+        {
+            return;
+        }
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        if (authState.User?.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        var hasAccess = await PermissionService.CanReadAsync(relativeRoute);
+
+        if (!hasAccess && !_isRedirecting)
+        {
+            _isRedirecting = true;
+            NavigationManager.NavigateTo("/AccessDenied", true);
+            _isRedirecting = false;
+        }
+    }
+
+    private string NormalizeRoute(string absoluteUri)
+    {
+        var relative = NavigationManager.ToBaseRelativePath(absoluteUri);
+
+        if (string.IsNullOrWhiteSpace(relative))
+        {
+            return "/";
+        }
+
+        var queryIndex = relative.IndexOf('?');
+        if (queryIndex >= 0)
+        {
+            relative = relative[..queryIndex];
+        }
+
+        if (!relative.StartsWith("/"))
+        {
+            relative = "/" + relative;
+        }
+
+        return relative;
+    }
+
+    private bool IsPublicRoute(string route)
+    {
+        if (string.IsNullOrWhiteSpace(route) || route == "/")
+        {
+            return true;
+        }
+
+        var normalized = route.Trim().TrimStart('/').ToLowerInvariant();
+        return _publicRoutes.Contains(normalized);
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}
+
