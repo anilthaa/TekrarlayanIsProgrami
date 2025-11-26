@@ -233,11 +233,7 @@ namespace TekrarlayanIsProgrami.Services
         }
         public async Task CikisYapAsync()
         {
-            _currentUser = null;
-            await _Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
-            await _Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-            
+            await MarkUserAsLoggedOut();
         }
     }
 }
