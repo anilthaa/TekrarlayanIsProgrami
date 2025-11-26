@@ -245,7 +245,7 @@
 	</RadzenStack>
 
 }
-else
+else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
 
@@ -390,6 +390,20 @@ else
 		</RadzenCard>
 
 	</RadzenStack>
+}
+else
+{
+	<RadzenCard Style="max-width:400px; margin:100px auto; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; border-left:5px solid #e74c3c;">
+		<RadzenIcon Icon="lock" Style="font-size:64px; color:#e74c3c; margin-bottom:20px;" />
+
+		<h2 style="margin-bottom:10px;">Erişim Engellendi</h2>
+		<p style="color:#555; font-size:14px; margin-bottom:20px;">
+			Bu sayfaya erişim yetkiniz bulunmamaktadır.<br />
+			Lütfen yönetici ile iletişime geçin veya başka bir sayfaya dönün.
+		</p>
+
+		<RadzenButton Text="Anasayfaya Dön" Icon="home" Style="background-color:#3498db; color:white;" Click="@GoHome" />
+	</RadzenCard>
 }
 
 
@@ -574,7 +588,10 @@ else
 		};
 	}
 	//Bitti.
-	
+	void GoHome()
+	{
+		NavigationManager.NavigateTo("/", forceLoad: true);
+	}
 	
 
 }
