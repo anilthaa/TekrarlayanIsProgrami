@@ -15,26 +15,83 @@
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/kullaniciprofil"))
             {
-                @if (!IsLoading && kullaniciTip != null)
+                @if (!IsLoading)
                 {
                     <RadzenCard class="dashboard-nav">
                         <a href="/dashboard" style="text-decoration:none; color:white;"><h3>📊 Dashboard</h3></a>
 
-                        @if (kullaniciTip.Adi == "Admin")
+                        @if (_isMenuLoading)
                         {
-                            <NavLink href="/kullanicilar" class="nav-link">Kullanıcılar</NavLink>
-                            <NavLink href="/kategori" class="nav-link">Kategoriler</NavLink>
-                            <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
-                            <NavLink href="/admin/kullanicitipleri" class="nav-link">Kullanıcı Tipleri</NavLink>
+                            <div class="nav-link" style="opacity:0.6;">Menü yükleniyor...</div>
                         }
                         else
                         {
-                            <NavLink href="/Gorevler" class="nav-link">Görev Listesi</NavLink>
+                            @* Ortak Sayfalar (Görevler gibi) - dropdown dışında *@
+                            @foreach (var menuItem in _commonMenuItems)
+                            {
+                                <NavLink href="@GetHref(menuItem)" class="nav-link" style="font-weight:500;">
+                                    @if (!string.IsNullOrWhiteSpace(menuItem.Icon))
+                                    {
+                                        <span class="@menuItem.Icon" style="margin-right:6px;"></span>
+                                    }
+                                    @menuItem.Adi
+                                </NavLink>
+                            }
+
+                            @if (_adminMenuItems.Any())
+                            {
+                                <div class="menu-group" style="margin-top:10px;">
+                                    <div class="menu-header" @onclick="() => _adminMenuOpen = !_adminMenuOpen" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(255,255,255,0.1); border-radius:6px; margin-bottom:5px;">
+                                        <span>Admin Sayfaları</span>
+                                        <RadzenIcon Icon="@(_adminMenuOpen ? "expand_less" : "expand_more")" />
+                                    </div>
+                                    @if (_adminMenuOpen)
+                                    {
+                                        <div class="menu-items" style="padding-left:10px;">
+                                            @foreach (var menuItem in _adminMenuItems)
+                                            {
+                                                <NavLink href="@GetHref(menuItem)" class="nav-link">
+                                                    @if (!string.IsNullOrWhiteSpace(menuItem.Icon))
+                                                    {
+                                                        <span class="@menuItem.Icon" style="margin-right:6px;"></span>
+                                                    }
+                                                    @menuItem.Adi
+                                                </NavLink>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (_userMenuItems.Any())
+                            {
+                                <div class="menu-group" style="margin-top:10px;">
+                                    <div class="menu-header" @onclick="() => _userMenuOpen = !_userMenuOpen" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(255,255,255,0.1); border-radius:6px; margin-bottom:5px;">
+                                        <span>Kullanıcı Sayfaları</span>
+                                        <RadzenIcon Icon="@(_userMenuOpen ? "expand_less" : "expand_more")" />
+                                    </div>
+                                    @if (_userMenuOpen)
+                                    {
+                                        <div class="menu-items" style="padding-left:10px;">
+                                            @foreach (var menuItem in _userMenuItems)
+                                            {
+                                                <NavLink href="@GetHref(menuItem)" class="nav-link">
+                                                    @if (!string.IsNullOrWhiteSpace(menuItem.Icon))
+                                                    {
+                                                        <span class="@menuItem.Icon" style="margin-right:6px;"></span>
+                                                    }
+                                                    @menuItem.Adi
+                                                </NavLink>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
                         }
 
-                        <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%" class="radzen-button" />
+                        <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%; margin-top:15px;" class="radzen-button" />
                     </RadzenCard>
                 }
             }
@@ -45,17 +102,125 @@
         @Body
     </RadzenBody>
 </RadzenLayout>
+@implements IDisposable
 @code {
     private ItemKullaniciTip? kullaniciTip;
     private bool IsLoading = true;
+    private IReadOnlyList<ItemForm> _menuItems = Array.Empty<ItemForm>();
+    private bool _isMenuLoading = true;
+    
+    // Dropdown state'leri
+    private bool _adminMenuOpen = true;
+    private bool _userMenuOpen = true;
+    
+    // Ortak sayfalar (hem admin hem kullanıcı için - dropdown dışında)
+    private static readonly HashSet<string> _commonRoutes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "/gorevler"
+    };
+    
+    // Admin sayfaları
+    private static readonly HashSet<string> _adminRoutes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "/kullanicilar",
+        "/kategori", 
+        "/admin/kullanicitipleri",
+        "/admin/kullanici-yetkileri"
+    };
+    
+    // Menü öğelerini kategorilere ayır
+    private IEnumerable<ItemForm> _commonMenuItems => _menuItems.Where(m => IsCommonPage(GetHref(m)));
+    private IEnumerable<ItemForm> _adminMenuItems => _menuItems.Where(m => IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
+    private IEnumerable<ItemForm> _userMenuItems => _menuItems.Where(m => !IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
+    
+    private bool IsCommonPage(string route)
+    {
+        if (string.IsNullOrWhiteSpace(route)) return false;
+        var normalizedRoute = route.ToLowerInvariant().TrimEnd('/');
+        return _commonRoutes.Contains(normalizedRoute);
+    }
+    
+    private bool IsAdminPage(string route)
+    {
+        if (string.IsNullOrWhiteSpace(route)) return false;
+        var normalizedRoute = route.ToLowerInvariant().TrimEnd('/');
+        return _adminRoutes.Contains(normalizedRoute) || normalizedRoute.StartsWith("/admin");
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        // Authentication state değişikliklerini dinle
+        girisSaglayici.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        
+        await LoadUserDataAsync();
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        // Authentication state değiştiğinde menüleri ve kullanıcı bilgilerini yeniden yükle
+        await InvokeAsync(async () =>
+        {
+            await PermissionService.RefreshAsync();
+            await LoadUserDataAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadUserDataAsync()
+    {
+        IsLoading = true;
         var currentUser = await girisSaglayici.GetCurrentUserAsync();
         if (currentUser != null)
         {
             kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUser.ID);
         }
+        else
+        {
+            kullaniciTip = null;
+        }
         IsLoading = false;
+        
+        // Menü öğelerini yükle
+        await LoadMenuAsync();
+    }
+
+    private async Task LoadMenuAsync()
+    {
+        _isMenuLoading = true;
+        try
+        {
+            _menuItems = await PermissionService.GetMenuAsync(forceRefresh: true);
+        }
+        catch
+        {
+            _menuItems = Array.Empty<ItemForm>();
+        }
+        finally
+        {
+            _isMenuLoading = false;
+        }
+    }
+
+    private string GetHref(ItemForm form)
+    {
+        var route = form.SayfaURL;
+        if (string.IsNullOrWhiteSpace(route))
+        {
+            route = form.Adi;
+        }
+
+        if (string.IsNullOrWhiteSpace(route))
+        {
+            return "/";
+        }
+
+        route = route.Trim();
+        if (!route.StartsWith("/", StringComparison.Ordinal))
+        {
+            route = "/" + route.TrimStart('/');
+        }
+
+        return route;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -75,14 +240,17 @@
                 await Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
             }
         }
-
     }
+
     private async void CikisYap()
     {
-        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        var target = string.IsNullOrEmpty(relative) ? "/" : "/" + relative;
-        var encoded = Uri.EscapeDataString(target);
         await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
-        NavigationManager.NavigateTo($"/GirisYap?returnUrl={encoded}", true);
+        await PermissionService.RefreshAsync();
+        NavigationManager.NavigateTo("/GirisYap", true);
+    }
+
+    public void Dispose()
+    {
+        girisSaglayici.AuthenticationStateChanged -= OnAuthenticationStateChanged;
     }
 }
