@@ -1,12 +1,15 @@
 ﻿@page "/Kategori"
 @layout MainLayout
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize]
 <RadzenCard Style="margin:20px;">
 	<h3 style="text-align:center;">Kategori Listesi</h3>
 
-	<RadzenButton Text="Yeni Kategori" Icon="add_circle"
-				  Style="margin-bottom:15px; background:#3498db; color:white"
-				  Click="@Ekle" />
+	@if (_canWrite)
+	{
+		<RadzenButton Text="Yeni Kategori" Icon="add_circle"
+					  Style="margin-bottom:15px; background:#3498db; color:white"
+					  Click="@Ekle" />
+	}
 
 	
 	@if (DataList == null || !DataList.Any())
@@ -16,20 +19,23 @@
 	else
 	{
 		<RadzenDataGrid TItem="ItemKategori" Data="@DataList" @ref="GrdData"
-						RowDoubleClick="@OnRowDoubleClick"
+						RowDoubleClick="@(_canWrite ? OnRowDoubleClick : null)"
 						AllowPaging="true" PageSize="20"
 						AllowSorting="true" AllowFiltering="true">
 			<Columns>
 				<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="70px" />
 				<RadzenDataGridColumn TItem="ItemKategori" Property="Adi" Title="Kategori Adı" />
-				<RadzenDataGridColumn TItem="ItemKategori" Title="İşlemler" Width="150px">
-					<Template Context="data">
-						<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:5px"
-									  Click="@(() => Duzenle(data))" ButtonStyle="ButtonStyle.Success" />
-						<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
-									  Click="@(() => Sil(data))" />
-					</Template>
-				</RadzenDataGridColumn>
+				@if (_canWrite)
+				{
+					<RadzenDataGridColumn TItem="ItemKategori" Title="İşlemler" Width="150px">
+						<Template Context="data">
+							<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:5px"
+										  Click="@(() => Duzenle(data))" ButtonStyle="ButtonStyle.Success" />
+							<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+										  Click="@(() => Sil(data))" />
+						</Template>
+					</RadzenDataGridColumn>
+				}
 			</Columns>
 		</RadzenDataGrid>
 	}
@@ -38,11 +44,13 @@
 @code {
 	private List<ItemKategori> DataList = new();
 	private RadzenDataGrid<ItemKategori>? GrdData;
+	private bool _canWrite = false;
 
 	protected override async Task OnInitializedAsync()
 	{
+		// Yazma yetkisi kontrolü (yetki >= 2)
+		_canWrite = await PermissionService.CanWriteAsync("kategori");
 		await YukleDataAsync();
-
 	}
 
 	private async Task YukleDataAsync()

@@ -1,37 +1,41 @@
 @page "/Admin/KullaniciTipleri"
 @layout MainLayout
-@attribute [Authorize(Roles ="Admin")]
-<AuthorizeView Roles="Admin">
-	<RadzenCard Style="margin:20px;">
-		<h3 style="text-align:center;">Kullanıcı Tipleri</h3>
+@attribute [Authorize]
+<RadzenCard Style="margin:20px;">
+	<h3 style="text-align:center;">Kullanıcı Tipleri</h3>
 
+	@if (_canWrite)
+	{
 		<RadzenButton Text="Yeni Tip" Icon="add"
 					  Style="margin-bottom:15px; background:#3498db; color:white"
 					  Click="@YeniTip" />
+	}
 
-		@if (isLoading)
-		{
-			<p>Veriler yükleniyor...</p>
-		}
-		else if (DataList == null || !DataList.Any())
-		{
-			<p>Henüz kullanıcı tipi tanımlanmamış.</p>
-		}
-		else
-		{
-			<RadzenDataGrid TItem="ItemKullaniciTip" Data="@DataList" @ref="grid"
-							AllowPaging="true" PageSize="10"
-							AllowSorting="true" AllowFiltering="true"
-							RowDoubleClick="@OnRowDoubleClick">
-				<Columns>
-					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="70px" />
-					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
-					<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
-						<Template Context="item">
-							<RadzenCheckBox Value="item.Aktif" TValue="bool" Disabled="true" Style="margin-right:5px;" />
-							@(item.Aktif ? "Aktif" : "Pasif")
-						</Template>
-					</RadzenDataGridColumn>
+	@if (isLoading)
+	{
+		<p>Veriler yükleniyor...</p>
+	}
+	else if (DataList == null || !DataList.Any())
+	{
+		<p>Henüz kullanıcı tipi tanımlanmamış.</p>
+	}
+	else
+	{
+		<RadzenDataGrid TItem="ItemKullaniciTip" Data="@DataList" @ref="grid"
+						AllowPaging="true" PageSize="10"
+						AllowSorting="true" AllowFiltering="true"
+						RowDoubleClick="@(_canWrite ? OnRowDoubleClick : null)">
+			<Columns>
+				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="70px" />
+				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
+				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
+					<Template Context="item">
+						<RadzenCheckBox Value="item.Aktif" TValue="bool" Disabled="true" Style="margin-right:5px;" />
+						@(item.Aktif ? "Aktif" : "Pasif")
+					</Template>
+				</RadzenDataGridColumn>
+				@if (_canWrite)
+				{
 					<RadzenDataGridColumn TItem="ItemKullaniciTip" Title="İşlemler" Width="150px">
 						<Template Context="item">
 							<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:6px"
@@ -40,22 +44,26 @@
 										  Click="@(() => Sil(item))" />
 						</Template>
 					</RadzenDataGridColumn>
-				</Columns>
-			</RadzenDataGrid>
-		}
-	</RadzenCard>
+				}
+			</Columns>
+		</RadzenDataGrid>
+	}
+</RadzenCard>
 
-	@code {
-		private List<ItemKullaniciTip> DataList = new();
-		private RadzenDataGrid<ItemKullaniciTip>? grid;
-		private bool isLoading = true;
-		private int? currentUserId;
+@code {
+	private List<ItemKullaniciTip> DataList = new();
+	private RadzenDataGrid<ItemKullaniciTip>? grid;
+	private bool isLoading = true;
+	private int? currentUserId;
+	private bool _canWrite = false;
 
-		protected override async Task OnInitializedAsync()
-		{
-			await YukleKullaniciAsync();
-			await YukleDataAsync();
-		}
+	protected override async Task OnInitializedAsync()
+	{
+		// Yazma yetkisi kontrolü (yetki >= 2)
+		_canWrite = await PermissionService.CanWriteAsync("admin/kullanicitipleri");
+		await YukleKullaniciAsync();
+		await YukleDataAsync();
+	}
 
 		private async Task YukleKullaniciAsync()
 		{
@@ -192,10 +200,7 @@
 		}
 
 		private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<ItemKullaniciTip> args)
-		{
-			await Duzenle(args.Data);
-		}
+	{
+		await Duzenle(args.Data);
 	}
-</AuthorizeView>
-
-
+}

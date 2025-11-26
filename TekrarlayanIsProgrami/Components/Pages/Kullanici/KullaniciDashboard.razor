@@ -1,6 +1,5 @@
 ﻿@page "/dashboard"
 @layout MainLayout
-@attribute [Authorize] 
 @if(kullaniciTip != null && kullaniciTip.Adi == "Admin")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
@@ -425,21 +424,40 @@ else
 	}
 	private List<GorevDurum> GorevDurumData = new();
 
-	protected override async Task OnInitializedAsync()
+	private bool _isInitialized = false;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender && !_isInitialized)
+		{
+			_isInitialized = true;
+			await LoadDashboardAsync();
+		}
+	}
+
+	private async Task LoadDashboardAsync()
 	{
 		IsLoading = true;
+		StateHasChanged();
 
 		await YukleKullaniciId();
+		
+		// Giriş yapmamış kullanıcıları yönlendir
+		if (!currentUserId.HasValue)
+		{
+			NavigationManager.NavigateTo("/GirisYap", forceLoad: false);
+			return;
+		}
+		
 		Console.WriteLine($"CurrentUserId: {currentUserId}");
 		kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
 		if (kullaniciTip == null)
 		{
 			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Kullanıcı tipi bulunamadı.");
 			IsLoading = false;
+			StateHasChanged();
 			return;
 		}
-
-
 
 		await YukleGorevler();
 

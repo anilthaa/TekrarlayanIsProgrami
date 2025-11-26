@@ -1,14 +1,17 @@
 ﻿@page "/kullanicilar"
 @layout MainLayout
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize]
 <RadzenDialog></RadzenDialog>
 
 <RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
     <h2 class="text-center mb-4">Kullanıcılar Listesi</h2>
 
-    <div class="d-flex justify-content-end gap-2 mb-3">
-        <RadzenButton Text="Yeni Kullanıcı Ekle" Style="background-color:royalblue;" Click="@OpenRegisterDialog"> </RadzenButton>
-    </div>
+    @if (_canWrite)
+    {
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <RadzenButton Text="Yeni Kullanıcı Ekle" Style="background-color:royalblue;" Click="@OpenRegisterDialog"> </RadzenButton>
+        </div>
+    }
 
     <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name"  TItem="User" RowSelect="@OnRowSelect"
                     AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="true"
@@ -20,7 +23,7 @@
             <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="150px" />
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px"/>
             <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" Width="250px;" />
-            <RadzenDataGridColumn TItem="User" Property="Sifre" Title="Şifre" />
+            
             <RadzenDataGridColumn TItem="User" Title="Rol" Width="180px">
                 <Template Context="k">
                     @GetKullaniciTipAdi(k.KullaniciTip_ID)
@@ -29,23 +32,36 @@
 
             <RadzenDataGridColumn TItem="User" Title="Durum" Width="150px">
                 <Template Context="k">
-                    <span style="cursor:pointer;" @onclick="@(async () => await ToggleDurum(k))">
+                    @if (_canWrite)
+                    {
+                        <span style="cursor:pointer;" @onclick="@(async () => await ToggleDurum(k))">
+                            <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
+                                         Style="@(k.Aktif
+                                                     ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
+                                                     : "background-color:red;color:white;padding:5px 10px;border-radius:10px;")" />
+                        </span>
+                    }
+                    else
+                    {
                         <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
                                      Style="@(k.Aktif
                                                  ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
                                                  : "background-color:red;color:white;padding:5px 10px;border-radius:10px;")" />
-                    </span>
+                    }
                 </Template>
             </RadzenDataGridColumn>
 
-            <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="240px">
-                <Template Context="user">
-                    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
-                    <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="lock" Size="ButtonSize.Small" Style="margin-right:5px;"
-                                  Click="@(() => NavigateToYetki(user.ID))" />
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
-                </Template>
-            </RadzenDataGridColumn>
+            @if (_canWrite)
+            {
+                <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="240px">
+                    <Template Context="user">
+                        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
+                        <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="lock" Size="ButtonSize.Small" Style="margin-right:5px;"
+                                      Click="@(() => NavigateToYetki(user.ID))" />
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
+                    </Template>
+                </RadzenDataGridColumn>
+            }
         </Columns>
 
     </RadzenDataGrid>
@@ -55,8 +71,13 @@
     private List<ItemKullaniciTip> kullaniciTipleri = new();
     private RadzenDataGrid<User> kullaniciGrid;
     private User user = new User();
+    private bool _canWrite = false;
+
     protected override async Task OnInitializedAsync()
     {
+        // Yazma yetkisi kontrolü (yetki >= 2)
+        _canWrite = await PermissionService.CanWriteAsync("kullanicilar");
+        
         kullanicilar = await _kullaniciRepo.GetAllAsync();
         kullaniciTipleri = (await DataService.GetKullaniciTipleri()).ToList();
     }
