@@ -31,11 +31,11 @@ namespace TekrarlayanIsProgrami.Repository
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""ID"" = @ID";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID = ID });
         }
-        public async Task<User?> GetByEmailAsync(string EPosta, string Sifre)
+        public async Task<User?> GetByEmailAsync(string EPosta,string Sifre)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
-            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta, Sifre });
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta,Sifre });
         }
         public async Task<User?> GetByTokenAsync(string token)
         {
@@ -102,22 +102,22 @@ namespace TekrarlayanIsProgrami.Repository
             await conn.ExecuteAsync(sql, new { ID = id, DelUser = delUser });
         }
 
-        public async Task<User?> GirisYapAsync(string eposta, string sifre)
+        public async Task<User?> GirisYapAsync(string EPosta, string Sifre)
         {
             using var conn = GetConnection();
             var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
-            return await conn.QueryFirstOrDefaultAsync<User>(sql, new { EPosta = eposta, Sifre = sifre });
+            return await conn.QueryFirstOrDefaultAsync<User>(sql, new { EPosta = EPosta, Sifre = Sifre });
         }
 
         public async Task<User> KayitOlAsync(
-     string Adi,
-     string Soyadi,
-     string EPosta,
-     string Sifre,
-     string SifreTekrar,
-     string? ResetToken,
-     int kaydedenUserId,
-     int KullaniciTip_ID) // admin seçtiyse.
+        string Adi,
+        string Soyadi,
+        string EPosta,
+        string Sifre,
+        string SifreTekrar,
+        string? ResetToken,
+        int kaydedenUserId,
+        int? secilenKullaniciTipId = 0) // admin seçtiyse.
         {
             using var conn = GetConnection();
 
@@ -130,41 +130,32 @@ namespace TekrarlayanIsProgrami.Repository
                 Aktif = true,
                 CreUser = kaydedenUserId,
                 CreDate = DateTime.Now,
-                ResetToken = ResetToken,
-                KullaniciTip_ID = KullaniciTip_ID
+                ResetToken = ResetToken
             };
+            // Şifreyi hashle
+            user.Sifre = PasswordHelper.HashPassword(user.Sifre);
 
             var sqlInsert = @"INSERT INTO ""Kullanici"" 
  (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
  VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, @CreDate, @ResetToken)
  RETURNING ""ID"";";
 
-            //int KullaniciTip_ID = 0;
-            //if (secilenKullaniciTipId == null || secilenKullaniciTipId == 0)
-            //{
-            //    Console.WriteLine("Hiç tip seçilmemiş, varsayılan tip atanacak.");
-            //    KullaniciTip_ID = 2; // Standart tip
-            //}
-            //else
-            //{
-            //    switch (secilenKullaniciTipId)
-            //    {
-            //        case 1: //Admin.
-            //            KullaniciTip_ID = 1;
-            //            break;
-            //        case 2: //Standart.
-            //            KullaniciTip_ID = 2;
-            //            break;
-            //        default:
-            //            KullaniciTip_ID = 2; //Seçilmemişse yani kullanıcı kendisi giriş yaptığında bu seçilcek.
-            //            break;
-            //    }
-            //}
+            int Tip_ID;
+            if (secilenKullaniciTipId == null || secilenKullaniciTipId == 0)
+            {
+                Console.WriteLine("Hiç tip seçilmemiş, varsayılan tip atanacak.");
+                Tip_ID = 2;
+            }
+            else
+            {
+                Tip_ID = secilenKullaniciTipId.Value;
+            }
+            user.KullaniciTip_ID = Tip_ID;
             user.ID = await conn.ExecuteScalarAsync<int>(sqlInsert, new
             {
                 user.Adi,
                 user.Soyadi,
-                user.KullaniciTip_ID, // admin seçtiyse onun tipini kullan, yoksa standartsecilenKullaniciTipId ?? 2    KullaniciTip_ID = user.KullaniciTip_ID !=0 ? user.KullaniciTip_ID : 2
+                KullaniciTip_ID = user.KullaniciTip_ID, // admin seçtiyse onun tipini kullan, yoksa standartsecilenKullaniciTipId ?? 2    KullaniciTip_ID = user.KullaniciTip_ID !=0 ? user.KullaniciTip_ID : 2
                 user.EPosta,
                 user.Sifre,
                 user.Aktif,
@@ -207,6 +198,12 @@ namespace TekrarlayanIsProgrami.Repository
                     ""ResetTokenExpiry"" = @expiry
                 WHERE ""ID"" = @id";
             await baglanti.ExecuteAsync(sql, new { id, token, expiry });
+        }
+        public async Task<User?> GetByGirisAsync(string EPosta)
+        {
+            using var baglanti = new NpgsqlConnection(_connectionString);
+            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Aktif""=true and ""DelDate"" is null";
+            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta});
         }
     }
 }
