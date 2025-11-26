@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using Npgsql;
 using Radzen;
@@ -21,12 +22,14 @@ namespace TekrarlayanIsProgrami.Services
         private ClaimsPrincipal _user;
         private readonly UserRepository _kullaniciRepo;
         private readonly HttpClient _http;
+        private readonly NavigationManager _nav;
 
-        public CustomAuthenticationStateProvider(UserRepository dbContext, IJSRuntime Js, HttpClient http)
+        public CustomAuthenticationStateProvider(UserRepository dbContext, IJSRuntime Js, HttpClient http,NavigationManager nav)
         {
             _kullaniciRepo = dbContext;
             _Js = Js;
             _http = http;
+            _nav=nav;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -94,37 +97,36 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
-        public async Task<AuthResult> GirisYapAsync(string eposta, string sifre)
+        public async Task<AuthResult> GirisYapAsync(string EPosta, string Sifre)
         {
-            var response=await _http.PostAsJsonAsync("api/auth/login", new {Email=eposta, Password=sifre});
-            var rawLoginResponse = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] Login Response: {response.StatusCode} - {rawLoginResponse}");
+            var response = await _http.PostAsJsonAsync("api/auth/login",
+            new { Email = EPosta, Password = Sifre });
+
+            var raw = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] Login Response: {response.StatusCode} - {raw}");
 
             if (!response.IsSuccessStatusCode)
             {
                 return new AuthResult { Basarili = false, Mesaj = "E-posta veya Şifre Hatalı." };
             }
 
-            var result = JsonSerializer.Deserialize<AuthResult>(rawLoginResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            if (result==null || !result.Basarili)
+            var result = JsonSerializer.Deserialize<AuthResult>(raw,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (result == null || !result.Basarili)
             {
                 return new AuthResult { Basarili = false, Mesaj = "Giriş başarısız." };
             }
 
             await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
 
-            var kullanici=await _kullaniciRepo.GetByEmailAsync(eposta, sifre);
-            if (kullanici==null)
-            {
-                return new AuthResult { Basarili = false, Mesaj = "Kullanıcı bulunamadı." };
-            }
+            await MarkUserAsAuthenticated(result.User);
+            //_nav.NavigateTo("/", true);
 
-            await MarkUserAsAuthenticated(kullanici);
-
-            return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {kullanici.Adi}!" };
+            return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {result.User.Adi}!" };
         }
 
-        public async Task<AuthResult> KayitOlAsync(User user,int secilenKullaniciTipId)
+        public async Task<AuthResult> KayitOlAsync(User user,int KullaniciTip_ID)
         {
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
