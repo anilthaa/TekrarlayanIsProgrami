@@ -23,8 +23,8 @@
 
 			@if (Gorev.TekrarlamaTipi == "Günlük")
 			{
-				<RadzenFormField Text="Tekrar Aralığı (Gün)" Style="width:49%; margin-top:10px;" >
-					<RadzenNumeric @bind-Value="Gorev.TekrarAraligi" TValue="int?" class="w-100" />
+				<RadzenFormField Text="Kaç günde bir tekrarlansın?" Style="width:49%; margin-top:10px;" >
+					<RadzenNumeric @bind-Value="Gorev.TekrarAraligi" TValue="int?" class="w-100" Min="1" Placeholder="Örn: 2 = 2 günde bir" />
 				</RadzenFormField>
 			}
 			@if (Gorev.TekrarlamaTipi == "Haftalık")

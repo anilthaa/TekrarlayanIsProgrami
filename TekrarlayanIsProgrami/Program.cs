@@ -24,11 +24,33 @@ var connectionString = builder.Configuration.GetConnectionString("PostgreSqlConn
 
 // Add services to the container.
 builder.Services.AddAuthentication("Identity.Application")
-    .AddCookie("Identity.Application", options=>
+    .AddCookie("Identity.Application", options =>
     {
         options.LoginPath = "/GirisYap";
         options.AccessDeniedPath = "/AccessDenied";
-    }); // scheme ismi önemli
+        // Sadece API istekleri için 401 dön, Blazor sayfaları için normal davran
+        options.Events.OnRedirectToLogin = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = 401;
+                return Task.CompletedTask;
+            }
+            // Blazor için normal redirect yap ama ReturnUrl ekleme
+            context.Response.Redirect(options.LoginPath);
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = 403;
+                return Task.CompletedTask;
+            }
+            context.Response.Redirect(options.AccessDeniedPath);
+            return Task.CompletedTask;
+        };
+    });
 builder.Services.AddRazorComponents()
      .AddInteractiveServerComponents();
 builder.Services.AddScoped(sp =>
@@ -45,10 +67,11 @@ builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<TooltipService>(); 
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<UserRepository>();//UserRrepository servisini çağırdık.
 builder.Services.AddScoped<KullaniciTipRepository>();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(serviceProvider =>
+    serviceProvider.GetRequiredService<CustomAuthenticationStateProvider>());
 builder.Services.AddScoped<GorevLoglariRepository>();
 builder.Services.AddScoped<SifreService>();
 builder.Services.AddScoped<AuthService>();

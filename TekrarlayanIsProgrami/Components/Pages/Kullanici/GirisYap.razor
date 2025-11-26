@@ -107,29 +107,15 @@
 			{
 				await Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
 			}
+			
+			// PermissionService cache'ini temizle
+			await PermissionService.RefreshAsync();
+			
             notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
-            var uri = new Uri(NavigationManager.Uri);
-            var query = QueryHelpers.ParseQuery(uri.Query);
-            if (query.TryGetValue("returnUrl", out var returnUrls) && returnUrls.Count > 0)
-            {
-                var decoded = Uri.UnescapeDataString(returnUrls[0]);
-                // güvenli: sadece uygulama içi göreli yollara izin ver
-                if (!string.IsNullOrWhiteSpace(decoded) && decoded.StartsWith("/"))
-                {
-                    NavigationManager.NavigateTo(decoded, forceLoad: false, replace: true);
-                    return;
-                }
-                else
-                {
-                    NavigationManager.NavigateTo("/dashboard", forceLoad: false, replace: true);
-                    return;
-                }
-            }
-            else
-            {
-                NavigationManager.NavigateTo("/dashboard", forceLoad: false, replace: true);
-                return;
-            }
+            
+            // Kısa gecikme sonrası dashboard'a yönlendir
+            await Task.Delay(500);
+            NavigationManager.NavigateTo("/dashboard", forceLoad: true);
 		}
 		else
 		{
