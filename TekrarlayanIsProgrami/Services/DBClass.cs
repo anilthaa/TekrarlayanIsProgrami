@@ -85,7 +85,13 @@ namespace TekrarlayanIsProgrami.Services
             }
             catch (Exception ex)
             {
-                return default!;
+                Console.WriteLine($"SQLExecuteScalar hatası: {ex.Message}");
+                Console.WriteLine($"SQL Sorgusu: {SQLSorgu}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                throw; // Exception'ı tekrar fırlat ki üst katmanda yakalanabilsin
             }
             finally
             {

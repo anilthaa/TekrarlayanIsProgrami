@@ -118,12 +118,41 @@ namespace TekrarlayanIsProgrami.Services
                 return new AuthResult { Basarili = false, Mesaj = "Giriş başarısız." };
             }
 
+            // Eğer User null ise, API'den dönen user bilgisini manuel olarak oluştur
+            if (result.User == null)
+            {
+                Console.WriteLine("[DEBUG] result.User null, API'den user bilgisi alınıyor...");
+                // API'den dönen user bilgisini almak için repository'yi kullan
+                var user = await _kullaniciRepo.GetByGirisAsync(EPosta);
+                if (user != null)
+                {
+                    result.User = new User
+                    {
+                        ID = user.ID,
+                        Adi = user.Adi,
+                        Soyadi = user.Soyadi,
+                        EPosta = user.EPosta,
+                        KullaniciTip_ID = user.KullaniciTip_ID
+                    };
+                    Console.WriteLine($"[DEBUG] User bilgisi repository'den alındı - ID: {result.User.ID}, Ad: {result.User.Adi}");
+                }
+                else
+                {
+                    Console.WriteLine("[DEBUG] UYARI: Repository'den de user bulunamadı!");
+                }
+            }
+
             await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
 
-            await MarkUserAsAuthenticated(result.User);
-            //_nav.NavigateTo("/", true);
-
-            return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {result.User.Adi}!" };
+            if (result.User != null)
+            {
+                await MarkUserAsAuthenticated(result.User);
+                return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {result.User.Adi}!", User = result.User, Token = result.Token };
+            }
+            else
+            {
+                return new AuthResult { Basarili = false, Mesaj = "Kullanıcı bilgisi alınamadı." };
+            }
         }
 
         public async Task<AuthResult> KayitOlAsync(User user,int KullaniciTip_ID)

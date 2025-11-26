@@ -1,5 +1,27 @@
 ﻿@page "/dashboard"
 @layout MainLayout
+
+@* Yeni Görev Bildirimi - Kapanabilir Uyarı Penceresi *@
+@if (showYeniGorevBildirimi && yeniGorevSayisi > 0 && !IsLoading)
+{
+	<RadzenCard Style="margin:20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1000;">
+		<div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+			<div style="display:flex; align-items:center; gap:15px; flex:1;">
+				<RadzenIcon Icon="notifications" Style="font-size:28px; color:white;"></RadzenIcon>
+				<div>
+					<h4 style="margin:0; color:white; font-weight:600;">Yeni Görevleriniz Var!</h4>
+					<p style="margin:5px 0 0 0; color:rgba(255,255,255,0.9); font-size:14px;">
+						@yeniGorevSayisi yeni göreviniz var! Dashboard'ınızı kontrol ediniz.
+					</p>
+				</div>
+			</div>
+			<RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+						  Style="background:rgba(255,255,255,0.2); color:white; border:none; min-width:auto;"
+						  Click="@(() => { showYeniGorevBildirimi = false; StateHasChanged(); })"></RadzenButton>
+		</div>
+	</RadzenCard>
+}
+
 @if(kullaniciTip != null && kullaniciTip.Adi == "Admin")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
@@ -439,6 +461,8 @@ else
 	private List<GorevDurum> GorevDurumData = new();
 
 	private bool _isInitialized = false;
+	private bool showYeniGorevBildirimi = false;
+	private int yeniGorevSayisi = 0;
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
@@ -495,6 +519,45 @@ else
 
 		IsLoading = false;
 		await InvokeAsync(StateHasChanged);
+		
+		// Yeni görevleri kontrol et (IsLoading false olduktan sonra)
+		await KontrolEtYeniGorevler();
+		await InvokeAsync(StateHasChanged); // Banner'ı göstermek için tekrar render et
+	}
+
+	private async Task KontrolEtYeniGorevler()
+	{
+		try
+		{
+			if (!currentUserId.HasValue)
+			{
+				Console.WriteLine("KontrolEtYeniGorevler: currentUserId null");
+				return;
+			}
+
+			Console.WriteLine($"KontrolEtYeniGorevler başladı - Kullanıcı ID: {currentUserId.Value}");
+			
+			var sonGirisTarihi = await DataService.GetSonGirisAsync(currentUserId.Value);
+			Console.WriteLine($"Son giriş tarihi: {(sonGirisTarihi.HasValue ? sonGirisTarihi.Value.ToString() : "İlk giriş")}");
+			
+			yeniGorevSayisi = await DataService.GetYeniGorevSayisiAsync(currentUserId.Value, sonGirisTarihi);
+			Console.WriteLine($"Yeni görev sayısı: {yeniGorevSayisi}");
+			
+			if (yeniGorevSayisi > 0)
+			{
+				showYeniGorevBildirimi = true;
+				Console.WriteLine($"Banner gösterilecek - showYeniGorevBildirimi: {showYeniGorevBildirimi}, yeniGorevSayisi: {yeniGorevSayisi}");
+			}
+			else
+			{
+				Console.WriteLine("Yeni görev yok, banner gösterilmeyecek");
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Yeni görev kontrolü hatası: {ex.Message}");
+			Console.WriteLine($"Stack trace: {ex.StackTrace}");
+		}
 	}
 
 	private async Task YukleKullaniciId()
