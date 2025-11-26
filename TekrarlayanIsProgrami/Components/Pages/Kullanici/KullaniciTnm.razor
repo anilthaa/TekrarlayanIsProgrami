@@ -28,13 +28,6 @@ else
 								@bind-Value="kullanicilar.KullaniciTip_ID" />
 			</RadzenFormField>
 
-			<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
-				<RadzenTextBox type="@InputType" class="form-control" @bind-Value="kullanicilar.Sifre" placeholder="Şifreyi girin" />
-				<button type="button" @onclick="@TogglePassword" style="position:absolute; right:1px; top:8px; transform:translate(-50%); border:none; background:transparent;">
-					<RadzenIcon Icon="@Icon" Style="color:gray;"></RadzenIcon>
-				</button>
-			</RadzenFormField>
-
 			<RadzenCard class="btn-group">
 				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
 							  Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
@@ -102,6 +95,9 @@ else
 		var currentUser = await girisSaglayici.GetCurrentUserAsync();
 		kullanicilar.UpdUser = currentUser?.ID ?? 0;
 
+		// Şifreyi null yap ki UpdateAsync mevcut şifreyi korusun
+		kullanicilar.Sifre = null;
+
 		bool sonuc = await _kullaniciRepo.UpdateAsync(kullanicilar);
 		isSaving = false;
 		if (sonuc)
@@ -143,23 +139,6 @@ else
 		return current.Adi != original.Adi
 			|| current.Soyadi != original.Soyadi
 			|| current.EPosta != original.EPosta
-			|| current.Sifre  != original.Sifre
 			|| current.KullaniciTip_ID != original.KullaniciTip_ID;
-	}
-	private string InputType { get; set; } = "password";
-	private string Icon { get; set; } = "visibility_off"; // göz kapalı
-
-	void TogglePassword()
-	{
-		if (InputType == "password")
-		{
-			InputType = "text";
-			Icon = "visibility"; // göz açık
-		}
-		else
-		{
-			InputType = "password";
-			Icon = "visibility_off";
-		}
 	}
 }
