@@ -233,7 +233,7 @@ namespace TekrarlayanIsProgrami.Services
         }
         public async Task CikisYapAsync()
         {
-            await MarkUserAsLoggedOut();
+            await MarkUserAsLoggedOut(); 
         }
     }
 }
