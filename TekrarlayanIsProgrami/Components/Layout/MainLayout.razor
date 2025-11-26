@@ -128,8 +128,31 @@
         "/admin/kullanici-yetkileri"
     };
     
+    // Görevler sayfası için sabit menü öğesi (PermissionService'den bağımsız)
+    private ItemForm _gorevlerMenuItem => new ItemForm
+    {
+        ID = 0,
+        Adi = "Görevler",
+        SayfaURL = "/gorevler",
+        Icon = "📋",
+        IsMenu = true,
+        Sira = 0
+    };
+    
     // Menü öğelerini kategorilere ayır
-    private IEnumerable<ItemForm> _commonMenuItems => _menuItems.Where(m => IsCommonPage(GetHref(m)));
+    private IEnumerable<ItemForm> _commonMenuItems
+    {
+        get
+        {
+            var fromService = _menuItems.Where(m => IsCommonPage(GetHref(m))).ToList();
+            // Eğer PermissionService'den /gorevler gelmiyorsa, manuel ekle
+            if (!fromService.Any(m => GetHref(m).Equals("/gorevler", StringComparison.OrdinalIgnoreCase)))
+            {
+                return new[] { _gorevlerMenuItem }.Concat(fromService);
+            }
+            return fromService;
+        }
+    }
     private IEnumerable<ItemForm> _adminMenuItems => _menuItems.Where(m => IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
     private IEnumerable<ItemForm> _userMenuItems => _menuItems.Where(m => !IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
     

@@ -13,7 +13,8 @@
         "sifremiunuttum",
         "sifresifirla",
         "accessdenied",
-        "dashboard"
+        "dashboard",
+        "gorevler" // Hem admin hem standart kullanıcı için erişilebilir
     };
 
     private bool _initialized;
@@ -57,6 +58,13 @@
         if (authState.User?.Identity?.IsAuthenticated != true)
         {
             return;
+        }
+
+        // /gorevler sayfası hem admin hem standart kullanıcı için erişilebilir
+        var normalizedRoute = relativeRoute.Trim().TrimStart('/').ToLowerInvariant();
+        if (normalizedRoute == "gorevler")
+        {
+            return; // Erişime izin ver
         }
 
         var hasAccess = await PermissionService.CanReadAsync(relativeRoute);

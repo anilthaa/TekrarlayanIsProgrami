@@ -48,7 +48,37 @@ namespace TekrarlayanIsProgrami.Repository
         public async Task<bool> UpdateAsync(User user)
         {
             using var conn = new NpgsqlConnection(_connectionString);
-            string sql = @"UPDATE ""Kullanici""
+            
+            // Şifre boş veya null ise şifreyi güncelleme (mevcut şifreyi koru)
+            string sql;
+            if (string.IsNullOrWhiteSpace(user.Sifre))
+            {
+                sql = @"UPDATE ""Kullanici""
+           SET ""Adi""=@Adi,
+               ""Soyadi""=@Soyadi,
+               ""EPosta""=@EPosta,
+               ""Aktif""=@Aktif,
+               ""KullaniciTip_ID""=@KullaniciTip_ID,
+               ""UpdUser""=@UpdUser,
+               ""UpdDate""=NOW()
+           WHERE ""ID""=@ID";
+
+                var result = await conn.ExecuteAsync(sql, new
+                {
+                    user.Adi,
+                    user.Soyadi,
+                    user.EPosta,
+                    user.Aktif,
+                    user.KullaniciTip_ID,
+                    user.UpdUser,
+                    user.ID
+                });
+
+                return result > 0;
+            }
+            else
+            {
+                sql = @"UPDATE ""Kullanici""
            SET ""Adi""=@Adi,
                ""Soyadi""=@Soyadi,
                ""EPosta""=@EPosta,
@@ -59,19 +89,20 @@ namespace TekrarlayanIsProgrami.Repository
                ""UpdDate""=NOW()
            WHERE ""ID""=@ID";
 
-            var result = await conn.ExecuteAsync(sql, new
-            {
-                user.Adi,
-                user.Soyadi,
-                user.EPosta,
-                user.Sifre,
-                user.Aktif,
-                user.KullaniciTip_ID,
-                user.UpdUser,
-                user.ID
-            });
+                var result = await conn.ExecuteAsync(sql, new
+                {
+                    user.Adi,
+                    user.Soyadi,
+                    user.EPosta,
+                    user.Sifre,
+                    user.Aktif,
+                    user.KullaniciTip_ID,
+                    user.UpdUser,
+                    user.ID
+                });
 
-            return result > 0;
+                return result > 0;
+            }
         }
         public async Task<bool> SifreGuncelle(string token, string yeniSifre)
         {
