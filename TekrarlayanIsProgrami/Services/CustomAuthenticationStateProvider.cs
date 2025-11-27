@@ -180,18 +180,40 @@ namespace TekrarlayanIsProgrami.Services
                 }
 
                 var result = await response.Content.ReadFromJsonAsync<AuthResult>();
-                if (result.Basarili && !string.IsNullOrEmpty(result.Token))
+                if (result != null && result.Basarili)
                 {
-                    await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-
-                    var yeni = await _kullaniciRepo.GetByEmailAsync(user.EPosta, user.Sifre);
-                    if (yeni != null)
+                    // Token varsa localStorage'a kaydet
+                    if (!string.IsNullOrEmpty(result.Token))
                     {
-                        await MarkUserAsAuthenticated(yeni);
+                        await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
                     }
-                    return new AuthResult {Basarili=true,Mesaj=$"Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın." };
+
+                    // API'den dönen User objesini kullan, yoksa repository'den al
+                    if (result.User != null)
+                    {
+                        await MarkUserAsAuthenticated(result.User);
+                        Console.WriteLine($"Kayıt sonrası kullanıcı authenticate edildi: {result.User.ID}");
+                    }
+                    else
+                    {
+                        // Eğer API'den User gelmediyse, repository'den al
+                        var yeni = await _kullaniciRepo.GetByGirisAsync(user.EPosta);
+                        if (yeni != null)
+                        {
+                            await MarkUserAsAuthenticated(yeni);
+                            Console.WriteLine($"Kayıt sonrası kullanıcı repository'den alındı ve authenticate edildi: {yeni.ID}");
+                        }
+                    }
+                    
+                    return new AuthResult 
+                    {
+                        Basarili = true,
+                        Mesaj = "Kayıt başarıyla tamamlandı!",
+                        Token = result.Token,
+                        User = result.User
+                    };
                 }
-                return result;
+                return result ?? new AuthResult { Basarili = false, Mesaj = "Kayıt başarısız." };
             }
             catch (Exception ex)
             {

@@ -15,7 +15,7 @@
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/admin/kullanici-loglari") || uri.Contains("/kullaniciprofil"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/admin/kullanici-loglari") || uri.Contains("/kullaniciprofil") || uri.Contains("/admin/kullanici-yetkileri"))
             {
                 @if (!IsLoading)
                 {

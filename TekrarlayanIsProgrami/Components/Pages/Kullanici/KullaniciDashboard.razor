@@ -135,6 +135,72 @@
 				</div>
 			</div>
 
+			@* Takvim Görünümü - Admin *@
+			<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
+				<h5 style="color:#3498db; font-weight:600; margin-bottom:15px;">Görev Takvimi</h5>
+				<p style="color:#555; font-size:14px; margin-bottom:15px;">
+					Tüm görevleri tarihlerine göre görüntüleyin
+				</p>
+				<div class="calendar-container" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-top:20px;">
+					@* Hafta günleri başlıkları *@
+					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Pzt</div>
+					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Sal</div>
+					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Çar</div>
+					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Per</div>
+					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cum</div>
+					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cmt</div>
+					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Paz</div>
+
+					@* Takvim günleri *@
+					@foreach (var day in GetCalendarDays())
+					{
+						var dayGorevler = GetGorevlerForDate(day);
+						var isToday = day.Date == DateTime.Today;
+						var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
+						
+						<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px; 
+									background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
+									cursor:pointer; position:relative;"
+							 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
+							<div style="font-weight:@(isToday ? "bold" : "normal"); 
+										color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
+										margin-bottom:5px;">
+								@day.Day
+							</div>
+							@if (dayGorevler.Any())
+							{
+								<div style="display:flex; flex-direction:column; gap:2px;">
+									@foreach (var gorev in dayGorevler.Take(3))
+									{
+										var renk = GetGorevRengi(gorev);
+										<div style="font-size:10px; padding:2px 4px; background:@renk; color:white; 
+													border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+											 title="@gorev.Baslik">
+											@gorev.Baslik
+										</div>
+									}
+									@if (dayGorevler.Count() > 3)
+									{
+										<div style="font-size:10px; color:#666; text-align:center; margin-top:2px;">
+											+@(dayGorevler.Count() - 3) daha
+										</div>
+									}
+								</div>
+							}
+						</div>
+					}
+				</div>
+				
+				@* Ay navigasyonu *@
+				<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
+					<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+								  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
+					<h6 style="margin:0; font-weight:600;">@selectedMonth.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</h6>
+					<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+								  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
+				</div>
+			</RadzenCard>
+
 			<div class="row mt-4">
 				<div class="col-md-12">
 					<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0,0.1); border-left:5px solid #e74c3c;">
@@ -332,6 +398,72 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 
 		</RadzenStack>
 
+		@* Takvim Görünümü *@
+		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
+			<h5 style="color:#3498db; font-weight:600; margin-bottom:15px;">Görev Takvimi</h5>
+			<p style="color:#555; font-size:14px; margin-bottom:15px;">
+				Görevlerinizi tarihlerine göre görüntüleyin
+			</p>
+			<div class="calendar-container" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-top:20px;">
+				@* Hafta günleri başlıkları *@
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Pzt</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Sal</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Çar</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Per</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cum</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cmt</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Paz</div>
+
+				@* Takvim günleri *@
+				@foreach (var day in GetCalendarDays())
+				{
+					var dayGorevler = GetGorevlerForDate(day);
+					var isToday = day.Date == DateTime.Today;
+					var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
+					
+					<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px; 
+								background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
+								cursor:pointer; position:relative;"
+						 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
+						<div style="font-weight:@(isToday ? "bold" : "normal"); 
+									color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
+									margin-bottom:5px;">
+							@day.Day
+						</div>
+						@if (dayGorevler.Any())
+						{
+							<div style="display:flex; flex-direction:column; gap:2px;">
+								@foreach (var gorev in dayGorevler.Take(3))
+								{
+									var renk = GetGorevRengi(gorev);
+									<div style="font-size:10px; padding:2px 4px; background:@renk; color:white; 
+												border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+										 title="@gorev.Baslik">
+										@gorev.Baslik
+									</div>
+								}
+								@if (dayGorevler.Count() > 3)
+								{
+									<div style="font-size:10px; color:#666; text-align:center; margin-top:2px;">
+										+@(dayGorevler.Count() - 3) daha
+									</div>
+								}
+							</div>
+						}
+					</div>
+				}
+			</div>
+			
+			@* Ay navigasyonu *@
+			<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
+				<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
+				<h6 style="margin:0; font-weight:600;">@selectedMonth.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</h6>
+				<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
+			</div>
+		</RadzenCard>
+
 		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid lightskyblue; margin-top:20px;">
 			<h5 style="color:lightskyblue; font-weight:600; margin-bottom:10px;">Bana Atanan Görevler</h5>
 			<p style="color:#555; font-size:14px; margin-bottom:10px;">
@@ -463,6 +595,7 @@ else
 	private bool _isInitialized = false;
 	private bool showYeniGorevBildirimi = false;
 	private int yeniGorevSayisi = 0;
+	private DateTime selectedMonth = DateTime.Now;
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
@@ -654,6 +787,82 @@ else
 	void GoHome()
 	{
 		NavigationManager.NavigateTo("/", forceLoad: true);
+	}
+
+	// Takvim metodları
+	private List<DateTime> GetCalendarDays()
+	{
+		var days = new List<DateTime>();
+		var firstDayOfMonth = new DateTime(selectedMonth.Year, selectedMonth.Month, 1);
+		var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
+		
+		// Ayın ilk gününden önceki boş günleri ekle
+		var startDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
+		// Pazartesi = 0 olacak şekilde ayarla
+		startDayOfWeek = startDayOfWeek == 0 ? 6 : startDayOfWeek - 1;
+		
+		for (int i = 0; i < startDayOfWeek; i++)
+		{
+			days.Add(firstDayOfMonth.AddDays(-(startDayOfWeek - i)));
+		}
+		
+		// Ayın günlerini ekle
+		for (var day = firstDayOfMonth; day <= lastDayOfMonth; day = day.AddDays(1))
+		{
+			days.Add(day);
+		}
+		
+		// Ayın son gününden sonraki boş günleri ekle (takvimi 42 güne tamamla)
+		var remainingDays = 42 - days.Count;
+		for (int i = 1; i <= remainingDays; i++)
+		{
+			days.Add(lastDayOfMonth.AddDays(i));
+		}
+		
+		return days;
+	}
+
+	private IEnumerable<ItemGorev> GetGorevlerForDate(DateTime date)
+	{
+		if (GorevListt == null || !GorevListt.Any())
+			return Enumerable.Empty<ItemGorev>();
+
+		return GorevListt.Where(g => 
+			(g.BitisTarihi.HasValue && g.BitisTarihi.Value.Date == date.Date) ||
+			(g.BaslangicTarihi.HasValue && g.BaslangicTarihi.Value.Date == date.Date)
+		);
+	}
+
+	private string GetGorevRengi(ItemGorev gorev)
+	{
+		if (gorev.Tamamlandi)
+			return "#4caf50"; // Yeşil - tamamlandı
+		
+		if (gorev.BitisTarihi.HasValue && gorev.BitisTarihi.Value < DateTime.Now)
+			return "#e74c3c"; // Kırmızı - süresi doldu
+		
+		if (gorev.OnemDerecesi?.ToLower() == "yüksek")
+			return "#e74c3c"; // Kırmızı - yüksek önem
+		
+		if (gorev.OnemDerecesi?.ToLower() == "orta")
+			return "#f39c12"; // Turuncu - orta önem
+		
+		return "#3498db"; // Mavi - normal
+	}
+
+	private void ShowDayDetails(DateTime date, IEnumerable<ItemGorev> gorevler)
+	{
+		var gorevList = gorevler.ToList();
+		if (gorevList.Any())
+		{
+			var mesaj = $"{date:dd.MM.yyyy} tarihinde {gorevList.Count} görev bulunuyor:\n\n";
+			mesaj += string.Join("\n", gorevList.Select(g => $"• {g.Baslik}"));
+			notificationService.Notify(NotificationSeverity.Info, "Görevler", mesaj);
+		}
+		else
+		{
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", $"{date:dd.MM.yyyy} tarihinde görev bulunmuyor.");
+		}
 	}
 	
 
