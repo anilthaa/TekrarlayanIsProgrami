@@ -15,7 +15,7 @@
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/kullaniciprofil"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/admin/kullanici-loglari") || uri.Contains("/kullaniciprofil") || uri.Contains("/admin/kullanici-yetkileri"))
             {
                 @if (!IsLoading)
                 {
@@ -267,6 +267,29 @@
 
     private async void CikisYap()
     {
+        // Çıkış logunu kaydet
+        try
+        {
+            var currentUser = await girisSaglayici.GetCurrentUserAsync();
+            if (currentUser != null)
+            {
+                var log = new ItemKullaniciLog
+                {
+                    Kullanici_ID = currentUser.ID,
+                    IslemTipi = "Cikis",
+                    IslemTarihi = DateTime.Now,
+                    Aciklama = "Kullanıcı çıkış yaptı",
+                    CreUser = currentUser.ID
+                };
+                await DataService.SetKullaniciLog(log);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log hatası kritik değil, sessizce devam et
+            Console.WriteLine($"Çıkış log kaydı hatası: {ex.Message}");
+        }
+        
         await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
         await PermissionService.RefreshAsync();
         NavigationManager.NavigateTo("/GirisYap", true);

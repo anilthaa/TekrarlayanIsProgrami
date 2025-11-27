@@ -118,12 +118,41 @@ namespace TekrarlayanIsProgrami.Services
                 return new AuthResult { Basarili = false, Mesaj = "Giriş başarısız." };
             }
 
+            // Eğer User null ise, API'den dönen user bilgisini manuel olarak oluştur
+            if (result.User == null)
+            {
+                Console.WriteLine("[DEBUG] result.User null, API'den user bilgisi alınıyor...");
+                // API'den dönen user bilgisini almak için repository'yi kullan
+                var user = await _kullaniciRepo.GetByGirisAsync(EPosta);
+                if (user != null)
+                {
+                    result.User = new User
+                    {
+                        ID = user.ID,
+                        Adi = user.Adi,
+                        Soyadi = user.Soyadi,
+                        EPosta = user.EPosta,
+                        KullaniciTip_ID = user.KullaniciTip_ID
+                    };
+                    Console.WriteLine($"[DEBUG] User bilgisi repository'den alındı - ID: {result.User.ID}, Ad: {result.User.Adi}");
+                }
+                else
+                {
+                    Console.WriteLine("[DEBUG] UYARI: Repository'den de user bulunamadı!");
+                }
+            }
+
             await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
 
-            await MarkUserAsAuthenticated(result.User);
-            //_nav.NavigateTo("/", true);
-
-            return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {result.User.Adi}!" };
+            if (result.User != null)
+            {
+                await MarkUserAsAuthenticated(result.User);
+                return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {result.User.Adi}!", User = result.User, Token = result.Token };
+            }
+            else
+            {
+                return new AuthResult { Basarili = false, Mesaj = "Kullanıcı bilgisi alınamadı." };
+            }
         }
 
         public async Task<AuthResult> KayitOlAsync(User user,int KullaniciTip_ID)
@@ -151,18 +180,40 @@ namespace TekrarlayanIsProgrami.Services
                 }
 
                 var result = await response.Content.ReadFromJsonAsync<AuthResult>();
-                if (result.Basarili && !string.IsNullOrEmpty(result.Token))
+                if (result != null && result.Basarili)
                 {
-                    await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-
-                    var yeni = await _kullaniciRepo.GetByEmailAsync(user.EPosta, user.Sifre);
-                    if (yeni != null)
+                    // Token varsa localStorage'a kaydet
+                    if (!string.IsNullOrEmpty(result.Token))
                     {
-                        await MarkUserAsAuthenticated(yeni);
+                        await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
                     }
-                    return new AuthResult {Basarili=true,Mesaj=$"Kayıt Başarıyla Tamamlandı! Lütfen Giriş Yapın." };
+
+                    // API'den dönen User objesini kullan, yoksa repository'den al
+                    if (result.User != null)
+                    {
+                        await MarkUserAsAuthenticated(result.User);
+                        Console.WriteLine($"Kayıt sonrası kullanıcı authenticate edildi: {result.User.ID}");
+                    }
+                    else
+                    {
+                        // Eğer API'den User gelmediyse, repository'den al
+                        var yeni = await _kullaniciRepo.GetByGirisAsync(user.EPosta);
+                        if (yeni != null)
+                        {
+                            await MarkUserAsAuthenticated(yeni);
+                            Console.WriteLine($"Kayıt sonrası kullanıcı repository'den alındı ve authenticate edildi: {yeni.ID}");
+                        }
+                    }
+                    
+                    return new AuthResult 
+                    {
+                        Basarili = true,
+                        Mesaj = "Kayıt başarıyla tamamlandı!",
+                        Token = result.Token,
+                        User = result.User
+                    };
                 }
-                return result;
+                return result ?? new AuthResult { Basarili = false, Mesaj = "Kayıt başarısız." };
             }
             catch (Exception ex)
             {

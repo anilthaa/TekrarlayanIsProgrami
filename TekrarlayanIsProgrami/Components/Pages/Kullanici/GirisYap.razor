@@ -93,14 +93,61 @@
 
 	async Task OnLogin(LoginModel model)
 	{
+		Console.WriteLine("OnLogin başladı");
 		var result = await girisSaglayici.GirisYapAsync(model.E_Posta, model.Sifre);
+		Console.WriteLine($"GirisYapAsync sonucu - Basarili: {result.Basarili}, User: {(result.User != null ? result.User.ID.ToString() : "null")}");
 
 		if (result.Basarili) 
 		{
 			// Sağlayıcı zaten token'ı ve kullanıcıyı set ediyor; eksikse tamamlayalım
 			if (result.User != null)
 			{
+				Console.WriteLine($"User bilgisi var - ID: {result.User.ID}, Ad: {result.User.Adi}");
 				await girisSaglayici.MarkUserAsAuthenticated(result.User);
+				Console.WriteLine("MarkUserAsAuthenticated tamamlandı");
+				
+				// Giriş logunu kaydet
+				try
+				{
+					Console.WriteLine("Log kaydı başlatılıyor...");
+					var log = new ItemKullaniciLog
+					{
+						Kullanici_ID = result.User.ID,
+						IslemTipi = "Giris",
+						IslemTarihi = DateTime.Now,
+						Aciklama = "Kullanıcı giriş yaptı",
+						CreUser = result.User.ID
+					};
+					
+					Console.WriteLine($"Log objesi oluşturuldu - Kullanıcı ID: {log.Kullanici_ID}, İşlem Tipi: {log.IslemTipi}");
+					
+					var logResult = await DataService.SetKullaniciLog(log);
+					
+					Console.WriteLine($"Log kaydı sonucu - ID: {logResult.Data}");
+					
+					if (logResult.Data > 0)
+					{
+						Console.WriteLine("Log başarıyla kaydedildi");
+					}
+					else
+					{
+						Console.WriteLine("UYARI: Log kaydı başarısız - ID 0 döndü");
+					}
+				}
+				catch (Exception ex)
+				{
+					// Log hatası kritik değil, sessizce devam et ama console'a yazdır
+					Console.WriteLine($"Log kaydı hatası: {ex.Message}");
+					Console.WriteLine($"Stack trace: {ex.StackTrace}");
+					if (ex.InnerException != null)
+					{
+						Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+					}
+				}
+			}
+			else
+			{
+				Console.WriteLine("UYARI: result.User null!");
 			}
 			var storedToken = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
 			if (string.IsNullOrEmpty(storedToken) && !string.IsNullOrEmpty(result.Token))

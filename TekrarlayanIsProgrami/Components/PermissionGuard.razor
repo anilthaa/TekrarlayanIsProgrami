@@ -67,7 +67,9 @@
             return; // Erişime izin ver
         }
 
-        var hasAccess = await PermissionService.CanReadAsync(relativeRoute);
+        // Route'u parametrelerden temizle (örn: /admin/kullanici-yetkileri/182 -> /admin/kullanici-yetkileri)
+        var routeForPermissionCheck = RemoveRouteParameters(relativeRoute);
+        var hasAccess = await PermissionService.CanReadAsync(routeForPermissionCheck);
 
         if (!hasAccess && !_isRedirecting)
         {
@@ -109,6 +111,31 @@
 
         var normalized = route.Trim().TrimStart('/').ToLowerInvariant();
         return _publicRoutes.Contains(normalized);
+    }
+
+    private string RemoveRouteParameters(string route)
+    {
+        if (string.IsNullOrWhiteSpace(route))
+        {
+            return route;
+        }
+
+        // Route'u parametrelerden temizle
+        // Örnek: /admin/kullanici-yetkileri/182 -> /admin/kullanici-yetkileri
+        var parts = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+        {
+            return route;
+        }
+
+        // Son segment sayısal ise (parametre), kaldır
+        if (parts.Length > 1 && int.TryParse(parts[^1], out _))
+        {
+            var routeWithoutParam = "/" + string.Join("/", parts.Take(parts.Length - 1));
+            return routeWithoutParam;
+        }
+
+        return route;
     }
 
     public void Dispose()
