@@ -1,0 +1,46 @@
+@inject DialogService DialogService
+
+<div style="padding:20px; max-width:600px;">
+	<h4 style="margin-bottom:15px; color:#3498db;">@DateStr</h4>
+	<p style="margin-bottom:15px; color:#666;">Bu tarihte <strong>@Gorevler.Count</strong> görev bulunuyor:</p>
+	<RadzenDataGrid Data="@Gorevler" TItem="ItemGorev" AllowPaging="false">
+		<Columns>
+			<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Görev Başlığı" Width="250px"></RadzenDataGridColumn>
+			<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
+			<RadzenDataGridColumn TItem="ItemGorev" Title="Önem" Width="100px">
+				<Template Context="g">
+					<span style="font-size:11px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetGorevRengi(g.OnemDerecesi ?? string.Empty)">
+						@(string.IsNullOrWhiteSpace(g.OnemDerecesi) ? "Normal" : g.OnemDerecesi)
+					</span>
+				</Template>
+			</RadzenDataGridColumn>
+			<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Durum" Width="100px">
+				<Template Context="g">
+					<span style="@($"font-size:11px; padding:3px 8px; border-radius:4px; background-color:{(g.Tamamlandi ? "#4caf50" : "#e53935")}; color:white;")">
+						@(g.Tamamlandi ? "Tamamlandı" : "Devam Ediyor")
+					</span>
+				</Template>
+			</RadzenDataGridColumn>
+		</Columns>
+	</RadzenDataGrid>
+	<div style="margin-top:20px; text-align:right;">
+		<RadzenButton Text="Kapat" ButtonStyle="ButtonStyle.Secondary" Click="@(() => DialogService.Close())" />
+	</div>
+</div>
+
+@code {
+	[Parameter] public string DateStr { get; set; } = string.Empty;
+	[Parameter] public List<ItemGorev> Gorevler { get; set; } = new();
+
+	private string GetGorevRengi(string onem)
+	{
+		return onem?.ToLower() switch
+		{
+			"yüksek" => "#e74c3c",
+			"orta" => "#f39c12",
+			"düşük" => "#2ecc71",
+			_ => "#3498db"
+		};
+	}
+}
+

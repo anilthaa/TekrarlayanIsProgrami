@@ -1,0 +1,132 @@
+@page "/admin/kullanici-loglari"
+@layout MainLayout
+@attribute [Authorize]
+<RadzenDialog></RadzenDialog>
+
+<RadzenCard class="container mt-4" Style="z-index:2000 !important;">
+    <h2 class="text-center mb-4">Kullanıcı Logları</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center" style="padding:50px;">
+            <RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:220px;" />
+            <p class="mt-2">Loglar yükleniyor...</p>
+        </div>
+    }
+    else if (logList == null || !logList.Any())
+    {
+        <div class="text-center" style="padding:50px;">
+            <p style="color:#7f8c8d; font-style:italic;">Henüz log kaydı bulunmamaktadır.</p>
+        </div>
+    }
+    else
+    {
+        <RadzenDataGrid @ref="logGrid" Data="@logList" TItem="ItemKullaniciLog"
+                        AllowPaging="true" PageSize="20" AllowSorting="true" AllowFiltering="true"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        class="text-center align-middle">
+            <Columns>
+                <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="ID" Title="ID" Width="80px" />
+                
+                <RadzenDataGridColumn TItem="ItemKullaniciLog" Title="Kullanıcı" Width="200px">
+                    <Template Context="log">
+                        @GetKullaniciAdi(log.Kullanici_ID)
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="IslemTipi" Title="İşlem Tipi" Width="120px">
+                    <Template Context="log">
+                        @{
+                            var islemTipi = log.IslemTipi?.Trim() ?? "";
+                        }
+                        @if (islemTipi.Equals("Giris", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <RadzenBadge Text="Giriş" 
+                                         Style="background-color:#2ecc71;color:white;padding:5px 10px;border-radius:10px;" />
+                        }
+                        else if (islemTipi.Equals("Cikis", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <RadzenBadge Text="Çıkış" 
+                                         Style="background-color:#e74c3c;color:white;padding:5px 10px;border-radius:10px;" />
+                        }
+                        else
+                        {
+                            <span>@log.IslemTipi</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="IslemTarihi" Title="İşlem Tarihi" Width="180px">
+                    <Template Context="log">
+                        @log.IslemTarihi.ToString("dd.MM.yyyy HH:mm:ss")
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="Aciklama" Title="Açıklama" />
+            </Columns>
+        </RadzenDataGrid>
+    }
+</RadzenCard>
+
+@code {
+    private List<ItemKullaniciLog> logList = new();
+    private RadzenDataGrid<ItemKullaniciLog>? logGrid;
+    private bool isLoading = true;
+    private Dictionary<int, string> kullaniciAdlari = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await YukleLoglarAsync();
+    }
+
+    private async Task YukleLoglarAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // Tüm logları getir
+            var loglar = await DataService.GetKullaniciLoglari();
+            logList = loglar.ToList();
+            
+            // Debug: Console'a log sayısını yazdır
+            Console.WriteLine($"Toplam log sayısı: {logList.Count}");
+            Console.WriteLine($"Giriş logları: {logList.Count(l => l.IslemTipi?.Equals("Giris", StringComparison.OrdinalIgnoreCase) == true)}");
+            Console.WriteLine($"Çıkış logları: {logList.Count(l => l.IslemTipi?.Equals("Cikis", StringComparison.OrdinalIgnoreCase) == true)}");
+            
+            // Tüm IslemTipi değerlerini listele
+            var uniqueIslemTipleri = logList.Select(l => l.IslemTipi).Distinct().ToList();
+            Console.WriteLine($"Tüm IslemTipi değerleri: {string.Join(", ", uniqueIslemTipleri)}");
+            
+            // İlk 5 logun detaylarını yazdır
+            foreach (var log in logList.Take(5))
+            {
+                Console.WriteLine($"Log ID: {log.ID}, Kullanıcı ID: {log.Kullanici_ID}, IslemTipi: '{log.IslemTipi}', Tarih: {log.IslemTarihi}");
+            }
+            
+            // Kullanıcı adlarını yükle
+            var kullanicilar = await _kullaniciRepo.GetAllAsync();
+            kullaniciAdlari = kullanicilar.ToDictionary(k => k.ID, k => $"{k.Adi} {k.Soyadi}");
+            
+            isLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", $"Loglar yüklenirken bir hata oluştu: {ex.Message}");
+            Console.WriteLine($"Log yükleme hatası: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            isLoading = false;
+        }
+    }
+
+    private string GetKullaniciAdi(int kullaniciId)
+    {
+        if (kullaniciAdlari.TryGetValue(kullaniciId, out var ad))
+        {
+            return ad;
+        }
+        return $"Kullanıcı ID: {kullaniciId}";
+    }
+}
+

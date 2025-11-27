@@ -27,21 +27,38 @@ namespace TekrarlayanIsProgrami.Api
             if (await _userRepository.EpostaVarMiAsync(model.EPosta))
                 return BadRequest(new AuthResult { Basarili = false, Mesaj = "Bu e-posta zaten kayıtlı" });
 
-            // Şifre hashleniyor
-            string hashed = PasswordHelper.HashPassword(model.Sifre);
+            // Token'ı önce oluştur (kayıt sırasında veritabanına kaydedilecek)
+            var token = _jwtService.GenerateToken(model.EPosta);
+            
+            // Token'ı veritabanı kolonuna uygun uzunlukta tut (100 karakter sınırı varsa)
+            var tokenToStore = !string.IsNullOrEmpty(token) && token.Length > 100 ? token.Substring(0, 100) : token;
 
+            // Şifreyi hashlemeyin - UserRepository.KayitOlAsync zaten hashliyor
             var yeniUser = await _userRepository.KayitOlAsync(
                 model.Adi,
                 model.Soyadi,
                 model.EPosta,
-                hashed,           // ← Hash'i kaydediyoruz
-                null,
-                null,
+                model.Sifre,      // ← Ham şifre gönderiliyor, repository'de hashlenecek
+                model.SifreTekrar ?? string.Empty,
+                tokenToStore,     // ← Token'ı ResetToken olarak kaydet (100 karakter sınırlı)
                 model.CreUser,
                 model.KullaniciTip_ID
             );
 
-            return Ok(new AuthResult { Basarili = true, Mesaj = "Kayıt başarılı" });
+            return Ok(new AuthResult
+            {
+                Basarili = true,
+                Mesaj = "Kayıt başarılı",
+                Token = token,
+                User = new User
+                {
+                    ID = yeniUser.ID,
+                    Adi = yeniUser.Adi,
+                    Soyadi = yeniUser.Soyadi,
+                    EPosta = yeniUser.EPosta,
+                    KullaniciTip_ID = yeniUser.KullaniciTip_ID
+                }
+            });
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
