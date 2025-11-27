@@ -850,18 +850,33 @@ else
 		return "#3498db"; // Mavi - normal
 	}
 
-	private void ShowDayDetails(DateTime date, IEnumerable<ItemGorev> gorevler)
+	private async Task ShowDayDetails(DateTime date, IEnumerable<ItemGorev> gorevler)
 	{
 		var gorevList = gorevler.ToList();
+		var dateStr = date.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"));
+		
 		if (gorevList.Any())
 		{
-			var mesaj = $"{date:dd.MM.yyyy} tarihinde {gorevList.Count} görev bulunuyor:\n\n";
-			mesaj += string.Join("\n", gorevList.Select(g => $"• {g.Baslik}"));
-			notificationService.Notify(NotificationSeverity.Info, "Görevler", mesaj);
+			await DialogService.OpenAsync<GunDetayDialog>($"Görevler - {date:dd.MM.yyyy}",
+				new Dictionary<string, object> 
+				{ 
+					{ "DateStr", dateStr },
+					{ "Gorevler", gorevList }
+				},
+				new DialogOptions { Width = "700px", Height = "auto", Resizable = true, Draggable = true });
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Info, "Bilgi", $"{date:dd.MM.yyyy} tarihinde görev bulunmuyor.");
+			await DialogService.OpenAsync($"Bilgi - {date:dd.MM.yyyy}", ds =>
+				@<div style="padding:20px; text-align:center;">
+					<RadzenIcon Icon="event_busy" Style="font-size:48px; color:#999; margin-bottom:15px;" />
+					<h4 style="margin-bottom:10px; color:#666;">@dateStr</h4>
+					<p style="color:#888;">Bu tarihte görev bulunmuyor.</p>
+					<div style="margin-top:20px;">
+						<RadzenButton Text="Kapat" ButtonStyle="ButtonStyle.Secondary" Click="@(() => ds.Close())" />
+					</div>
+				</div>,
+				new DialogOptions { Width = "400px", Height = "auto" });
 		}
 	}
 	
