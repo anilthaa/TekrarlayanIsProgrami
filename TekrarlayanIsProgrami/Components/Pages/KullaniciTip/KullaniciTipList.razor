@@ -26,7 +26,7 @@
 						AllowSorting="true" AllowFiltering="true"
 						RowDoubleClick="@(_canWrite ? OnRowDoubleClick : null)">
 			<Columns>
-				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="70px" />
+				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="150px" />
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
 					<Template Context="item">
@@ -111,7 +111,7 @@
 				DelUser = 0
 			};
 
-			var result = await DialogService.OpenAsync<KullaniciTipTnm>("Kullanıcı Tipi Ekle",
+			var result = await DialogService.OpenAsync<KullaniciTipTnm>(" ",
 			new Dictionary<string, object> { { "ItemData", yeniItem }, { "CurrentUserId", currentUserId ?? 1 } },
 			new DialogOptions { Width = "480px", Height = "auto" });
 
@@ -142,7 +142,7 @@
 				DelDate = item.DelDate
 			};
 
-			var result = await DialogService.OpenAsync<KullaniciTipTnm>("Kullanıcı Tipini Düzenle",
+			var result = await DialogService.OpenAsync<KullaniciTipTnm>(" ",
 			new Dictionary<string, object> { { "ItemData", payload }, { "CurrentUserId", currentUserId ?? 1 } },
 			new DialogOptions { Width = "480px", Height = "auto" });
 
