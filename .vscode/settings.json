@@ -1,0 +1,6 @@
+{
+    "dotnet.server.useOmnisharp": false,
+    "browser.default": "firefox",
+    "debug.javascript.usePreview": true
+}
+
