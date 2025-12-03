@@ -4,7 +4,7 @@
 <RadzenDialog></RadzenDialog>
 
 <RadzenCard class="container mt-4" Style="z-index:2000 !important;">
-    <h2 class="text-center mb-4">Kullanıcı Logları</h2>
+    <h2 class="text-center mb-4">Kullanıcı Hareketleri</h2>
 
     @if (isLoading)
     {
@@ -34,7 +34,7 @@
                     </Template>
                 </RadzenDataGridColumn>
                 
-                <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="IslemTipi" Title="İşlem Tipi" Width="120px">
+                <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="IslemTipi" Title="İşlem Tipi" Width="160px">
                     <Template Context="log">
                         @{
                             var islemTipi = log.IslemTipi?.Trim() ?? "";

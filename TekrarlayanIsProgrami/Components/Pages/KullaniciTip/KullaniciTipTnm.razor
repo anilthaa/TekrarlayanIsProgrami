@@ -1,32 +1,52 @@
 @inherits ComponentBase
+@if (ItemData.ID != 0)
+{
+	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
+		<ChildContent>
+			<DataAnnotationsValidator></DataAnnotationsValidator>
+			<h3 style="text-align:center;"> Kullanıcı Tipini Düzenle</h3>
 
-<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
-	<ChildContent>
-@* 		<RadzenLabel Text="Kullanıcı Tipi Adı" Component="Adi" />
- *@		
-        <RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-bottom:15px;">
-        <RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi"  />
-		</RadzenFormField>
-		<RadzenRequiredValidator Component="Adi" Text="Bu Alan Zorunludur." Popup="false" />
+			<RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-top:15px;">
+				<RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi"  />
+			</RadzenFormField>
+			<ValidationMessage For="@(()=>ItemData.Adi)"></ValidationMessage>
 
-		<div style="display:flex; align-items:center; margin-bottom:15px;">
-			<RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
-			<span class="rz-ml-2">Aktif</span>
-		</div>
+			<div style="display:flex; align-items:center; margin-bottom:15px;">
+				<RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
+				<span class="rz-ml-2">Aktif</span>
+			</div>
 
-		@if (!string.IsNullOrEmpty(hataMesaji))
-		{
-			<div style="color:red; margin-bottom:15px;">@hataMesaji</div>
-		}
-		<div class="btn-group">
-		<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
-						  Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
-		<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
-						  Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
-		</div>
-	</ChildContent>
-</RadzenTemplateForm>
+			<div class="btn-group">
+				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
+				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+			</div>
+		</ChildContent>
+	</RadzenTemplateForm>
+}
+else
+{
+	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
+		<ChildContent>
+			<DataAnnotationsValidator></DataAnnotationsValidator>
+			<h3 style="text-align:center;"> Kullanıcı Tipi Ekle</h3>
 
+			<RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-top:15px;">
+				<RadzenTextBox @bind-Value="ItemData.Adi" />
+			</RadzenFormField>
+			<ValidationMessage For="@(() => ItemData.Adi)"></ValidationMessage>
+
+			<div style="display:flex; align-items:center; margin-bottom:15px;">
+				<RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
+				<span class="rz-ml-2">Aktif</span>
+			</div>
+
+			<div class="btn-group">
+				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
+				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+			</div>
+		</ChildContent>
+	</RadzenTemplateForm>
+}
 @code {
 	[Parameter] public ItemKullaniciTip ItemData { get; set; } = new();
 	[Parameter] public int CurrentUserId { get; set; } = 1;
@@ -54,12 +74,6 @@
 		{
 			isSaving = true;
 			hataMesaji = null;
-
-			if (string.IsNullOrWhiteSpace(ItemData.Adi))
-			{
-				hataMesaji = "Bu Alan Zorunludur.";
-				return;
-			}
 
 			if (ItemData.ID == 0)
 			{
@@ -97,24 +111,33 @@
 
 	private async Task Iptal()
 	{
+		// Ekleme modunda isen direk kapat
+		if (ItemData.ID == 0)
+		{
+			DialogService.Close(null);
+			return;
+		}
+
+		// Düzenleme modunda değişiklik kontrolü
 		if (HasChanges(kullaniciTip, originalTip))
 		{
-			var confirmed = await DialogService.Confirm("Formda yaptığınız değişiklikler kaybolacak. Çıkmak istediğinize emin misiniz?", "İptal Onayı",
-						new ConfirmOptions() { OkButtonText = "Evet", CancelButtonText = "Hayır" });
-			if (!confirmed == true)
+			var confirmed = await DialogService.Confirm(
+				"Formda yaptığınız değişiklikler kaybolacak. Çıkmak istediğinize emin misiniz?",
+				"İptal Onayı",
+				new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" });
+
+			if (confirmed == true)
 			{
-				return;
-			}
-			else
-			{
+				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme işlemi iptal edildi.");
 				DialogService.Close(null);
 			}
+
+			return;
 		}
-		else
-		{
-			notificationService.Notify(NotificationSeverity.Info, "Bilgi", " Düzenleme İşleminiz İptal Edildi.");
-			DialogService.Close(null);
-		}
+
+		// Düzenleme modunda ama değişiklik yoksa direk kapat
+		notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme işlemi iptal edildi.");
+		DialogService.Close(null);
 	}
 	private bool HasChanges(ItemKullaniciTip current, ItemKullaniciTip original)
 	{

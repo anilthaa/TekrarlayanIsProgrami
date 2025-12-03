@@ -25,8 +25,7 @@
 @if(kullaniciTip != null && kullaniciTip.Adi == "Admin")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
-		<RadzenText Text="Admin Kontrol Paneli" TextStyle="TextStyle.H3" TagName="@TagName.H1" class="rz-mb-0"></RadzenText>
-
+    <h2> Admin Kontrol Paneli</h2>
 		@if (IsLoading)
 		{
 			<p>Veriler yükleniyor...</p>
@@ -337,8 +336,7 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
 
-		<RadzenText Text="Gösterge Paneli" TextStyle="TextStyle.H3" TagName="@TagName.H1" class="rz-mb-0" />
-
+    <h2>Gösterge Paneli</h2>
 		<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
 
 			<RadzenCard class="radzen-hover-effect"

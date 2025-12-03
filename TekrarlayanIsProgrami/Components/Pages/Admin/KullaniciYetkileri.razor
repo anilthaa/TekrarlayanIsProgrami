@@ -1,9 +1,9 @@
 @page "/admin/kullanici-yetkileri/{KullaniciId:int}"
-@layout MainLayout
+@layout EmptyLayout
 @attribute [Authorize]
 
 <RadzenCard class="container mt-4">
-    <h3>Kullanıcı Sayfa Yetkileri</h3>
+    <h3 style="text-align:center;">Kullanıcı Sayfa Yetkileri</h3>
 
     @if (!_canAccess)
     {
@@ -112,14 +112,14 @@
         // Yetki kontrolü
         _canAccess = await PermissionService.CanReadAsync("/admin/kullanici-yetkileri");
         _canWrite = await PermissionService.CanWriteAsync("/admin/kullanici-yetkileri");
-        
+
         if (!_canAccess)
         {
             hataMesaji = "Bu sayfaya erişim yetkiniz bulunmamaktadır.";
             isLoading = false;
             return;
         }
-        
+
         await YukleAsync();
     }
 
@@ -214,6 +214,7 @@
             }
 
             notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Yetkiler güncellendi.");
+            NavigationManager.NavigateTo("/kullanicilar");
         }
         catch (Exception ex)
         {
@@ -224,6 +225,7 @@
         {
             isSaving = false;
         }
+
     }
 
     private int GetYetki(int formId)

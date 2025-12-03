@@ -1,4 +1,4 @@
-﻿body {
+body {
   /*  margin: 0;
     padding: 0;
     background: linear-gradient(135deg, #1d2b64, #f8cdda);
@@ -410,4 +410,46 @@ button RadzenIcon {
     padding: 20px;
     border: 1px solid #ddd;
 }
+.sayfaListe{
+    background-color:transparent;
+}
+    .sayfaListe:active {
+        transform: scale(0.97);
+    }
 
+.my-tabs {
+    display: flex; /* yatay sıralama */
+    justify-content: center; /* ortala */
+    align-items: center; /* dikey ortala */
+    gap: 12px; /* tablar arası boşluk */
+    background: #ba76d3;
+    padding: 10px;
+    flex-wrap: nowrap; /* alta kaymayı engelle */
+    overflow-x: auto; 
+    border-radius:7px;
+}
+
+.my-tab {
+    background: #8e24aa;
+    color: white;
+    padding: 8px 20px; 
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap; /* metin kırılmasın */
+    text-align: center; /* metin ortalı */
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    flex-shrink: 0; /* daralmasın */
+    cursor: pointer;
+    width:200px;
+}
+
+    .my-tab:hover {
+        background-color: #ba68c8; /* hover rengi */
+        cursor: pointer;
+    }
+
+    .my-tab.active {
+        background-color: #4a148c; /* aktif tab rengi */
+        transform: scale(1.15); /* aktif tab hafif büyüme */
+        cursor: pointer;
+    }
