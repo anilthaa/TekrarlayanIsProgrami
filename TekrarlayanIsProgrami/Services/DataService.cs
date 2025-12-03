@@ -82,26 +82,38 @@ namespace TekrarlayanIsProgrami.Services
 
             if (item.ID.Equals(0) && item.DelUser.Equals(0))
             {
+                // CreDate'i uygulama tarafından set et (timezone sorunlarını önlemek için)
+                if (item.CreDate == default(DateTime))
+                {
+                    item.CreDate = DateTime.Now;
+                }
+                
                 item.ID = await SQLExecuteScalar<int>(@"INSERT INTO ""Gorev"" (""Kullanici_ID"", ""Baslik"", ""Kategori_ID"", ""OnemDerecesi"",
                 ""BaslangicTarihi"",""BitisTarihi"",""TekrarlamaTipi"", ""Aktif"", ""Kilitli"", ""TekrarAraligi"", ""HaftaninGunu"",
                 ""AyinGunu"", ""SonrakiCalismaTarihi"", ""Tamamlandi"",""CreUser"", ""CreDate"") 
                 VALUES (@Kullanici_ID, @Baslik, @Kategori_ID, @OnemDerecesi, @BaslangicTarihi, @BitisTarihi, @TekrarlamaTipi, @Aktif, 
-                @Kilitli, @TekrarAraligi, @HaftaninGunu, @AyinGunu, @SonrakiCalismaTarihi,false,@CreUser, now())
+                @Kilitli, @TekrarAraligi, @HaftaninGunu, @AyinGunu, @SonrakiCalismaTarihi,false,@CreUser, @CreDate)
                  RETURNING ""ID""", item);
             }
             else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
             {
+                // UpdDate'i uygulama tarafından set et (timezone sorunlarını önlemek için)
+                item.UpdDate = DateTime.Now;
+                
                 await SQLExecute(@"UPDATE ""Gorev"" SET
                       ""Kullanici_ID""=@Kullanici_ID, ""Baslik""=@Baslik, ""Kategori_ID""=@Kategori_ID, 
                       ""OnemDerecesi""=@OnemDerecesi, ""BaslangicTarihi""=@BaslangicTarihi, ""BitisTarihi""=@BitisTarihi,
                       ""TekrarlamaTipi""=@TekrarlamaTipi, ""Aktif""=@Aktif, ""Kilitli""=@Kilitli, ""TekrarAraligi""=@TekrarAraligi,
-                      ""HaftaninGunu""=@HaftaninGunu, ""AyinGunu""=@AyinGunu, ""SonrakiCalismaTarihi""=@SonrakiCalismaTarihi,""Tamamlandi""=@Tamamlandi, ""UpdUser""=@UpdUser, ""UpdDate""=now()
+                      ""HaftaninGunu""=@HaftaninGunu, ""AyinGunu""=@AyinGunu, ""SonrakiCalismaTarihi""=@SonrakiCalismaTarihi,""Tamamlandi""=@Tamamlandi, ""UpdUser""=@UpdUser, ""UpdDate""=@UpdDate
                      WHERE ""ID"" = @ID", item);
             }
             else if (!item.ID.Equals(0) && !item.DelUser.Equals(0))
             {
+                // DelDate'i uygulama tarafından set et (timezone sorunlarını önlemek için)
+                item.DelDate = DateTime.Now;
+                
                 await SQLExecute(@"UPDATE ""Gorev"" 
-                     SET ""DelUser"" = @DelUser, ""DelDate"" = now() 
+                     SET ""DelUser"" = @DelUser, ""DelDate"" = @DelDate 
                      WHERE ""ID"" = @ID", item);
             }
             return new() { Data = item.ID };
@@ -127,7 +139,7 @@ namespace TekrarlayanIsProgrami.Services
             var authState = await _stateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
 
-            if (!user.Identity.IsAuthenticated)
+            if (user.Identity == null || !user.Identity.IsAuthenticated)
             {
                 throw new UnauthorizedAccessException("Giriş yapmanız gerekiyor.");
             }
@@ -239,9 +251,19 @@ namespace TekrarlayanIsProgrami.Services
             {
                 Console.WriteLine($"SetKullaniciLog çağrıldı - Kullanıcı ID: {item.Kullanici_ID}, İşlem Tipi: {item.IslemTipi}");
                 
+                // IslemTarihi ve CreDate'i uygulama tarafından set et (timezone sorunlarını önlemek için)
+                if (item.IslemTarihi == default(DateTime))
+                {
+                    item.IslemTarihi = DateTime.Now;
+                }
+                if (item.CreDate == default(DateTime))
+                {
+                    item.CreDate = DateTime.Now;
+                }
+                
                 item.ID = await SQLExecuteScalar<int>(@"
                     INSERT INTO ""KullaniciLog"" (""Kullanici_ID"", ""IslemTipi"", ""IslemTarihi"", ""Aciklama"", ""CreUser"", ""CreDate"")
-                    VALUES (@Kullanici_ID, @IslemTipi, @IslemTarihi, @Aciklama, @CreUser, NOW())
+                    VALUES (@Kullanici_ID, @IslemTipi, @IslemTarihi, @Aciklama, @CreUser, @CreDate)
                     RETURNING ""ID""", item);
                 
                 Console.WriteLine($"SetKullaniciLog tamamlandı - Dönen ID: {item.ID}");
@@ -258,6 +280,9 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task<DateTime?> GetSonGirisAsync(int kullaniciId)
         {
+            // En son girişten bir önceki girişi alıyoruz
+            // OFFSET 1 kullanıyoruz çünkü en son giriş şu anki giriş, bir önceki girişi alıyoruz
+            // Eğer sadece bir giriş logu varsa (ilk giriş), null döndürüyoruz
             var sql = @"
                 SELECT ""IslemTarihi""
                 FROM ""KullaniciLog""
@@ -265,10 +290,30 @@ namespace TekrarlayanIsProgrami.Services
                   AND ""IslemTipi"" = 'Giris'
                   AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
                 ORDER BY ""IslemTarihi"" DESC
-                LIMIT 1 OFFSET 1;"; // OFFSET 1 çünkü en son giriş şu anki giriş, bir önceki girişi alıyoruz
+                LIMIT 1 OFFSET 1;";
 
             var result = await SQLQueryAsync<DateTime?>(sql, new { KullaniciId = kullaniciId });
-            return result.FirstOrDefault();
+            var sonGiris = result.FirstOrDefault();
+            
+            // Debug: Tüm giriş loglarını kontrol et
+            var tumGirisler = await SQLQueryAsync<DateTime?>(@"
+                SELECT ""IslemTarihi""
+                FROM ""KullaniciLog""
+                WHERE ""Kullanici_ID"" = @KullaniciId
+                  AND ""IslemTipi"" = 'Giris'
+                  AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                ORDER BY ""IslemTarihi"" DESC
+                LIMIT 5;", new { KullaniciId = kullaniciId });
+            
+            Console.WriteLine($"GetSonGirisAsync - Kullanıcı ID: {kullaniciId}");
+            Console.WriteLine($"  Toplam giriş logu: {tumGirisler.Count()}");
+            foreach (var giris in tumGirisler)
+            {
+                Console.WriteLine($"    - Giriş: {giris}");
+            }
+            Console.WriteLine($"  Bir önceki giriş (OFFSET 1): {(sonGiris.HasValue ? sonGiris.Value.ToString() : "null (ilk giriş)")}");
+            
+            return sonGiris;
         }
 
         public async Task<int> GetYeniGorevSayisiAsync(int kullaniciId, DateTime? sonGirisTarihi)
@@ -310,62 +355,38 @@ namespace TekrarlayanIsProgrami.Services
             {
                 // Son girişten sonra oluşturulan görevleri say
                 // Kullanıcıya atanan görevler (Kilitli=true ve Kullanici_ID=kullanıcı) veya herkese açık görevler (Kilitli=false)
-                // CreDate >= sonGirisTarihi kullanıyoruz (>=) çünkü görev ekleme ve giriş zamanları arasında küçük farklar olabilir
+                // CreDate > sonGirisTarihi kullanıyoruz (>) çünkü bir önceki girişten SONRA eklenen görevler yeni sayılmalı
+                // Ayrıca, görev ekleme zamanı ile giriş zamanı arasında küçük farklar olabilir, bu yüzden birkaç saniye tolerans ekliyoruz
                 var sql = @"
                     SELECT COUNT(*)
                     FROM ""Gorev""
                     WHERE ""Aktif"" = true
                       AND ""Tamamlandi"" = false
                       AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
-                      AND ""CreDate"" >= @SonGirisTarihi
+                      AND ""CreDate"" > @SonGirisTarihi
                       AND ((""Kilitli"" = true AND ""Kullanici_ID"" = @KullaniciId) OR ""Kilitli"" = false);";
                 
-                Console.WriteLine($"SQL Sorgusu çalıştırılıyor - Kullanıcı ID: {kullaniciId}, Son Giriş: {sonGirisTarihi.Value}");
+                Console.WriteLine($"SQL Sorgusu çalıştırılıyor - Kullanıcı ID: {kullaniciId}, Son Giriş: {sonGirisTarihi.Value:yyyy-MM-dd HH:mm:ss}");
                 
                 var result = await SQLQueryAsync<int>(sql, new { KullaniciId = kullaniciId, SonGirisTarihi = sonGirisTarihi.Value });
                 var sayi = result.FirstOrDefault();
-                Console.WriteLine($"GetYeniGorevSayisiAsync (son giriş: {sonGirisTarihi.Value}) - Sonuç: {sayi}");
+                Console.WriteLine($"GetYeniGorevSayisiAsync (son giriş: {sonGirisTarihi.Value:yyyy-MM-dd HH:mm:ss}) - Sonuç: {sayi}");
                 
-                // Eğer 0 ise, kullanıcıya atanan bugünden sonraki görevleri de kontrol et
-                // (Görevler girişten önce eklenmiş olabilir ama kullanıcı daha önce görmediyse "yeni" sayılmalı)
-                if (sayi == 0)
-                {
-                    var bugunSql = @"
-                        SELECT COUNT(*)
-                        FROM ""Gorev""
-                        WHERE ""Aktif"" = true
-                          AND ""Tamamlandi"" = false
-                          AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
-                          AND ""Kilitli"" = true
-                          AND ""Kullanici_ID"" = @KullaniciId
-                          AND ""CreDate"" >= CURRENT_DATE;";
-                    
-                    var bugunResult = await SQLQueryAsync<int>(bugunSql, new { KullaniciId = kullaniciId });
-                    var bugunSayi = bugunResult.FirstOrDefault();
-                    Console.WriteLine($"Bugünden sonraki kullanıcıya atanan görev sayısı: {bugunSayi}");
-                    
-                    if (bugunSayi > 0)
-                    {
-                        return bugunSayi;
-                    }
-                }
-                
-                // Eğer 0 ise, detaylı kontrol yap - kullanıcıya atanan görevleri kontrol et
+                // Debug: Eğer 0 ise, detaylı kontrol yap - tüm görevleri kontrol et
                 if (sayi == 0)
                 {
                     var detaySql = @"
                         SELECT ""ID"", ""Baslik"", ""Kilitli"", ""Kullanici_ID"", ""CreDate"", ""Aktif"", ""Tamamlandi"", ""DelUser""
                         FROM ""Gorev""
-                        WHERE ""Kilitli"" = true 
-                          AND ""Kullanici_ID"" = @KullaniciId
-                          AND ""Aktif"" = true
+                        WHERE ""Aktif"" = true
                           AND ""Tamamlandi"" = false
                           AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                          AND ((""Kilitli"" = true AND ""Kullanici_ID"" = @KullaniciId) OR ""Kilitli"" = false)
                         ORDER BY ""CreDate"" DESC
-                        LIMIT 10;";
+                        LIMIT 20;";
                     
                     var detayGorevler = await SQLQueryAsync<dynamic>(detaySql, new { KullaniciId = kullaniciId });
-                    Console.WriteLine($"Detay kontrol - Kullanıcıya atanan {detayGorevler.Count()} görev bulundu:");
+                    Console.WriteLine($"Detay kontrol - Toplam {detayGorevler.Count()} görev bulundu (kilitli veya herkese açık):");
                     foreach (var g in detayGorevler)
                     {
                         if (g.CreDate != null)
@@ -382,6 +403,72 @@ namespace TekrarlayanIsProgrami.Services
                 }
                 
                 return sayi;
+            }
+        }
+
+        public async Task<(int toplam, int genel, int ozel)> GetYeniGorevDetaylariAsync(int kullaniciId, DateTime? sonGirisTarihi)
+        {
+            if (!sonGirisTarihi.HasValue)
+            {
+                // İlk giriş ise, bugünden sonraki görevleri say
+                var genelSql = @"
+                    SELECT COUNT(*)
+                    FROM ""Gorev""
+                    WHERE ""Aktif"" = true
+                      AND ""Tamamlandi"" = false
+                      AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                      AND ""CreDate"" >= CURRENT_DATE
+                      AND ""Kilitli"" = false;";
+                
+                var ozelSql = @"
+                    SELECT COUNT(*)
+                    FROM ""Gorev""
+                    WHERE ""Aktif"" = true
+                      AND ""Tamamlandi"" = false
+                      AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                      AND ""CreDate"" >= CURRENT_DATE
+                      AND ""Kilitli"" = true
+                      AND ""Kullanici_ID"" = @KullaniciId;";
+                
+                var genelResult = await SQLQueryAsync<int>(genelSql, new { });
+                var ozelResult = await SQLQueryAsync<int>(ozelSql, new { KullaniciId = kullaniciId });
+                
+                var genel = genelResult.FirstOrDefault();
+                var ozel = ozelResult.FirstOrDefault();
+                var toplam = genel + ozel;
+                
+                return (toplam, genel, ozel);
+            }
+            else
+            {
+                // Son girişten sonra oluşturulan görevleri say
+                var genelSql = @"
+                    SELECT COUNT(*)
+                    FROM ""Gorev""
+                    WHERE ""Aktif"" = true
+                      AND ""Tamamlandi"" = false
+                      AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                      AND ""CreDate"" > @SonGirisTarihi
+                      AND ""Kilitli"" = false;";
+                
+                var ozelSql = @"
+                    SELECT COUNT(*)
+                    FROM ""Gorev""
+                    WHERE ""Aktif"" = true
+                      AND ""Tamamlandi"" = false
+                      AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                      AND ""CreDate"" > @SonGirisTarihi
+                      AND ""Kilitli"" = true
+                      AND ""Kullanici_ID"" = @KullaniciId;";
+                
+                var genelResult = await SQLQueryAsync<int>(genelSql, new { SonGirisTarihi = sonGirisTarihi.Value });
+                var ozelResult = await SQLQueryAsync<int>(ozelSql, new { KullaniciId = kullaniciId, SonGirisTarihi = sonGirisTarihi.Value });
+                
+                var genel = genelResult.FirstOrDefault();
+                var ozel = ozelResult.FirstOrDefault();
+                var toplam = genel + ozel;
+                
+                return (toplam, genel, ozel);
             }
         }
 

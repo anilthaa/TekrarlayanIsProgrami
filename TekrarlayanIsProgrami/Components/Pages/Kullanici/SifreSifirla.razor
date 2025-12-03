@@ -28,6 +28,8 @@
 </RadzenCard>
 
 @code {
+    [Inject] private UrlSigningService urlSigningService { get; set; } = null!;
+
     [Parameter]
     [SupplyParameterFromQuery]
     public string token{ get; set; }
@@ -40,8 +42,34 @@
         var uri = new Uri(NavigationManager.Uri);
         var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
 
-        if (query.TryGetValue("token", out var tokenValue))
+        // URL token'ını doğrula ve parametreleri çıkar
+        if (query.ContainsKey("token"))
+        {
+            var isValid = urlSigningService.VerifyUrl(NavigationManager.Uri);
+            if (!isValid)
+            {
+                notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz veya değiştirilmiş link!");
+                token = null;
+                return;
+            }
+            
+            // Token'dan parametreleri çıkar
+            var urlParameters = urlSigningService.ParseSignedUrl(NavigationManager.Uri, out bool valid);
+            if (!valid || !urlParameters.ContainsKey("token"))
+            {
+                notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz link!");
+                token = null;
+                return;
+            }
+            
+            token = urlParameters["token"];
+        }
+        else if (query.TryGetValue("token", out var tokenValue))
+        {
+            // Eski format (imzasız) için geriye dönük uyumluluk
             token = System.Net.WebUtility.UrlDecode(tokenValue.ToString());
+        }
+        
         Console.WriteLine($"UI Token: {token}");
 
         if (string.IsNullOrEmpty(token))

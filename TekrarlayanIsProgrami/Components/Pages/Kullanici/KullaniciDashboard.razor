@@ -11,7 +11,7 @@
 				<div>
 					<h4 style="margin:0; color:white; font-weight:600;">Yeni Görevleriniz Var!</h4>
 					<p style="margin:5px 0 0 0; color:rgba(255,255,255,0.9); font-size:14px;">
-						@yeniGorevSayisi yeni göreviniz var! Dashboard'ınızı kontrol ediniz.
+						@GetYeniGorevMesaji()
 					</p>
 				</div>
 			</div>
@@ -562,6 +562,8 @@ else
 
 
 @code {
+	[Inject] private UrlSigningService urlSigningService { get; set; } = null!;
+	
 	private ItemKullaniciTip kullaniciTip=new ItemKullaniciTip();
 	private int toplamGorev = 0;
 	private int aktifGorev = 0;
@@ -595,6 +597,8 @@ else
 	private bool _isInitialized = false;
 	private bool showYeniGorevBildirimi = false;
 	private int yeniGorevSayisi = 0;
+	private int yeniGenelGorevSayisi = 0;
+	private int yeniOzelGorevSayisi = 0;
 	private DateTime selectedMonth = DateTime.Now;
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -609,9 +613,57 @@ else
 	private async Task LoadDashboardAsync()
 	{
 		IsLoading = true;
+		showYeniGorevBildirimi = false; // Her sayfa yüklendiğinde bildirimi sıfırla
 		StateHasChanged();
 
+		// URL parametrelerini kontrol et (e-posta linkinden geliyorsa)
+		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+		var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+		
+		// URL token'ını doğrula ve parametreleri çıkar
+		Dictionary<string, string> urlParameters = new();
+		if (queryParams.ContainsKey("token"))
+		{
+			var isValid = urlSigningService.VerifyUrl(NavigationManager.Uri);
+			if (!isValid)
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz veya değiştirilmiş link!");
+				NavigationManager.NavigateTo("/dashboard", forceLoad: true);
+				return;
+			}
+			
+			// Token'dan parametreleri çıkar
+			urlParameters = urlSigningService.ParseSignedUrl(NavigationManager.Uri, out bool valid);
+			if (!valid)
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz link!");
+				NavigationManager.NavigateTo("/dashboard", forceLoad: true);
+				return;
+			}
+		}
+		
+		var hedefUserIdParam = urlParameters.ContainsKey("userId") ? urlParameters["userId"] : null;
+		
 		await YukleKullaniciId();
+		
+		// E-posta linkinden geldiyse ve hedef kullanıcı farklıysa çıkış yap ve giriş sayfasına yönlendir
+		if (!string.IsNullOrEmpty(hedefUserIdParam) && int.TryParse(hedefUserIdParam, out int hedefUserId))
+		{
+			if (!currentUserId.HasValue || currentUserId.Value != hedefUserId)
+			{
+				// Farklı kullanıcı giriş yapmışsa önce çıkış yap
+				if (currentUserId.HasValue)
+				{
+					await girisSaglayici.CikisYapAsync();
+					await PermissionService.RefreshAsync();
+				}
+				
+				// Giriş yapmamış veya farklı kullanıcı giriş yapmış
+				var returnUrl = NavigationManager.Uri; // Mevcut URL'i returnUrl olarak sakla
+				NavigationManager.NavigateTo($"/GirisYap?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
+				return;
+			}
+		}
 		
 		// Giriş yapmamış kullanıcıları yönlendir
 		if (!currentUserId.HasValue)
@@ -632,9 +684,19 @@ else
 
 		await YukleGorevler();
 
-		kullaniciGorevler = GorevListt
-			.Where(x => x.Kullanici_ID == currentUserId)
-			.ToList();
+		// Standart kullanıcı için: kendisine atanan kilitli görevler + herkese açık görevler
+		// Admin için: tüm görevler
+		if (kullaniciTip.Adi == "Standart")
+		{
+			kullaniciGorevler = GorevListt
+				.Where(x => (x.Kullanici_ID == currentUserId || !x.Kilitli))
+				.ToList();
+		}
+		else
+		{
+			// Admin için tüm görevler
+			kullaniciGorevler = GorevListt.ToList();
+		}
 
 		toplamGorev = kullaniciGorevler.Count;
 		aktifGorev = kullaniciGorevler.Count(x => x.Aktif && !x.Tamamlandi);
@@ -673,8 +735,12 @@ else
 			var sonGirisTarihi = await DataService.GetSonGirisAsync(currentUserId.Value);
 			Console.WriteLine($"Son giriş tarihi: {(sonGirisTarihi.HasValue ? sonGirisTarihi.Value.ToString() : "İlk giriş")}");
 			
-			yeniGorevSayisi = await DataService.GetYeniGorevSayisiAsync(currentUserId.Value, sonGirisTarihi);
-			Console.WriteLine($"Yeni görev sayısı: {yeniGorevSayisi}");
+			var (toplam, genel, ozel) = await DataService.GetYeniGorevDetaylariAsync(currentUserId.Value, sonGirisTarihi);
+			yeniGorevSayisi = toplam;
+			yeniGenelGorevSayisi = genel;
+			yeniOzelGorevSayisi = ozel;
+			
+			Console.WriteLine($"Yeni görev sayısı - Toplam: {toplam}, Genel: {genel}, Özel: {ozel}");
 			
 			if (yeniGorevSayisi > 0)
 			{
@@ -783,6 +849,31 @@ else
 			"hayır" => "#e53935"
 		};
 	}
+
+	private string GetYeniGorevMesaji()
+	{
+		if (yeniOzelGorevSayisi > 0 && yeniGenelGorevSayisi > 0)
+		{
+			// Hem genel hem özel görevler var
+			return $"{yeniGorevSayisi} yeni göreviniz var! ({yeniOzelGorevSayisi} size özel, {yeniGenelGorevSayisi} herkese açık) Dashboard'ınızı kontrol ediniz.";
+		}
+		else if (yeniOzelGorevSayisi > 0)
+		{
+			// Sadece özel görevler var
+			return $"{yeniOzelGorevSayisi} size özel yeni göreviniz var! Dashboard'ınızı kontrol ediniz.";
+		}
+		else if (yeniGenelGorevSayisi > 0)
+		{
+			// Sadece genel görevler var
+			return $"{yeniGenelGorevSayisi} yeni göreviniz var! Dashboard'ınızı kontrol ediniz.";
+		}
+		else
+		{
+			// Bu durumda banner gösterilmemeli ama yine de bir mesaj döndürelim
+			return $"{yeniGorevSayisi} yeni göreviniz var! Dashboard'ınızı kontrol ediniz.";
+		}
+	}
+
 	//Bitti.
 	void GoHome()
 	{
@@ -850,18 +941,33 @@ else
 		return "#3498db"; // Mavi - normal
 	}
 
-	private void ShowDayDetails(DateTime date, IEnumerable<ItemGorev> gorevler)
+	private async Task ShowDayDetails(DateTime date, IEnumerable<ItemGorev> gorevler)
 	{
 		var gorevList = gorevler.ToList();
+		var dateStr = date.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"));
+		
 		if (gorevList.Any())
 		{
-			var mesaj = $"{date:dd.MM.yyyy} tarihinde {gorevList.Count} görev bulunuyor:\n\n";
-			mesaj += string.Join("\n", gorevList.Select(g => $"• {g.Baslik}"));
-			notificationService.Notify(NotificationSeverity.Info, "Görevler", mesaj);
+			await DialogService.OpenAsync<GunDetayDialog>($"Görevler - {date:dd.MM.yyyy}",
+				new Dictionary<string, object> 
+				{ 
+					{ "DateStr", dateStr },
+					{ "Gorevler", gorevList }
+				},
+				new DialogOptions { Width = "700px", Height = "auto", Resizable = true, Draggable = true });
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Info, "Bilgi", $"{date:dd.MM.yyyy} tarihinde görev bulunmuyor.");
+			await DialogService.OpenAsync($"Bilgi - {date:dd.MM.yyyy}", ds =>
+				@<div style="padding:20px; text-align:center;">
+					<RadzenIcon Icon="event_busy" Style="font-size:48px; color:#999; margin-bottom:15px;" />
+					<h4 style="margin-bottom:10px; color:#666;">@dateStr</h4>
+					<p style="color:#888;">Bu tarihte görev bulunmuyor.</p>
+					<div style="margin-top:20px;">
+						<RadzenButton Text="Kapat" ButtonStyle="ButtonStyle.Secondary" Click="@(() => ds.Close())" />
+					</div>
+				</div>,
+				new DialogOptions { Width = "400px", Height = "auto" });
 		}
 	}
 	

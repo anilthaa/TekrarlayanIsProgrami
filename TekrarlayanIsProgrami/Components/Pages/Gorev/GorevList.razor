@@ -319,16 +319,16 @@ else
 			new DialogOptions { Width = "600px", Height = "auto" }
 		);
 
-		// Dialog’dan dönen sonucu kontrol ediyoruz
+		// Dialog'dan dönen sonucu kontrol ediyoruz
 		if (result is ItemGorev g && g.ID > 0)
 		{
 			g.CreUser = currentUserId.Value; // Atayan kişi burada kesin setleniyor
 			GorevListt.Insert(0, g);
 			await GrdGorev.Reload();
-		}
-
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev başarıyla eklendi!");
 		}
+		// Eğer result null veya ID 0 ise, kullanıcı iptal etmiş demektir, mesaj göstermiyoruz
+	}
 
 	private MarkupString GetAtananKullaniciAdi(int kullaniciId, bool kilitli)
 	{
@@ -350,7 +350,10 @@ else
 
 	private async Task Duzenle(ItemGorev gorev)
 	{
-		gorev.UpdUser = 1;
+		if (currentUserId.HasValue)
+		{
+			gorev.UpdUser = currentUserId.Value;
+		}
 		var result = await DialogService.OpenAsync<GorevTnm>(" ",
 			new Dictionary<string, object> { { "Gorev", gorev } },
 			new DialogOptions { Width = "600px", Height ="auto" });
@@ -375,7 +378,10 @@ else
 
 		if (onay == true)
 		{
-			gorev.DelUser = 1;
+			if (currentUserId.HasValue)
+			{
+				gorev.DelUser = currentUserId.Value;
+			}
 			var wsCvp = await DataService.SetGorev(gorev);
 
 			if (wsCvp.SonucKodu == 0)
@@ -404,7 +410,10 @@ else
 				return;
 			}
 			item.Aktif = !item.Aktif;
-			item.UpdUser = 1;
+			if (currentUserId.HasValue)
+			{
+				item.UpdUser = currentUserId.Value;
+			}
 
 			var sonuc = await DataService.SetGorev(item);
 
@@ -439,7 +448,10 @@ else
 				item.Aktif = true;
 			}
 
-			item.UpdUser = 1;
+			if (currentUserId.HasValue)
+			{
+				item.UpdUser = currentUserId.Value;
+			}
 
 			var sonuc = await DataService.SetGorev(item);
 
