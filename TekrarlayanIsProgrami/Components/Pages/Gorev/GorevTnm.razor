@@ -79,13 +79,26 @@
 		</fieldset>
 
 		<div class="text-center mt-4">
-			<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit" Icon="save" Style="width:30%; margin-left:18px;" class="radzen-button" />
-			<RadzenButton Text="İptal" Click="@İptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin-left:35px;" class="radzen-button"></RadzenButton>
+			@if(!isSaving)
+			{
+				<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit" Icon="save" Style="width:30%; margin-left:18px;" class="radzen-button" />
+				<RadzenButton Text="İptal" Click="@İptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin-left:35px;" class="radzen-button"></RadzenButton>
+			}
+			else
+			{
+				<div style="width:30%; margin-left:18px; display:inline-block; text-align:center;">
+					<div class="spinner-border" role="status" style="width:1.6rem; height:1.6rem">
+						<span class="visually-hidden">Yükleniyor...</span>
+					</div>
+				</div>
+			}
+			
 		</div>
 
 	</RadzenTemplateForm>
 </RadzenCard>
 @code {
+	[Inject] private UrlSigningService urlSigningService { get; set; } = null!;
 
 	[Parameter] public ItemGorev Gorev { get; set; } = new();
 
@@ -94,10 +107,54 @@
 	private List<string> haftaninGunleri = new() { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
 	private List<ItemKategori> DataKategoriList = new();
 	private List<User> kullanicilar = new();
+	private ItemGorev originalGorev = new(); // Orijinal görev bilgilerini saklamak için
+	private bool isSaving = false;
 
 	protected override async Task OnInitializedAsync()
 	{
 		await YukleData();
+
+		// YukleData'dan sonra orijinal değerleri sakla (varsayılan değerler set edildikten sonra)
+		if (Gorev.ID == 0)
+		{
+			// Yeni görev modunda - varsayılan değerleri sakla
+			originalGorev = new ItemGorev
+			{
+				ID = 0,
+				Baslik = Gorev.Baslik ?? string.Empty,
+				Kategori_ID = Gorev.Kategori_ID,
+				OnemDerecesi = Gorev.OnemDerecesi,
+				BaslangicTarihi = Gorev.BaslangicTarihi,
+				BitisTarihi = Gorev.BitisTarihi,
+				TekrarlamaTipi = Gorev.TekrarlamaTipi,
+				TekrarAraligi = Gorev.TekrarAraligi,
+				HaftaninGunu = Gorev.HaftaninGunu,
+				AyinGunu = Gorev.AyinGunu,
+				Kilitli = Gorev.Kilitli,
+				Kullanici_ID = Gorev.Kullanici_ID,
+				Aktif = Gorev.Aktif
+			};
+		}
+		else
+		{
+			// Düzenleme modunda orijinal görev bilgilerini sakla
+			originalGorev = new ItemGorev
+			{
+				ID = Gorev.ID,
+				Baslik = Gorev.Baslik ?? string.Empty,
+				Kategori_ID = Gorev.Kategori_ID,
+				OnemDerecesi = Gorev.OnemDerecesi,
+				BaslangicTarihi = Gorev.BaslangicTarihi,
+				BitisTarihi = Gorev.BitisTarihi,
+				TekrarlamaTipi = Gorev.TekrarlamaTipi,
+				TekrarAraligi = Gorev.TekrarAraligi,
+				HaftaninGunu = Gorev.HaftaninGunu,
+				AyinGunu = Gorev.AyinGunu,
+				Kilitli = Gorev.Kilitli,
+				Kullanici_ID = Gorev.Kullanici_ID,
+				Aktif = Gorev.Aktif
+			};
+		}
 	}
 
 	private async Task YukleData()
@@ -107,6 +164,7 @@
 
 		if (Gorev.ID==0)
 		{
+			// Yeni görev modunda varsayılan değerleri set et
 			Gorev.Aktif = true;
 			Gorev.Kilitli = false;
 			Gorev.BaslangicTarihi = DateTime.Now;
@@ -132,66 +190,84 @@
 
 	private async Task OnSubmit()
 	{
-		bool yeniKayıt = Gorev.ID == 0;
-
-		if (Gorev.BitisTarihi < Gorev.BaslangicTarihi)
+		if (isSaving) return;
+		isSaving = true;
+		StateHasChanged();
+		try
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Bitiş tarihi başlangıç tarihinden küçük olamaz!");
-			return;
-		}
-
-		if (Gorev.Kilitli && Gorev.Kullanici_ID==0)
-		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Kilitli görev için kullanıcı seçmeniz gerekiyor!");
-			return;
-		}
+			bool yeniKayıt = Gorev.ID == 0;
 
 
-		if (Gorev.TekrarlamaTipi=="Günlük"&& !Gorev.TekrarAraligi.HasValue)
-		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Günlük tekrar için aralık girmeniz gerekiyor!");
-			return;
-		}
-
-		if (Gorev.TekrarlamaTipi=="Haftalık" && string.IsNullOrEmpty(Gorev.HaftaninGunu))
-		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için gün seçmeniz gerekiyor!");
-			return;
-		}
-
-		if (Gorev.TekrarlamaTipi=="Aylık"&& !Gorev.AyinGunu.HasValue)
-		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Aylık tekrar için gün girmeniz gerekiyor!");
-			return;
-		}
-
-		HesaplaSonrakiCalismaTarihi(Gorev);
-
-		if (yeniKayıt)
-		{
-			Gorev.Aktif = true;
-			// Gorev.CreUser = 1;
-		}
-		else
-		{
-			// Gorev.UpdUser = 1;
-		}
-
-		var sonuc = await DataService.SetGorev(Gorev);
-		if (sonuc.SonucKodu==0)
-		{
-			if (yeniKayıt && sonuc.Data>0)
+			if (Gorev.BitisTarihi < Gorev.BaslangicTarihi)
 			{
-				Gorev.ID = sonuc.Data;
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Bitiş tarihi başlangıç tarihinden küçük olamaz!");
+				return;
 			}
 
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", yeniKayıt ? "Görev eklendi!" : "Görev güncellendi!");
-			DialogService.Close(Gorev);
+			if (Gorev.Kilitli && Gorev.Kullanici_ID == 0)
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Kilitli görev için kullanıcı seçmeniz gerekiyor!");
+				return;
+			}
+
+
+			if (Gorev.TekrarlamaTipi == "Günlük" && !Gorev.TekrarAraligi.HasValue)
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Günlük tekrar için aralık girmeniz gerekiyor!");
+				return;
+			}
+
+			if (Gorev.TekrarlamaTipi == "Haftalık" && string.IsNullOrEmpty(Gorev.HaftaninGunu))
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için gün seçmeniz gerekiyor!");
+				return;
+			}
+
+			if (Gorev.TekrarlamaTipi == "Aylık" && !Gorev.AyinGunu.HasValue)
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Aylık tekrar için gün girmeniz gerekiyor!");
+				return;
+			}
+
+			HesaplaSonrakiCalismaTarihi(Gorev);
+
+			if (yeniKayıt)
+			{
+				Gorev.Aktif = true;
+				// Gorev.CreUser = 1;
+			}
+			else
+			{
+				// Gorev.UpdUser = 1;
+			}
+
+			var sonuc = await DataService.SetGorev(Gorev);
+			if (sonuc.SonucKodu == 0)
+			{
+				if (yeniKayıt && sonuc.Data > 0)
+				{
+					Gorev.ID = sonuc.Data;
+
+					// Yeni görev eklendiğinde e-posta bildirimi gönder
+
+				}
+
+				await GonderYeniGorevEpostalari();
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", yeniKayıt ? "Görev eklendi!" : "Görev güncellendi!");
+				DialogService.Close(Gorev);
+				return;
+			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", sonuc.SonucAciklama);
+			}
 		}
-		else
+		finally
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", sonuc.SonucAciklama);
+			isSaving = false;
+			StateHasChanged();
 		}
+		
 	}
 
 	private void HesaplaSonrakiCalismaTarihi(ItemGorev gorev)
@@ -249,10 +325,143 @@
 				break;
 		}
 	}
-	private void İptal()
+	private async Task İptal()
 	{
-		NavigationManager.NavigateTo("/Gorevler");
-		notificationService.Notify(NotificationSeverity.Info, "Bilgi","Görev Ekleme İşleminiz İptal Edildi.");
+		bool yeniKayıt = Gorev.ID == 0;
+		
+		// Hem yeni kayıt hem düzenleme modunda değişiklik kontrolü yap
+		// Tarih karşılaştırmalarında sadece tarih kısmını karşılaştır (saat farklarını göz ardı et)
+		bool degisiklikVar = 
+			!string.Equals(Gorev.Baslik?.Trim() ?? string.Empty, originalGorev.Baslik?.Trim() ?? string.Empty, StringComparison.Ordinal) ||
+			Gorev.Kategori_ID != originalGorev.Kategori_ID ||
+			!string.Equals(Gorev.OnemDerecesi ?? string.Empty, originalGorev.OnemDerecesi ?? string.Empty, StringComparison.Ordinal) ||
+			(Gorev.BaslangicTarihi.HasValue && originalGorev.BaslangicTarihi.HasValue && 
+			 Math.Abs((Gorev.BaslangicTarihi.Value - originalGorev.BaslangicTarihi.Value).TotalSeconds) > 1) ||
+			(Gorev.BitisTarihi.HasValue && originalGorev.BitisTarihi.HasValue && 
+			 Math.Abs((Gorev.BitisTarihi.Value - originalGorev.BitisTarihi.Value).TotalSeconds) > 1) ||
+			(Gorev.BaslangicTarihi.HasValue != originalGorev.BaslangicTarihi.HasValue) ||
+			(Gorev.BitisTarihi.HasValue != originalGorev.BitisTarihi.HasValue) ||
+			!string.Equals(Gorev.TekrarlamaTipi ?? string.Empty, originalGorev.TekrarlamaTipi ?? string.Empty, StringComparison.Ordinal) ||
+			Gorev.TekrarAraligi != originalGorev.TekrarAraligi ||
+			!string.Equals(Gorev.HaftaninGunu ?? string.Empty, originalGorev.HaftaninGunu ?? string.Empty, StringComparison.Ordinal) ||
+			Gorev.AyinGunu != originalGorev.AyinGunu ||
+			Gorev.Kilitli != originalGorev.Kilitli ||
+			Gorev.Kullanici_ID != originalGorev.Kullanici_ID ||
+			Gorev.Aktif != originalGorev.Aktif;
+		
+		if (degisiklikVar)
+		{
+			// Değişiklik varsa onay iste
+			bool? onay = await DialogService.Confirm(
+				"Yaptığınız değişiklikler kaybolacaktır. İptal etmek istediğinize emin misiniz?",
+				"Değişiklikleri Kaydetmeden Çık",
+				new ConfirmOptions 
+				{ 
+					OkButtonText = "Evet, İptal Et", 
+					CancelButtonText = "Hayır, Geri Dön",
+					Icon = "warning"
+				});
+			
+			if (onay != true)
+			{
+				return; // Kullanıcı iptal etmekten vazgeçti
+			}
+			
+			// Onay verildiyse, değişiklikleri geri al (originalGorev ile geri yükle)
+			Gorev.Baslik = originalGorev.Baslik ?? string.Empty;
+			Gorev.Kategori_ID = originalGorev.Kategori_ID;
+			Gorev.OnemDerecesi = originalGorev.OnemDerecesi;
+			Gorev.BaslangicTarihi = originalGorev.BaslangicTarihi;
+			Gorev.BitisTarihi = originalGorev.BitisTarihi;
+			Gorev.TekrarlamaTipi = originalGorev.TekrarlamaTipi;
+			Gorev.TekrarAraligi = originalGorev.TekrarAraligi;
+			Gorev.HaftaninGunu = originalGorev.HaftaninGunu;
+			Gorev.AyinGunu = originalGorev.AyinGunu;
+			Gorev.Kilitli = originalGorev.Kilitli;
+			Gorev.Kullanici_ID = originalGorev.Kullanici_ID;
+			Gorev.Aktif = originalGorev.Aktif;
+			
+			// İptal mesajı göster
+			string mesaj = yeniKayıt ? "Görev ekleme işleminiz iptal edildi." : "Görev düzenleme işleminiz iptal edildi.";
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", mesaj);
+		}
+		else
+		{
+			// Değişiklik yoksa direkt iptal mesajı göster
+			string mesaj = yeniKayıt ? "Görev ekleme işleminiz iptal edildi." : "Görev düzenleme işleminiz iptal edildi.";
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", mesaj);
+		}
+		
+		// Dialog'u kapat (null döndürerek iptal edildiğini belirt)
+		DialogService.Close();
+	}
+
+	private async Task GonderYeniGorevEpostalari()
+	{
+		try
+		{
+			if (Gorev.Kilitli && Gorev.Kullanici_ID > 0)
+			{
+				// Kilitli görev - sadece atanan kullanıcıya gönder
+				var kullanici = await _kullaniciRepo.GetByIDAsync(Gorev.Kullanici_ID);
+				if (kullanici != null && !string.IsNullOrEmpty(kullanici.EPosta))
+				{
+					// Dashboard URL'ini oluştur ve imzala (görev ID ve kullanıcı ID ile)
+					var urlParams = new Dictionary<string, string>
+					{
+						{ "gorevId", Gorev.ID.ToString() },
+						{ "userId", Gorev.Kullanici_ID.ToString() }
+					};
+					var dashboardUrl = urlSigningService.SignUrl("https://localhost:7014/dashboard", urlParams);
+					
+					await EpostaService.SendYeniGorevBildirimiAsync(
+						kullanici.EPosta,
+						kullanici.Adi,
+						Gorev.Baslik ?? "Yeni Görev",
+						dashboardUrl
+					);
+					Console.WriteLine($"E-posta gönderildi: {kullanici.EPosta}");
+				}
+			}
+			else
+			{
+				// Herkese açık görev - tüm aktif kullanıcılara gönder
+				var tumKullanicilar = await _kullaniciRepo.GetAllAsync();
+				var aktifKullanicilar = tumKullanicilar.Where(k => k.Aktif && !string.IsNullOrEmpty(k.EPosta)).ToList();
+
+				foreach (var kullanici in aktifKullanicilar)
+				{
+					try
+					{
+						// Dashboard URL'ini oluştur ve imzala (görev ID ve kullanıcı ID ile)
+						var urlParams = new Dictionary<string, string>
+						{
+							{ "gorevId", Gorev.ID.ToString() },
+							{ "userId", kullanici.ID.ToString() }
+						};
+						var dashboardUrl = urlSigningService.SignUrl("https://localhost:7014/dashboard", urlParams);
+						
+						await EpostaService.SendYeniGorevBildirimiAsync(
+							kullanici.EPosta,
+							kullanici.Adi,
+							Gorev.Baslik ?? "Yeni Görev",
+							dashboardUrl
+						);
+						Console.WriteLine($"E-posta gönderildi: {kullanici.EPosta}");
+					}
+					catch (Exception ex)
+					{
+						Console.WriteLine($"E-posta gönderme hatası ({kullanici.EPosta}): {ex.Message}");
+						// Bir kullanıcıya gönderilemese bile diğerlerine göndermeye devam et
+					}
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"E-posta bildirimi hatası: {ex.Message}");
+			// E-posta gönderimi kritik değil, hata olsa bile devam et
+		}
 	}
 }
 	
