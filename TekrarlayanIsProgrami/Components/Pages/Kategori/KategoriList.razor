@@ -23,7 +23,7 @@
 						AllowPaging="true" PageSize="20"
 						AllowSorting="true" AllowFiltering="true">
 			<Columns>
-				<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="70px" />
+				<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="150px" />
 				<RadzenDataGridColumn TItem="ItemKategori" Property="Adi" Title="Kategori Adı" />
 				@if (_canWrite)
 				{
@@ -86,8 +86,8 @@
 				DelUser=0
 			};
 
-			var dialogResult = await DialogService.OpenAsync<KategoriTnm>("Kategori Ekle",
-				new Dictionary<string, object> { { "ItemData", newItem } }, new DialogOptions { Width = "500px", Height = "300px" });
+			var dialogResult = await DialogService.OpenAsync<KategoriTnm>(" ",
+				new Dictionary<string, object> { { "ItemData", newItem } }, new DialogOptions { Width = "500px", Height = "auto" });
 			if (dialogResult is ItemKategori result && result != null)
 			{
 				DataList.Insert(0, result);
@@ -111,9 +111,9 @@
 	private async Task Duzenle(ItemKategori item)
 	{
 		item.UpdUser = 1;
-		ItemKategori result = await DialogService.OpenAsync<KategoriTnm>("Kategori Düzenle",
+		ItemKategori result = await DialogService.OpenAsync<KategoriTnm>(" ",
 			new Dictionary<string, object> { { "ItemData", item } },
-			new DialogOptions { Width = "500px", Height = "300px" });
+			new DialogOptions { Width = "500px", Height = "auto" });
 		if (result != null)
 		{
 			var index = DataList.FindIndex(x => x.ID == result.ID);

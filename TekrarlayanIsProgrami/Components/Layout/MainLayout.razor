@@ -42,8 +42,8 @@
 
                             @if (_adminMenuItems.Any())
                             {
-                                <div class="menu-group" style="margin-top:10px;">
-                                    <div class="menu-header" @onclick="() => _adminMenuOpen = !_adminMenuOpen" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:10px; background:rgba(255,255,255,0.1); border-radius:6px; margin-bottom:5px;">
+                                <div class="menu-group " style="margin-top:10px;">
+                                    <div class="menu-header sayfaListe" @onclick="() => _adminMenuOpen = !_adminMenuOpen" style="cursor:pointer; display:flex; justify-content:space-between;align-items:center; padding:10px; border-radius:6px; margin-bottom:5px;">
                                         <span>Admin Sayfaları</span>
                                         <RadzenIcon Icon="@(_adminMenuOpen ? "expand_less" : "expand_more")" />
                                     </div>
@@ -91,7 +91,7 @@
                             }
                         }
 
-                        <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%; margin-top:15px;" class="radzen-button" />
+                        <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%; margin-top:auto;" class="radzen-button" />
                     </RadzenCard>
                 }
             }

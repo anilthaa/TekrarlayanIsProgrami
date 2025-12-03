@@ -1,20 +1,45 @@
 ﻿@layout MainLayout
 @attribute [Authorize]
-<RadzenCard Style="padding:20px;">
-	<RadzenTemplateForm TItem="ItemKategori" Data="@ItemData" Submit="@OnSubmit">
-		<ChildContent>
-			<RadzenLabel Text="Kategori Adı" Component="Adi"></RadzenLabel>
-			<RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi" Style="width:100%; margin-bottom:15px;" Change="() => degisiklikYapildiMi = true"></RadzenTextBox>
+@if (IsEdit)
+{
+	<RadzenCard Style="padding:20px;">
+		<RadzenTemplateForm TItem="ItemKategori" Data="@ItemData" Submit="@OnSubmit">
+			<ChildContent>
+				<DataAnnotationsValidator></DataAnnotationsValidator>
+				<h3 style="text-align:center;">Kategori Düzenle </h3>
+				<RadzenFormField Text="Kategori Adı" Style="width:100%; margin-top:15px;">
+					<RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi" Change =" ()=> degisiklikYapildiMi = true" ></RadzenTextBox>
+				</RadzenFormField>
+				<ValidationMessage For="@(()=>ItemData.Adi)"></ValidationMessage>
 
-			@if (!string.IsNullOrEmpty(ErrorMessage))
-			{
-				<div style="color: red; margin-bottom:10px;">@ErrorMessage</div>
-			}
-				<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin-left:48px;" class="radzen-button" ButtonType="ButtonType.Submit"></RadzenButton>
-				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin-left:58px; margin-top:20px;" class="radzen-button" ButtonType="ButtonType.Button"></RadzenButton>
-		</ChildContent>
-	</RadzenTemplateForm>
-</RadzenCard>
+				<div class="btn-group">
+					<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Submit"></RadzenButton>
+					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%;margin:auto;" class="radzen-button" ButtonType="ButtonType.Button"></RadzenButton>
+				</div>
+			</ChildContent>
+		</RadzenTemplateForm>
+	</RadzenCard>
+}
+else
+{
+	<RadzenCard Style="padding:20px;">
+		<RadzenTemplateForm TItem="ItemKategori" Data="@ItemData" Submit="@OnSubmit">
+			<ChildContent>
+				<DataAnnotationsValidator></DataAnnotationsValidator>
+				<h3 style="text-align:center;">Kategori Ekle </h3>
+				<RadzenFormField Text="Kategori Adı" Style="width:100%; margin-top:15px;">
+					<RadzenTextBox @bind-Value="ItemData.Adi"></RadzenTextBox>
+				</RadzenFormField>
+				<ValidationMessage For="@(() => ItemData.Adi)"></ValidationMessage>
+
+				<div class="btn-group">
+					<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Submit"></RadzenButton>
+					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%;margin:auto;" class="radzen-button" ButtonType="ButtonType.Button"></RadzenButton>
+				</div>
+			</ChildContent>
+		</RadzenTemplateForm>
+	</RadzenCard>
+}
 
 @code {
 	[Parameter] public ItemKategori ItemData { get; set; } = new();
@@ -23,11 +48,14 @@
 	private bool IsEdit;
 	private bool isProcessing = false;
 	private bool degisiklikYapildiMi = false;
+	private ItemKategori Kategoriler = new();
+	private string originalKategori;
 
 	protected override void OnInitialized()
 	{
 		// IsEdit durumu form ilk açıldığında sabitleniyor (sonradan değişmez)
 		IsEdit = ItemData.ID != 0;
+		originalKategori = ItemData.Adi;
 	}
 
 	private async Task OnSubmit(ItemKategori item)
@@ -40,12 +68,6 @@
 
 		try
 		{
-			if (string.IsNullOrWhiteSpace(item.Adi))
-			{
-				ErrorMessage = "Kategori adı boş olamaz!";
-				return;
-			}
-
 			// Kullanıcı bilgileri (örnek olarak statik)
 			item.DelUser = 0;
 			item.CreUser = IsEdit ? 0 : 1;
@@ -68,6 +90,7 @@
 
 				await Task.Delay(100);
 				DialogService.Close(item);
+				StateHasChanged();			
 			}
 			else
 			{
@@ -83,28 +106,44 @@
 		}
 		finally
 		{
-			isProcessing = false; // her durumda form yeniden aktif olur
+			isProcessing = true; // her durumda form yeniden aktif olur
 		}
 	}
 
 	private async Task Iptal()
 	{
-		if (degisiklikYapildiMi)
+		if (IsEdit)
 		{
-			bool? onay = await DialogService.Confirm("Yaptığınız değişiklikler kaybolacak. Devam etmek istiyor musunuz?",
-			"İptal Etme Onayı",
-			new ConfirmOptions
+			if (degisiklikYapildiMi)
 			{
-				OkButtonText = "Evet",
-				CancelButtonText = "Hayır"
-			});
+				bool? onay = await DialogService.Confirm(
+					"Yaptığınız değişiklikler kaybolacak. Devam etmek istiyor musunuz?",
+					"İptal Onayı",
+					new ConfirmOptions
+						{
+							OkButtonText = "Evet",
+							CancelButtonText = "Hayır"
+						});
 
-			if (onay != true)
-				return;
-			notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Silme İşleminiz İptal Edildi.");
+				if (onay != true)
+					return;
+				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
+				// Değişiklikleri geri al
+				ItemData.Adi = originalKategori;
+			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
+				NavigationManager.NavigateTo("/kategori");
+			}
+		}
+		else
+		{
+			notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
+			NavigationManager.NavigateTo("/kategori");
 
 		}
-
-		DialogService.Close(null);
+		DialogService.Close();
 	}
+
 }

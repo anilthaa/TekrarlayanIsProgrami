@@ -9,7 +9,7 @@
     @if (_canWrite)
     {
         <div class="d-flex justify-content-end gap-2 mb-3">
-            <RadzenButton Text="Yeni Kullanıcı Ekle" Style="background-color:royalblue;" Click="@OpenRegisterDialog"> </RadzenButton>
+            <RadzenButton Text="Yeni Kullanıcı Ekle" Icon="add" Style=" background:#3498db; color:white;border-radius:10px;" Click="@OpenRegisterDialog"> </RadzenButton>
         </div>
     }
 
@@ -19,10 +19,10 @@
                     class="text-center align-middle">
 
         <Columns>
-            <RadzenDataGridColumn TItem="User" Property="ID" Title="Id" Width="150px" />
+            <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="150px" />
             <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="150px" />
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px"/>
-            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-Posta" Width="250px;" />
+            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-posta" Width="250px;" />
             
             <RadzenDataGridColumn TItem="User" Title="Rol" Width="180px">
                 <Template Context="k">
@@ -84,7 +84,7 @@
     //Popuplar.
     private async Task OpenRegisterDialog()
     {
-        var result = await DialogService.OpenAsync<KayitOl>(" ", null, new DialogOptions { Width = "600px", Height = "auto" });
+        var result = await DialogService.OpenAsync<KullaniciTnm>(" ", null, new DialogOptions { Width = "600px", Height = "auto" });
 
         if (result == true) 
         {
@@ -101,7 +101,7 @@
         var result = await DialogService.OpenAsync<KullaniciTnm>(
              " ",
              new Dictionary<string, object>() { { "KullaniciId", id } },
-             new DialogOptions() {Width = "600px", Height = "auto" }
+             new DialogOptions() {Width = "550px", Height = "auto" }
          );
 
         if (result is User updatedUser)
