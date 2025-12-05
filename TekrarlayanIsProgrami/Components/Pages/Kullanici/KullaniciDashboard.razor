@@ -15,17 +15,17 @@
 					</p>
 				</div>
 			</div>
-			<RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+			<RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 						  Style="background:rgba(255,255,255,0.2); color:white; border:none; min-width:auto;"
 						  Click="@(() => { showYeniGorevBildirimi = false; StateHasChanged(); })"></RadzenButton>
 		</div>
 	</RadzenCard>
 }
 
-@if(kullaniciTip != null && kullaniciTip.Adi == "Admin")
+@if (kullaniciTip != null && kullaniciTip.Adi == "Admin")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
-    <h2> Admin Kontrol Paneli</h2>
+		<h2> Admin Kontrol Paneli</h2>
 		@if (IsLoading)
 		{
 			<p>Veriler yükleniyor...</p>
@@ -86,7 +86,7 @@
 					<div style="display:flex; justify-content:space-between; align-items:center;">
 						<div>
 							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Pasif Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4"  class="rz-mb-0">@(pasifGorevler.Count())</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(pasifGorevler.Count())</RadzenText>
 						</div>
 					</div>
 					<RadzenIcon Icon="pause_circle_outline" Style=" font-size:32px; color:#f39c12; opacity:0.6;"></RadzenIcon>
@@ -156,14 +156,14 @@
 						var dayGorevler = GetGorevlerForDate(day);
 						var isToday = day.Date == DateTime.Today;
 						var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
-						
-						<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px; 
-									background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
-									cursor:pointer; position:relative;"
+
+						<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px;
+												background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
+												cursor:pointer; position:relative;"
 							 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
-							<div style="font-weight:@(isToday ? "bold" : "normal"); 
-										color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
-										margin-bottom:5px;">
+							<div style="font-weight:@(isToday ? "bold" : "normal");
+													color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
+													margin-bottom:5px;">
 								@day.Day
 							</div>
 							@if (dayGorevler.Any())
@@ -172,8 +172,8 @@
 									@foreach (var gorev in dayGorevler.Take(3))
 									{
 										var renk = GetGorevRengi(gorev);
-										<div style="font-size:10px; padding:2px 4px; background:@renk; color:white; 
-													border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+										<div style="font-size:10px; padding:2px 4px; background:@renk; color:white;
+																		border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
 											 title="@gorev.Baslik">
 											@gorev.Baslik
 										</div>
@@ -189,13 +189,13 @@
 						</div>
 					}
 				</div>
-				
+
 				@* Ay navigasyonu *@
 				<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
-					<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+					<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 								  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
 					<h6 style="margin:0; font-weight:600;">@selectedMonth.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</h6>
-					<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+					<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 								  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
 				</div>
 			</RadzenCard>
@@ -302,14 +302,6 @@
 					<Columns>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Title="Atanan Kişi">
-							<Template Context="g">
-								@{
-									var kisi = KullaniciListesi.FirstOrDefault(x => x.ID == g.Kullanici_ID);
-								}
-								@(kisi != null ? $"{kisi.Adi} {kisi.Soyadi}" : "-")
-							</Template>
-						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
 							<Template Context="onem">
 								<span style="font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
@@ -340,11 +332,11 @@
 	</RadzenStack>
 
 }
-else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
+else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
 
-    <h2>Gösterge Paneli</h2>
+		<h2>Gösterge Paneli</h2>
 		<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
 
 			<RadzenCard class="radzen-hover-effect"
@@ -363,7 +355,7 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 				<div style="display:flex; justify-content:space-between; align-items:center;">
 					<div>
 						<RadzenText TextStyle="TextStyle.Subtitle2">Aktif Görevler</RadzenText>
-						<RadzenText TextStyle="TextStyle.H4">@aktifGorevler.Count()</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@aktifGorev</RadzenText>
 					</div>
 					<RadzenIcon Icon="play_circle" Style="font-size:32px; color:#27ae60; opacity:0.6;" />
 				</div>
@@ -374,7 +366,7 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 				<div style="display:flex; justify-content:space-between; align-items:center;">
 					<div>
 						<RadzenText TextStyle="TextStyle.Subtitle2">Bugünkü Görevler</RadzenText>
-						<RadzenText TextStyle="TextStyle.H4">@BugunkuGorevler.Count()</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@bugunkuGorev</RadzenText>
 					</div>
 					<RadzenIcon Icon="schedule" Style="font-size:32px; color:#f39c12; opacity:0.6;" />
 				</div>
@@ -426,14 +418,14 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 					var dayGorevler = GetGorevlerForDate(day);
 					var isToday = day.Date == DateTime.Today;
 					var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
-					
-					<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px; 
-								background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
-								cursor:pointer; position:relative;"
+
+					<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px;
+										background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
+										cursor:pointer; position:relative;"
 						 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
-						<div style="font-weight:@(isToday ? "bold" : "normal"); 
-									color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
-									margin-bottom:5px;">
+						<div style="font-weight:@(isToday ? "bold" : "normal");
+											color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
+											margin-bottom:5px;">
 							@day.Day
 						</div>
 						@if (dayGorevler.Any())
@@ -442,8 +434,8 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 								@foreach (var gorev in dayGorevler.Take(3))
 								{
 									var renk = GetGorevRengi(gorev);
-									<div style="font-size:10px; padding:2px 4px; background:@renk; color:white; 
-												border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+									<div style="font-size:10px; padding:2px 4px; background:@renk; color:white;
+																border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
 										 title="@gorev.Baslik">
 										@gorev.Baslik
 									</div>
@@ -459,13 +451,13 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 					</div>
 				}
 			</div>
-			
+
 			@* Ay navigasyonu *@
 			<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
-				<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+				<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
 				<h6 style="margin:0; font-weight:600;">@selectedMonth.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</h6>
-				<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" 
+				<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
 			</div>
 		</RadzenCard>
@@ -509,7 +501,7 @@ else if(kullaniciTip!=null || kullaniciTip.Adi=="Standart")
 			else
 			{
 				<div style="padding:20px; text-align:center; color:#888;">
-					<p >Size atanan görev bulunmuyor.</p>
+					<p>Size atanan görev bulunmuyor.</p>
 					<p style="font-size:12px; margin-top:10px;">
 						@if (!currentUserId.HasValue)
 						{
@@ -570,7 +562,7 @@ else
 @code {
 	[Inject] private UrlSigningService urlSigningService { get; set; } = null!;
 
-	private ItemKullaniciTip kullaniciTip=new ItemKullaniciTip();
+	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
 	private int toplamGorev = 0;
 	private int aktifGorev = 0;
 	private int bugunkuGorev = 0;
@@ -581,7 +573,6 @@ else
 	private List<ItemGorev> kritikGorevler = new();
 	private List<ItemGorev> GorevListt = new();
 	private List<ItemGorev> adminGorevleri = new();
-	private List<User> KullaniciListesi = new List<User>();
 	private bool IsLoading = true;
 	private int? currentUserId = null;
 
@@ -593,12 +584,7 @@ else
 	private IEnumerable<ItemGorev> SizeOzelGorevler =>
 		GorevListt.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif);
 	private IEnumerable<ItemGorev> yuksekOnemliGorevler => aktifGorevler.Where(g => g.OnemDerecesi?.ToLower() == "yüksek").OrderBy(g => g.BitisTarihi);
-	private IEnumerable<ItemGorev> BugunkuGorevler =>
-		GorevListt.Where(g =>
-			g.Aktif
-			&& !g.Tamamlandi
-			&& g.CreDate.Date == DateTime.Today
-		); 
+
 	class GorevDurum
 	{
 		public string Category { get; set; } = string.Empty;
@@ -627,12 +613,11 @@ else
 		IsLoading = true;
 		showYeniGorevBildirimi = false; // Her sayfa yüklendiğinde bildirimi sıfırla
 		StateHasChanged();
-		KullaniciListesi = await _kullaniciRepo.GetAllAsync();
 
 		// URL parametrelerini kontrol et (e-posta linkinden geliyorsa)
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 		var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
-		
+
 		// URL token'ını doğrula ve parametreleri çıkar
 		Dictionary<string, string> urlParameters = new();
 		if (queryParams.ContainsKey("token"))
@@ -644,7 +629,7 @@ else
 				NavigationManager.NavigateTo("/dashboard", forceLoad: true);
 				return;
 			}
-			
+
 			// Token'dan parametreleri çıkar
 			urlParameters = urlSigningService.ParseSignedUrl(NavigationManager.Uri, out bool valid);
 			if (!valid)
@@ -654,11 +639,11 @@ else
 				return;
 			}
 		}
-		
+
 		var hedefUserIdParam = urlParameters.ContainsKey("userId") ? urlParameters["userId"] : null;
-		
+
 		await YukleKullaniciId();
-		
+
 		// E-posta linkinden geldiyse ve hedef kullanıcı farklıysa çıkış yap ve giriş sayfasına yönlendir
 		if (!string.IsNullOrEmpty(hedefUserIdParam) && int.TryParse(hedefUserIdParam, out int hedefUserId))
 		{
@@ -670,21 +655,21 @@ else
 					await girisSaglayici.CikisYapAsync();
 					await PermissionService.RefreshAsync();
 				}
-				
+
 				// Giriş yapmamış veya farklı kullanıcı giriş yapmış
 				var returnUrl = NavigationManager.Uri; // Mevcut URL'i returnUrl olarak sakla
 				NavigationManager.NavigateTo($"/GirisYap?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
 				return;
 			}
 		}
-		
+
 		// Giriş yapmamış kullanıcıları yönlendir
 		if (!currentUserId.HasValue)
 		{
 			NavigationManager.NavigateTo("/GirisYap", forceLoad: false);
 			return;
 		}
-		
+
 		Console.WriteLine($"CurrentUserId: {currentUserId}");
 		kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
 		if (kullaniciTip == null)
@@ -697,12 +682,12 @@ else
 
 		await YukleGorevler();
 
-		// Standart kullanıcı için: kendisine atanan kilitli görevler + herkese açık görevler
+		// Standart kullanıcı için: kendisine atanan kilitli görevler + herkese açık görevler (sadece aktif olanlar)
 		// Admin için: tüm görevler
 		if (kullaniciTip.Adi == "Standart")
 		{
 			kullaniciGorevler = GorevListt
-				.Where(x => (x.Kullanici_ID == currentUserId || !x.Kilitli))
+				.Where(x => (x.Kullanici_ID == currentUserId || !x.Kilitli) && x.Aktif)
 				.ToList();
 		}
 		else
@@ -727,7 +712,7 @@ else
 
 		IsLoading = false;
 		await InvokeAsync(StateHasChanged);
-		
+
 		// Yeni görevleri kontrol et (IsLoading false olduktan sonra)
 		await KontrolEtYeniGorevler();
 		await InvokeAsync(StateHasChanged); // Banner'ı göstermek için tekrar render et
@@ -744,17 +729,17 @@ else
 			}
 
 			Console.WriteLine($"KontrolEtYeniGorevler başladı - Kullanıcı ID: {currentUserId.Value}");
-			
+
 			var sonGirisTarihi = await DataService.GetSonGirisAsync(currentUserId.Value);
 			Console.WriteLine($"Son giriş tarihi: {(sonGirisTarihi.HasValue ? sonGirisTarihi.Value.ToString() : "İlk giriş")}");
-			
+
 			var (toplam, genel, ozel) = await DataService.GetYeniGorevDetaylariAsync(currentUserId.Value, sonGirisTarihi);
 			yeniGorevSayisi = toplam;
 			yeniGenelGorevSayisi = genel;
 			yeniOzelGorevSayisi = ozel;
-			
+
 			Console.WriteLine($"Yeni görev sayısı - Toplam: {toplam}, Genel: {genel}, Özel: {ozel}");
-			
+
 			if (yeniGorevSayisi > 0)
 			{
 				showYeniGorevBildirimi = true;
@@ -899,30 +884,30 @@ else
 		var days = new List<DateTime>();
 		var firstDayOfMonth = new DateTime(selectedMonth.Year, selectedMonth.Month, 1);
 		var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
-		
+
 		// Ayın ilk gününden önceki boş günleri ekle
 		var startDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
 		// Pazartesi = 0 olacak şekilde ayarla
 		startDayOfWeek = startDayOfWeek == 0 ? 6 : startDayOfWeek - 1;
-		
+
 		for (int i = 0; i < startDayOfWeek; i++)
 		{
 			days.Add(firstDayOfMonth.AddDays(-(startDayOfWeek - i)));
 		}
-		
+
 		// Ayın günlerini ekle
 		for (var day = firstDayOfMonth; day <= lastDayOfMonth; day = day.AddDays(1))
 		{
 			days.Add(day);
 		}
-		
+
 		// Ayın son gününden sonraki boş günleri ekle (takvimi 42 güne tamamla)
 		var remainingDays = 42 - days.Count;
 		for (int i = 1; i <= remainingDays; i++)
 		{
 			days.Add(lastDayOfMonth.AddDays(i));
 		}
-		
+
 		return days;
 	}
 
@@ -931,26 +916,38 @@ else
 		if (GorevListt == null || !GorevListt.Any())
 			return Enumerable.Empty<ItemGorev>();
 
-		return GorevListt.Where(g => 
+		// Tarih filtresi
+		var tarihFiltreliGorevler = GorevListt.Where(g =>
 			(g.BitisTarihi.HasValue && g.BitisTarihi.Value.Date == date.Date) ||
 			(g.BaslangicTarihi.HasValue && g.BaslangicTarihi.Value.Date == date.Date)
 		);
+
+		// Standart kullanıcı için: sadece kendisine ait kilitli görevler ve herkese açık görevler
+		if (kullaniciTip != null && kullaniciTip.Adi == "Standart" && currentUserId.HasValue)
+		{
+			return tarihFiltreliGorevler.Where(g =>
+				(g.Kullanici_ID == currentUserId.Value || !g.Kilitli) && g.Aktif
+			);
+		}
+
+		// Admin için: tüm görevler
+		return tarihFiltreliGorevler;
 	}
 
 	private string GetGorevRengi(ItemGorev gorev)
 	{
 		if (gorev.Tamamlandi)
 			return "#4caf50"; // Yeşil - tamamlandı
-		
+
 		if (gorev.BitisTarihi.HasValue && gorev.BitisTarihi.Value < DateTime.Now)
 			return "#e74c3c"; // Kırmızı - süresi doldu
-		
+
 		if (gorev.OnemDerecesi?.ToLower() == "yüksek")
 			return "#e74c3c"; // Kırmızı - yüksek önem
-		
+
 		if (gorev.OnemDerecesi?.ToLower() == "orta")
 			return "#f39c12"; // Turuncu - orta önem
-		
+
 		return "#3498db"; // Mavi - normal
 	}
 
@@ -958,31 +955,31 @@ else
 	{
 		var gorevList = gorevler.ToList();
 		var dateStr = date.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"));
-		
+
 		if (gorevList.Any())
 		{
 			await DialogService.OpenAsync<GunDetayDialog>($"Görevler - {date:dd.MM.yyyy}",
-				new Dictionary<string, object> 
-				{ 
+				new Dictionary<string, object>
+				{
 					{ "DateStr", dateStr },
 					{ "Gorevler", gorevList }
 				},
-				new DialogOptions { Width = "700px", Height = "auto", Resizable = true, Draggable = true });
+				new DialogOptions { Width = "1200px", Height = "80vh", Resizable = true, Draggable = true });
 		}
 		else
 		{
 			await DialogService.OpenAsync($"Bilgi - {date:dd.MM.yyyy}", ds =>
 				@<div style="padding:20px; text-align:center;">
-					<RadzenIcon Icon="event_busy" Style="font-size:48px; color:#999; margin-bottom:15px;" />
-					<h4 style="margin-bottom:10px; color:#666;">@dateStr</h4>
-					<p style="color:#888;">Bu tarihte görev bulunmuyor.</p>
-					<div style="margin-top:20px;">
-						<RadzenButton Text="Kapat" ButtonStyle="ButtonStyle.Secondary" Click="@(() => ds.Close())" />
-					</div>
-				</div>,
-				new DialogOptions { Width = "400px", Height = "auto" });
+				<RadzenIcon Icon="event_busy" Style="font-size:48px; color:#999; margin-bottom:15px;" />
+				<h4 style="margin-bottom:10px; color:#666;">@dateStr</h4>
+				<p style="color:#888;">Bu tarihte görev bulunmuyor.</p>
+				<div style="margin-top:20px;">
+					<RadzenButton Text="Kapat" ButtonStyle="ButtonStyle.Secondary" Click="@(() => ds.Close())" />
+				</div>
+			</div>,
+			new DialogOptions { Width = "400px", Height = "auto" });
 		}
 	}
-	
+
 
 }
