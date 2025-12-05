@@ -155,14 +155,14 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
-        public async Task<AuthResult> KayitOlAsync(User user,int KullaniciTip_ID)
+        public async Task<AuthResult> KayitOlAsync(User user, int KullaniciTip_ID)
         {
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
                 return new AuthResult
                 {
                     Basarili = false,
-                    Mesaj = $"Şifre en az 8 karakter olmalıdır."
+                    Mesaj = "Şifre en az 8 karakter olmalıdır."
                 };
             }
 
@@ -170,49 +170,25 @@ namespace TekrarlayanIsProgrami.Services
             {
                 var response = await _http.PostAsJsonAsync("api/auth/register", user);
 
-                var responseContent=await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"[DEBUG] Register Response: {response.StatusCode} - {responseContent}");
-
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error=await response.Content.ReadFromJsonAsync<AuthResult>();
+                    var error = await response.Content.ReadFromJsonAsync<AuthResult>();
                     return error ?? new AuthResult { Basarili = false, Mesaj = "Kayıt başarısız." };
                 }
 
                 var result = await response.Content.ReadFromJsonAsync<AuthResult>();
+
                 if (result != null && result.Basarili)
                 {
-                    // Token varsa localStorage'a kaydet
-                    if (!string.IsNullOrEmpty(result.Token))
-                    {
-                        await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-                    }
-
-                    // API'den dönen User objesini kullan, yoksa repository'den al
-                    if (result.User != null)
-                    {
-                        await MarkUserAsAuthenticated(result.User);
-                        Console.WriteLine($"Kayıt sonrası kullanıcı authenticate edildi: {result.User.ID}");
-                    }
-                    else
-                    {
-                        // Eğer API'den User gelmediyse, repository'den al
-                        var yeni = await _kullaniciRepo.GetByGirisAsync(user.EPosta);
-                        if (yeni != null)
-                        {
-                            await MarkUserAsAuthenticated(yeni);
-                            Console.WriteLine($"Kayıt sonrası kullanıcı repository'den alındı ve authenticate edildi: {yeni.ID}");
-                        }
-                    }
-                    
-                    return new AuthResult 
+                    // **Token ve authenticate yok**
+                    return new AuthResult
                     {
                         Basarili = true,
                         Mesaj = "Kayıt başarıyla tamamlandı!",
-                        Token = result.Token,
                         User = result.User
                     };
                 }
+
                 return result ?? new AuthResult { Basarili = false, Mesaj = "Kayıt başarısız." };
             }
             catch (Exception ex)
@@ -224,7 +200,6 @@ namespace TekrarlayanIsProgrami.Services
                 };
             }
         }
-
         public async Task<AuthResult> UpdateAsync(User user)
         {
             var kullanici = await _kullaniciRepo.GetByEmailAsync(user.EPosta, user.Sifre);

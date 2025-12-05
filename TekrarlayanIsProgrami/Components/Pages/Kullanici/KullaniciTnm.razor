@@ -33,9 +33,9 @@ else
 
 				<div class="btn-group">
 					<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
-					Style="width:30%; margin:auto;" class="radzen-button" Disabled="@isSaving" />
+								  Style="width:30%; margin:auto;" class="radzen-buttonKaydet" Disabled="@isSaving" />
 					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
-					Style="width:30%; margin:auto;" class="radzen-button" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+								  Style="width:30%; margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
 				</div>
 			</RadzenTemplateForm>
 		</RadzenCard>
@@ -73,7 +73,7 @@ else
 						<ValidationMessage For="@(() => secilenTipId)" />
 					</RadzenFormField>
 
-					<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
+@* 					<RadzenFormField Text="Şifre" Style="width:85%; margin-left:41px; margin-top:4px;">
 						<RadzenTextBox class="form-control" @bind-Value="newUser.Sifre" type="@InputType" />
 						<button type="button" @onclick="TogglePassword"
 								style="position:absolute; right:18px; top:50%; transform:translateY(-50%); border:none; background:transparent;">
@@ -90,10 +90,10 @@ else
 						</button>
 					</RadzenFormField>
 					<ValidationMessage For="@(() => newUser.SifreTekrar)"></ValidationMessage>
-
+ *@
 					<div class="btn-group">
-						<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
-						<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-button"></RadzenButton>
+						<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-buttonKaydet"></RadzenButton>
+						<RadzenButton Text="İptal" Icon="cancel" ButtonType="ButtonType.Button" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-buttonIptal"></RadzenButton>
 					</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
@@ -108,6 +108,7 @@ else
 	public int id { get; set; }
 	private User kullanicilar = new();
 	private User originalKullanici;
+	private List<User> kullaniciListe = new List<User>();
 	[Parameter]
 	public int KullaniciId{ get; set; }
 	private List<ItemKullaniciTip> kullaniciTipleri = new();
@@ -215,7 +216,7 @@ else
 			|| current.EPosta != original.EPosta
 			|| current.KullaniciTip_ID != original.KullaniciTip_ID;
 	}
-	 //Ekleme Alanı Kodları.
+	//Ekleme Alanı Kodları.
 	private int secilenTipId = 0;
 	private User newUser = new User
 	{
@@ -227,22 +228,25 @@ else
 	private async Task OnSubmit()
 	{
 		Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
+
 		if (!EpostaGecerliMi(newUser.EPosta))
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
 			return;
 		}
 
-		if (newUser.Sifre != newUser.SifreTekrar)
-		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre ile Tekrar Şifre Aynı Olmak Zorunda.");
-			return;
-		}
-
 		var currentUser = await girisSaglayici.GetCurrentUserAsync();
 
 		newUser.CreUser = currentUser.ID;
+		if (newUser.CreUser == 0)
+		{
+			newUser.CreUser = 0;
+		}
 		newUser.KullaniciTip_ID = secilenTipId;
+
+		newUser.Sifre = "00000000";
+		Console.WriteLine($"Şifre:{newUser.Sifre}");
+		newUser.SifreTekrar = "00000000";
 
 
 		var result = await girisSaglayici.KayitOlAsync(newUser, newUser.KullaniciTip_ID);
@@ -250,7 +254,7 @@ else
 		if (result.Basarili)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
-			NavigationManager.NavigateTo("/kullanicilar");
+			await ListeyiYenileAsync(); 
 			StateHasChanged();
 			Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
 		}
@@ -270,38 +274,8 @@ else
 		var desen = @"^[\w\.-]+@(gmail\.com|hotmail\.com)$";
 		return Regex.IsMatch(eposta, desen, RegexOptions.IgnoreCase);
 	}
-
-
-	private string InputType { get; set; } = "password";
-	private string Icon { get; set; } = "visibility_off"; // göz kapalı
-
-	void TogglePassword()
+	private async Task ListeyiYenileAsync()
 	{
-		if (InputType == "password")
-		{
-			InputType = "text";
-			Icon = "visibility"; // göz açık
-		}
-		else
-		{
-			InputType = "password";
-			Icon = "visibility_off";
-		}
-	}
-	private string InputType2 { get; set; } = "password";
-	private string Icon2 { get; set; } = "visibility_off"; // göz kapalı
-
-	void TogglePasswordAgain()
-	{
-		if (InputType2 == "password")
-		{
-			InputType2 = "text";
-			Icon2 = "visibility"; // göz açık
-		}
-		else
-		{
-			InputType2 = "password";
-			Icon2 = "visibility_off";
-		}
+		kullaniciListe = await _kullaniciRepo.GetAllAsync();
 	}
 }

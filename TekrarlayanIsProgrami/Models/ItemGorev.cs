@@ -1,8 +1,11 @@
-﻿namespace TekrarlayanIsProgrami.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TekrarlayanIsProgrami.Models
 {
     public class ItemGorev:ItemBase
     {
         public int Kullanici_ID {  get; set; }
+        [Required(ErrorMessage ="Bu Alan Zorunludur.")]
         public string Baslik {  get; set; } 
         public int Kategori_ID {  get; set; }
         public string? OnemDerecesi {  get; set; }

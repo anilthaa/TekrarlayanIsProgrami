@@ -1,7 +1,8 @@
 @attribute [Authorize]
 <RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
-	<RadzenHeading Size="H3" Text="Görev Ekle / Düzenle" Style="text-align:center; margin-bottom:20px;"></RadzenHeading>
-
+	<h3 style="text-align:center; margin-bottom:20px;">
+		@(IsEdit ? "Görev Düzenle" : "Görev Ekle")
+	</h3>
 
 	<RadzenTemplateForm Data="@Gorev" TItem="ItemGorev" Submit="@OnSubmit">
 
@@ -23,7 +24,7 @@
 
 			@if (Gorev.TekrarlamaTipi == "Günlük")
 			{
-				<RadzenFormField Text="Kaç günde bir tekrarlansın?" Style="width:49%; margin-top:10px;" >
+				<RadzenFormField Text="Kaç günde bir tekrarlansın?" Style="width:49%; margin-top:10px;">
 					<RadzenNumeric @bind-Value="Gorev.TekrarAraligi" TValue="int?" class="w-100" Min="1" Placeholder="Örn: 2 = 2 günde bir" />
 				</RadzenFormField>
 			}
@@ -45,6 +46,8 @@
 					<RadzenFormField Text="Başlangıç Tarihi" style="width:100%; margin-top:10px;">
 						<RadzenDatePicker @bind-Value="Gorev.BaslangicTarihi" DateFormat="dd.MM.yyyy HH:mm" ShowTime="true" class="w-100" />
 					</RadzenFormField>
+					<ValidationMessage For="@(() => Gorev.BaslangicTarihi)"></ValidationMessage>
+
 				</div>
 				<div class="col-md-6">
 					<RadzenFormField Text="Bitiş Tarihi" style="width:100%; margin-top:10px;">
@@ -56,8 +59,7 @@
 			<RadzenFormField Text="Başlık" style="width:47%; margin-top:10px;">
 				<RadzenTextBox Name="TxtBaslik" @bind-Value="Gorev.Baslik" class="w-100" />
 			</RadzenFormField>
-			<RadzenRequiredValidator Component="TxtBaslik" Text="Başlık Zorunludur." />
-
+             <ValidationMessage For="@(()=>Gorev.Baslik)"></ValidationMessage>
 			<div class="row g-3">
 				<div class="col-md-6">
 					<RadzenFormField Text="Kategori" style="width:100%; margin-top:10px;">
@@ -79,10 +81,17 @@
 		</fieldset>
 
 		<div class="text-center mt-4">
-			@if(!isSaving)
+			@if (!isSaving)
 			{
-				<RadzenButton Text="Kaydet" ButtonType="ButtonType.Submit" Icon="save" Style="width:30%; margin-left:18px;" class="radzen-button" />
-				<RadzenButton Text="İptal" Click="@İptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin-left:35px;" class="radzen-button"></RadzenButton>
+				<div class="btn-group">
+					<RadzenButton Text="@(IsEdit ? "Güncelle" : "Kaydet")"
+								  ButtonType="ButtonType.Submit"
+								  Icon="save"
+								  Style="width:30%; margin:auto;"
+								  class="radzen-buttonKaydet" />
+
+					<RadzenButton Text="İptal" Click="@İptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin:auto;" class="radzen-buttonIptal"></RadzenButton>
+				</div>
 			}
 			else
 			{
@@ -92,12 +101,12 @@
 					</div>
 				</div>
 			}
-			
 		</div>
 
 	</RadzenTemplateForm>
 </RadzenCard>
 @code {
+	bool IsEdit => Gorev?.ID > 0;
 	[Inject] private UrlSigningService urlSigningService { get; set; } = null!;
 
 	[Parameter] public ItemGorev Gorev { get; set; } = new();
