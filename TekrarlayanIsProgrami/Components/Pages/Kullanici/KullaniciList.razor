@@ -1,4 +1,5 @@
 ﻿@page "/kullanicilar"
+@using TekrarlayanIsProgrami.Components.Pages.Admin
 @layout MainLayout
 @attribute [Authorize]
 <RadzenDialog></RadzenDialog>
@@ -8,7 +9,7 @@
 
     @if (_canWrite)
     {
-        <div class="d-flex justify-content-end gap-2 mb-3">
+        <div class="d-flex gap-2 mb-3">
             <RadzenButton Text="Yeni Kullanıcı Ekle" Icon="add" Style=" background:#3498db; color:white;border-radius:10px;" Click="@OpenRegisterDialog"> </RadzenButton>
         </div>
     }
@@ -19,8 +20,8 @@
                     class="text-center align-middle">
 
         <Columns>
-            <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="150px" />
-            <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="150px" />
+            <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="auto" />
+            <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="auto" />
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px"/>
             <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-posta" Width="250px;" />
             
@@ -55,10 +56,13 @@
             {
                 <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="240px">
                     <Template Context="user">
+                        <RadzenButton Icon="mail" Style="margin-right:5px;" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"
+                                      Click="@(() => IzinMailiGonder(user.ID))" />
                         <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
                         <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="lock" Size="ButtonSize.Small" Style="margin-right:5px;"
                                       Click="@(() => NavigateToYetki(user.ID))" />
                         <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
+
                     </Template>
                 </RadzenDataGridColumn>
             }
@@ -77,14 +81,14 @@
     {
         // Yazma yetkisi kontrolü (yetki >= 2)
         _canWrite = await PermissionService.CanWriteAsync("kullanicilar");
-        
+
         kullanicilar = await _kullaniciRepo.GetAllAsync();
         kullaniciTipleri = (await DataService.GetKullaniciTipleri()).ToList();
     }
     //Popuplar.
     private async Task OpenRegisterDialog()
     {
-        var result = await DialogService.OpenAsync<KullaniciTnm>(" ", null, new DialogOptions { Width = "600px", Height = "auto" });
+        var result = await DialogService.OpenAsync<KullaniciTnm>(" ", null, new DialogOptions { Width = "550px", Height = "auto" });
 
         if (result == true) 
         {
@@ -139,7 +143,7 @@
         {
             await Sil(user.ID);
         }
-    else
+        else
         {
             notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Silme İşleminiz İptal Edildi.");
         }
@@ -207,9 +211,23 @@
         return tip?.Adi ?? "—";
     }
 
-    private void NavigateToYetki(int kullaniciId)
+    private async Task  NavigateToYetki(int Id)
     {
-        NavigationManager.NavigateTo($"/admin/kullanici-yetkileri/{kullaniciId}");
+       await DialogService.OpenAsync<KullaniciYetkileri>(
+         " ",
+             new Dictionary<string, object>() { { "KullaniciId", Id } },
+             new DialogOptions() { Width = "800px", Height = "auto" }
+        );
     }
 
+    private async Task IzinMailiGonder(int userId)
+    {
+        var u = kullanicilar.FirstOrDefault(x => x.ID == userId);
+        if (u == null) return;
+
+        var linkEvet = $"https://localhost:7014/onay?uid={userId}&ok=1";
+        var linkHayir = $"https://localhost:7014/onay?uid={userId}&ok=0";
+
+        await EpostaService.SendInviteMailAsync(u.EPosta, linkEvet, linkHayir);
+    }
 }

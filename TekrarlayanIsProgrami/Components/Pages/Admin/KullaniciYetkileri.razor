@@ -1,6 +1,7 @@
-@page "/admin/kullanici-yetkileri/{KullaniciId:int}"
+
 @layout EmptyLayout
 @attribute [Authorize]
+@* @page "/admin/kullanici-yetkileri/{KullaniciId:int}" *@
 
 <RadzenCard class="container mt-4">
     <h3 style="text-align:center;">Kullanıcı Sayfa Yetkileri</h3>
@@ -38,7 +39,7 @@
         </RadzenCard>
 
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="text-muted">0 = Gizli, 1 = Okuma, 2 = Okuma &amp; Yazma</span>
+            <span class="text-muted">0 = Gizli, 1 = Okuma, 2 = Yazma</span>
             @if (_canWrite)
             {
                 <RadzenButton Text="Değişiklikleri Kaydet"

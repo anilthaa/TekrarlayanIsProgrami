@@ -1,0 +1,50 @@
+﻿@page "/onay"
+@layout EmptyLayout
+<h3>@mesaj</h3>
+
+@code {
+    private string mesaj = "";
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int uid { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int ok { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (uid == 0)
+        {
+            mesaj = "Geçersiz bağlantı.";
+            return;
+        }
+
+        var kullanici = await _kullaniciRepo.GetByIDAsync(uid);
+        if (kullanici == null)
+        {
+            mesaj = "Kullanıcı bulunamadı.";
+            return;
+        }
+
+        if (ok == 1)
+        {
+            string tempPass = Guid.NewGuid().ToString("N").Substring(0, 6);
+            kullanici.Sifre = tempPass;
+            kullanici.Aktif = true;
+
+            await _kullaniciRepo.UpdateAsync(kullanici);
+            await EpostaService.SendPasswordMailAsync(kullanici.EPosta, tempPass);
+
+            mesaj = "Hesap onaylandı. Geçici şifre gönderildi.";
+        }
+        else
+        {
+            kullanici.Aktif = false;
+            await _kullaniciRepo.UpdateAsync(kullanici);
+
+            mesaj = "Talep reddedildi.";
+        }
+    }
+}

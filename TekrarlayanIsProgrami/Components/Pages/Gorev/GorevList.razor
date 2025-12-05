@@ -18,26 +18,30 @@
 	else
 		{
 
-			<div class="my-tabs" style="margin-top:15px;">
-				<div class="my-tab @(SelectedTabIndex == 0 ? "active" : "")"
+			<div class="my-tabs2" style="margin-top:15px;">
+				<div class="my-tab2 @(SelectedTabIndex == 0 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex = 0">
 					Tüm Aktif Görevler
 				</div>
-				<div class="my-tab @(SelectedTabIndex == 1 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex == 1 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex = 1">
 					Yaklaşan Görevler
 				</div>
-				<div class="my-tab @(SelectedTabIndex == 2 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex == 2 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex = 2">
 					Tamamlanmış Görevler
 				</div>
-				<div class="my-tab @(SelectedTabIndex == 3 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex == 3 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex = 3">
 					Süresi Dolanlar
 				</div>
-				<div class="my-tab @(SelectedTabIndex == 4 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex == 4 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex = 4">
 					Pasif Görevler
+				</div>
+				<div class="my-tab2 @(SelectedTabIndex == 5 ? "active" : "")"
+					 @onclick="() => SelectedTabIndex = 5">
+					Tüm Görevler
 				</div>
 			</div>
 
@@ -129,7 +133,7 @@
 else if(kullaniciTip.Adi=="Standart")
 {
 
-	<RadzenCard Style="margin:20px;">
+	<div Style="margin:20px;">
 		<h3 style="text-align:center;">Görev Listesi</h3>
 
 		@* Standart kullanıcı yeni görev ekleyemez, buton kaldırıldı *@
@@ -140,30 +144,34 @@ else if(kullaniciTip.Adi=="Standart")
 		}
 		else
 		{
-			<div class="my-tabs" style="margin-top:15px;">
-				<div class="my-tab @(SelectedTabIndex2 == 0 ? "active" : "")"
+			<div class="my-tabs2" style="margin-top:15px;">
+				<div class="my-tab2 @(SelectedTabIndex2 == 0 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex2 = 0">
 					Tüm Aktif Görevler
 				</div>
-				<div class="my-tab @(SelectedTabIndex2 == 1 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex2 == 1 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex2 = 1">
 					Yaklaşan Görevler
 				</div>
-				<div class="my-tab @(SelectedTabIndex2 == 2 ? "active" : "")"
-					 @onclick="() => SelectedTabIndex2= 2">
+				<div class="my-tab2 @(SelectedTabIndex2 == 2 ? "active" : "")"
+					 @onclick="() => SelectedTabIndex2 = 2">
 					Tamamlanmış Görevler
 				</div>
-				<div class="my-tab @(SelectedTabIndex2 == 3 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex2 == 3 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex2 = 3">
 					Süresi Dolanlar
 				</div>
-				<div class="my-tab @(SelectedTabIndex2 == 4 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex2 == 4 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex2 = 4">
 					Pasif Görevler
 				</div>
-				<div class="my-tab @(SelectedTabIndex2 == 5 ? "active" : "")"
+				<div class="my-tab2 @(SelectedTabIndex2 == 5 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex2 = 5">
 					Size Özel Görevler
+				</div>
+				<div class="my-tab2 @(SelectedTabIndex2 == 6 ? "active" : "")"
+					 @onclick="() => SelectedTabIndex2 = 6">
+					Tüm Görevler
 				</div>
 			</div>
 
@@ -220,19 +228,19 @@ else if(kullaniciTip.Adi=="Standart")
 				</RadzenDataGrid>
 			}
 		}
-	</RadzenCard>
+	</div>
 
 }
 
 @code {
 	private string[] TabNames = new string[]
-   {
+			{
 		"Tüm Aktif Görevler",
 		"Yaklaşan Görevler",
 		"Tamamlanmış Görevler",
 		"Süresi Dolanlar",
 		"Pasif Görevler"
-   };
+			};
 	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
 	private bool IsLoading = true;
 	private List<ItemGorev> GorevListt = new();
@@ -265,6 +273,7 @@ else if(kullaniciTip.Adi=="Standart")
 				2 => tamamlananGorevler,
 				3 => gecmisGorevler,
 				4 => pasifGorevler,
+				5 => TumGorevler,
 				_ => aktifGorevler,
 			};
 		}
@@ -275,24 +284,27 @@ else if(kullaniciTip.Adi=="Standart")
 	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
 	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
 	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value>=DateTime.Today));
+	private IEnumerable<ItemGorev> TumGorevler =>
+	 GorevListt.Where(g => g.DelUser == 0);
 
 	private IEnumerable<ItemGorev> SAktifGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> SYaklasanGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && !g.Kilitli &&g.Aktif &&(g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 &&g.DelUser==0 &&(g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7);
-private IEnumerable<ItemGorev> STamamlananGorevler =>
-    GorevListt.Where(g =>
-        g.Tamamlandi &&
-        g.DelUser == 0 &&
-        (!g.Kilitli || g.Kullanici_ID == currentUserId) // kilitli değil veya kullanıcıya ait
-    );	private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
+	private IEnumerable<ItemGorev> STamamlananGorevler =>
+	GorevListt.Where(g =>
+		g.Tamamlandi &&
+		g.DelUser == 0 &&
+		(!g.Kilitli || g.Kullanici_ID == currentUserId)
+	);	
+	private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
 	private IEnumerable<ItemGorev> SPasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId) && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-
-	protected override async Task OnInitializedAsync()
-	
+	private IEnumerable<ItemGorev> STumGorevler =>
+		 GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0);
+		protected override async Task OnInitializedAsync()
 	{
 		var user = await girisSaglayici.GetCurrentUserAsync();
 		currentUserId = user?.ID;
-		TumKullanicilar = await _kullaniciRepo.GetAllAsync(); // Tüm kullanıcıları al
+		TumKullanicilar = await _kullaniciRepo.GetAllAsync(); 
 		await YukleGorevler();
 		await YukleKullaniciId();
 		kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
@@ -357,7 +369,7 @@ private IEnumerable<ItemGorev> STamamlananGorevler =>
 
 		// Dialog'u açıyoruz
 		var result = await DialogService.OpenAsync<GorevTnm>(
-			"Görev Ekle",
+			" ",
 			new Dictionary<string, object> { { "Gorev", yeniGorev } },
 			new DialogOptions { Width = "600px", Height = "auto" }
 		);
@@ -687,7 +699,8 @@ private IEnumerable<ItemGorev> STamamlananGorevler =>
 				3 => SGecmisGorevler,
 				4 => SPasifGorevler,
 				5 =>SizeOzelGorevler, 
-				_ => SAktifGorevler,
+				6 =>STumGorevler,
+				_ => STumGorevler,
 			};
 		}
 	}

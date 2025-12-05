@@ -31,7 +31,7 @@ namespace TekrarlayanIsProgrami.Services
                     new()
                     {
                         Value = 2,
-                        Label = "Okuma & Yazma (2)",
+                        Label = "Yazma (2)",
                         Description = "Tam erişim, ekleme/düzenleme yapılabilir."
                     }
                 });

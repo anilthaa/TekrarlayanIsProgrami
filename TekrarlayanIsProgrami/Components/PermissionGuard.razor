@@ -12,7 +12,7 @@
         "kayitol",
         "sifremiunuttum",
         "sifresifirla",
-        "accessdenied",
+        // "accessdenied",
         "dashboard",
         "gorevler" // Hem admin hem standart kullanıcı için erişilebilir
     };
@@ -71,12 +71,12 @@
         var routeForPermissionCheck = RemoveRouteParameters(relativeRoute);
         var hasAccess = await PermissionService.CanReadAsync(routeForPermissionCheck);
 
-        if (!hasAccess && !_isRedirecting)
-        {
-            _isRedirecting = true;
-            NavigationManager.NavigateTo("/AccessDenied", true);
-            _isRedirecting = false;
-        }
+        // if (!hasAccess && !_isRedirecting)
+        // {
+        //     _isRedirecting = true;
+        //     NavigationManager.NavigateTo("/AccessDenied", true);
+        //     _isRedirecting = false;
+        // }
     }
 
     private string NormalizeRoute(string absoluteUri)

@@ -236,5 +236,37 @@ namespace TekrarlayanIsProgrami.Repository
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Aktif""=true and ""DelDate"" is null";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta});
         }
+        public async Task<bool> UpdateSifreAsync(int userId, string newPassword)
+        {
+            using var conn = GetConnection();
+
+            var sql = @"
+        UPDATE ""Kullanici""
+        SET ""Sifre"" = @Sifre,
+            ""UpdDate"" = NOW()
+        WHERE ""ID"" = @ID";
+
+            var affected = await conn.ExecuteAsync(sql, new
+            {
+                ID = userId,
+                Sifre = newPassword // hashing kullanıyorsan burada hashleyebilirsin
+            });
+
+            return affected > 0;
+        }
+        //Hayır derse;
+        public async Task<bool> DisableUserAsync(int userId)
+        {
+            using var conn = GetConnection();
+
+            var sql = @"
+        UPDATE ""Kullanici""
+        SET ""Aktif"" = false,
+            ""UpdDate"" = NOW()
+        WHERE ""ID"" = @ID";
+
+            var res = await conn.ExecuteAsync(sql, new { ID = userId });
+            return res > 0;
+        }
     }
 }
