@@ -3,6 +3,7 @@
 @layout EmptyLayout
 <RadzenDialog></RadzenDialog>
 
+
 <div class="login-container @(isRegisterActive ? "slide-active" : "")">
 	<!-- Giriş Formu -->
 	<div class="form login-form">
@@ -18,9 +19,21 @@
 				<RadzenIcon Icon="@Icon2" Style="color:gray;"></RadzenIcon>
 			</button>
 			</RadzenFormField>
- 			<RadzenButton Text=" Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" style="background-color:transparent; color:mediumpurple; margin-top:15px;"></RadzenButton>
+ 			@* <RadzenButton Text=" Şifrenizi Unuttunuz mu?" Click="@OpenSifremiUnuttumDialog" Style="background-color:transparent; color:mediumpurple; margin-top:15px; box-shadow:none !important;"></RadzenButton> *@
+			<a href="javascript:void(0);" @onclick="OpenSifremiUnuttumDialog" class="link-sifreUnuttum">Şifremi Unuttum?</a>
+			@if (!isSaving)
+			{
+				<RadzenButton ButtonType="ButtonType.Submit" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class="girisButton" Icon="login"></RadzenButton>
+			}
+			else
+			{
+				<div style="width:100%; display:flex; justify-content:center; align-items:center; padding:15px 0;">
+					<div class="spinner-border" role="status" style="width:1.8rem; height:1.8rem">
+						<span class="visually-hidden">Yükleniyor...</span>
+					</div>
+				</div>
+			}
 
-			<RadzenButton ButtonType="ButtonType.Submit" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class="girisButton" Icon="login"></RadzenButton>
 		</EditForm>
 	</div>
 	<!-- Kayıt Formu -->
@@ -92,9 +105,12 @@
 
 	bool isRegisterActive = false;
 	private LoginModel loginModel = new LoginModel();
+	private bool isSaving = false;
 
 	async Task OnLogin(LoginModel model)
 	{
+		isSaving = true;
+		StateHasChanged();
 		Console.WriteLine("OnLogin başladı");
 		var result = await girisSaglayici.GirisYapAsync(model.E_Posta, model.Sifre);
 		Console.WriteLine($"GirisYapAsync sonucu - Basarili: {result.Basarili}, User: {(result.User != null ? result.User.ID.ToString() : "null")}");
@@ -107,7 +123,7 @@
 				Console.WriteLine($"User bilgisi var - ID: {result.User.ID}, Ad: {result.User.Adi}");
 				await girisSaglayici.MarkUserAsAuthenticated(result.User);
 				Console.WriteLine("MarkUserAsAuthenticated tamamlandı");
-				
+
 				// Giriş logunu kaydet
 				try
 				{
@@ -120,13 +136,13 @@
 						Aciklama = "Kullanıcı giriş yaptı",
 						CreUser = result.User.ID
 					};
-					
+
 					Console.WriteLine($"Log objesi oluşturuldu - Kullanıcı ID: {log.Kullanici_ID}, İşlem Tipi: {log.IslemTipi}");
-					
+
 					var logResult = await DataService.SetKullaniciLog(log);
-					
+
 					Console.WriteLine($"Log kaydı sonucu - ID: {logResult.Data}");
-					
+
 					if (logResult.Data > 0)
 					{
 						Console.WriteLine("Log başarıyla kaydedildi");
@@ -156,62 +172,65 @@
 			{
 				await Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
 			}
-			
+
 			// PermissionService cache'ini temizle
 			await PermissionService.RefreshAsync();
-			
-            notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
-            
-            // Kısa gecikme sonrası returnUrl varsa oraya, yoksa dashboard'a yönlendir
-            await Task.Delay(500);
-            
-            // URL parametrelerinden returnUrl'i al
-            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-            var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
-            var returnUrl = queryParams.ContainsKey("returnUrl") ? queryParams["returnUrl"].ToString() : null;
-            
-            if (!string.IsNullOrEmpty(returnUrl))
-            {
-                // returnUrl'de token varsa, giriş yapan kullanıcının ID'sini kontrol et
-                try
-                {
-                    var returnUri = new Uri(returnUrl);
-                    var returnQuery = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(returnUri.Query);
-                    
-                    if (returnQuery.ContainsKey("token"))
-                    {
-                        // Token'dan userId'yi çıkar
-                        var urlParams = urlSigningService.ParseSignedUrl(returnUrl, out bool valid);
-                        if (valid && urlParams.ContainsKey("userId") && int.TryParse(urlParams["userId"], out int hedefUserId))
-                        {
-                            // Giriş yapan kullanıcı ile hedef kullanıcı eşleşmiyorsa hata göster
-                            if (result.User != null && result.User.ID != hedefUserId)
-                            {
-                                notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu link başka bir kullanıcıya aittir. Lütfen doğru hesap ile giriş yapın.");
-                                await girisSaglayici.CikisYapAsync();
-                                await PermissionService.RefreshAsync();
-                                NavigationManager.NavigateTo("/GirisYap", forceLoad: true);
-                                return;
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // Hata durumunda normal yönlendirme yap
-                }
-                
-                NavigationManager.NavigateTo(returnUrl, forceLoad: true);
-            }
-            else
-            {
-                NavigationManager.NavigateTo("/dashboard", forceLoad: true);
-            }
+			isSaving=false;
+			StateHasChanged();
+			notificationService.Notify(NotificationSeverity.Success, "Hoşgeldiniz", result.Mesaj);
+
+			// Kısa gecikme sonrası returnUrl varsa oraya, yoksa dashboard'a yönlendir
+			await Task.Delay(500);
+
+			// URL parametrelerinden returnUrl'i al
+			var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+			var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+			var returnUrl = queryParams.ContainsKey("returnUrl") ? queryParams["returnUrl"].ToString() : null;
+
+			if (!string.IsNullOrEmpty(returnUrl))
+			{
+				// returnUrl'de token varsa, giriş yapan kullanıcının ID'sini kontrol et
+				try
+				{
+					var returnUri = new Uri(returnUrl);
+					var returnQuery = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(returnUri.Query);
+
+					if (returnQuery.ContainsKey("token"))
+					{
+						// Token'dan userId'yi çıkar
+						var urlParams = urlSigningService.ParseSignedUrl(returnUrl, out bool valid);
+						if (valid && urlParams.ContainsKey("userId") && int.TryParse(urlParams["userId"], out int hedefUserId))
+						{
+							// Giriş yapan kullanıcı ile hedef kullanıcı eşleşmiyorsa hata göster
+							if (result.User != null && result.User.ID != hedefUserId)
+							{
+								notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu link başka bir kullanıcıya aittir. Lütfen doğru hesap ile giriş yapın.");
+								await girisSaglayici.CikisYapAsync();
+								await PermissionService.RefreshAsync();
+								NavigationManager.NavigateTo("/GirisYap", forceLoad: true);
+								return;
+							}
+						}
+					}
+				}
+				catch
+				{
+					// Hata durumunda normal yönlendirme yap
+				}
+
+				NavigationManager.NavigateTo(returnUrl, forceLoad: true);
+			}
+			else
+			{
+				NavigationManager.NavigateTo("/dashboard", forceLoad: true);
+			}
 		}
 		else
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", result.Mesaj);
 		}
+		isSaving=false;
+		StateHasChanged();
 	}
 
 	public class LoginModel
