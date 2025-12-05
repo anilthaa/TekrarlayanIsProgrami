@@ -31,10 +31,12 @@
         if (ok == 1)
         {
             string tempPass = Guid.NewGuid().ToString("N").Substring(0, 6);
-            kullanici.Sifre = tempPass;
+            string hashed = PasswordHelper.HashPassword(tempPass);
+            kullanici.Sifre = hashed;
             kullanici.Aktif = true;
 
-            await _kullaniciRepo.UpdateAsync(kullanici);
+            await _kullaniciRepo.UpdateSifreAsync(kullanici.ID, hashed);
+
             await EpostaService.SendPasswordMailAsync(kullanici.EPosta, tempPass);
 
             mesaj = "Hesap onaylandı. Geçici şifre gönderildi.";

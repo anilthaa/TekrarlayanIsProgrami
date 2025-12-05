@@ -445,18 +445,6 @@ button RadzenIcon {
     }
 
 .my-tabs {
-    display: flex; /* yatay sıralama */
-    justify-content: center; /* ortala */
-    align-items: center; /* dikey ortala */
-    gap: 12px; /* tablar arası boşluk */
-    background: #ba76d3;
-    padding: 10px;
-    flex-wrap: nowrap; /* alta kaymayı engelle */
-    overflow-x: auto;
-    border-radius: 7px;
-}
-
-.my-tabs2 {
     display: flex;
     justify-content: flex-start; /* merkezleme kaldırıldı */
     align-items: center;
@@ -469,11 +457,11 @@ button RadzenIcon {
     scrollbar-width: none;
 }
 
-    .my-tabs2::-webkit-scrollbar {
+    .my-tabs::-webkit-scrollbar {
         display: none;
     }
 
-.my-tab2 {
+.my-tab {
     background: #8e24aa;
     color: white;
     padding: 8px 20px;
@@ -485,11 +473,11 @@ button RadzenIcon {
     width: 200px;
 }
 
-    .my-tab2:hover {
+    .my-tab:hover {
         background-color: #ba68c8;
     }
 
-    .my-tab2.active {
+    .my-tab.active {
         background-color: #4a148c;
         transform: scale(1.15);
     }
