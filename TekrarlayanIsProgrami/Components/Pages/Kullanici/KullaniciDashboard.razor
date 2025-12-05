@@ -158,12 +158,12 @@
 						var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
 
 						<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px;
-												background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
-												cursor:pointer; position:relative;"
+															background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
+															cursor:pointer; position:relative;"
 							 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
 							<div style="font-weight:@(isToday ? "bold" : "normal");
-													color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
-													margin-bottom:5px;">
+																color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
+																margin-bottom:5px;">
 								@day.Day
 							</div>
 							@if (dayGorevler.Any())
@@ -173,7 +173,7 @@
 									{
 										var renk = GetGorevRengi(gorev);
 										<div style="font-size:10px; padding:2px 4px; background:@renk; color:white;
-																		border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+																							border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
 											 title="@gorev.Baslik">
 											@gorev.Baslik
 										</div>
@@ -420,12 +420,12 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 					var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
 
 					<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px;
-										background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
-										cursor:pointer; position:relative;"
+												background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
+												cursor:pointer; position:relative;"
 						 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
 						<div style="font-weight:@(isToday ? "bold" : "normal");
-											color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
-											margin-bottom:5px;">
+													color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
+													margin-bottom:5px;">
 							@day.Day
 						</div>
 						@if (dayGorevler.Any())
@@ -435,7 +435,7 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 								{
 									var renk = GetGorevRengi(gorev);
 									<div style="font-size:10px; padding:2px 4px; background:@renk; color:white;
-																border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+																				border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
 										 title="@gorev.Baslik">
 										@gorev.Baslik
 									</div>
@@ -728,27 +728,17 @@ else
 				return;
 			}
 
-			Console.WriteLine($"KontrolEtYeniGorevler başladı - Kullanıcı ID: {currentUserId.Value}");
-
+			// En son çıkış tarihini al (çıkış yaptıktan sonra eklenen görevleri bulmak için)
 			var sonGirisTarihi = await DataService.GetSonGirisAsync(currentUserId.Value);
-			Console.WriteLine($"Son giriş tarihi: {(sonGirisTarihi.HasValue ? sonGirisTarihi.Value.ToString() : "İlk giriş")}");
 
-			var (toplam, genel, ozel) = await DataService.GetYeniGorevDetaylariAsync(currentUserId.Value, sonGirisTarihi);
-			yeniGorevSayisi = toplam;
-			yeniGenelGorevSayisi = genel;
-			yeniOzelGorevSayisi = ozel;
-
-			Console.WriteLine($"Yeni görev sayısı - Toplam: {toplam}, Genel: {genel}, Özel: {ozel}");
+			yeniGenelGorevSayisi = await DataService.GetYeniGorevDetaylariGenel(currentUserId.Value, sonGirisTarihi);
+			yeniOzelGorevSayisi = await DataService.GetYeniGorevDetaylariOzel(currentUserId.Value, sonGirisTarihi);
+			yeniGorevSayisi = yeniGenelGorevSayisi + yeniOzelGorevSayisi;
 
 			if (yeniGorevSayisi > 0)
 			{
 				showYeniGorevBildirimi = true;
-				Console.WriteLine($"Banner gösterilecek - showYeniGorevBildirimi: {showYeniGorevBildirimi}, yeniGorevSayisi: {yeniGorevSayisi}");
-			}
-			else
-			{
-				Console.WriteLine("Yeni görev yok, banner gösterilmeyecek");
-			}
+			}			
 		}
 		catch (Exception ex)
 		{
@@ -982,4 +972,4 @@ else
 	}
 
 
-}
+	}
