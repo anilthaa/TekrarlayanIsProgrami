@@ -5,66 +5,83 @@ namespace TekrarlayanIsProgrami.Services
 {
     public class EPostaService
     {
-        private readonly string _fromEposta = "kamirbai07@gmail.com"; // gönderen adres
-        private readonly string _password = "vmzd gjbd edmk nfzt";
+        private readonly string _fromEposta = "kamirb1820@gmail.com";
+        private readonly string _password = "mrxy gsgo iphm rcfx";    /*vmzd gjbd edmk nfzt*/
         private readonly UrlSigningService _urlSigningService;
 
         public EPostaService(UrlSigningService urlSigningService)
         {
             _urlSigningService = urlSigningService;
         }
-        public async Task SendResetEpostaAsync(string toEposta, string token, string kullaniciAdi)
+
+        private SmtpClient CreateClient()
         {
-            using var smtp = new SmtpClient("smtp.gmail.com")
+            return new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
                 Credentials = new NetworkCredential(_fromEposta, _password),
                 EnableSsl = true
             };
+        }
 
-            string subject = "Şifre Sıfırlama Linkiniz";
-            
-            // URL'i imzala
+        private async Task SendEmailAsync(string to, string subject, string body, bool isHtml = true)
+        {
+            using var smtp = CreateClient();
+            using var msg = new MailMessage(_fromEposta, to, subject, body)
+            {
+                IsBodyHtml = isHtml
+            };
+            await smtp.SendMailAsync(msg);
+        }
+
+        public async Task SendResetEpostaAsync(string toEposta, string token, string kullaniciAdi)
+        {
             var linkParams = new Dictionary<string, string> { { "token", token } };
             string link = _urlSigningService.SignUrl("https://localhost:7014/sifre-sifirla", linkParams);
-            
-            string body =
-                $"Merhaba {kullaniciAdi},\n\n" +
-                $"Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:\n{link}\n\n" +
-                $"Bu bağlantı 3 dakika boyunca geçerlidir.\n\n" +
-                $"İyi günler dileriz.";
 
-            using var message = new MailMessage(_fromEposta, toEposta, subject, body);
-            await smtp.SendMailAsync(message);
+            string body =
+                $"Merhaba {kullaniciAdi},<br><br>" +
+                $"Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:<br>" +
+                $"<a href='{link}'>Şifre Sıfırlama Linki</a><br><br>" +
+                $"Bu bağlantı 3 dakika geçerlidir.";
+
+            await SendEmailAsync(toEposta, "Şifre Sıfırlama Linkiniz", body);
         }
 
         public async Task SendYeniGorevBildirimiAsync(string toEposta, string kullaniciAdi, string gorevBaslik, string dashboardUrl)
         {
-            try
-            {
-                using var smtp = new SmtpClient("smtp.gmail.com")
-                {
-                    Port = 587,
-                    Credentials = new NetworkCredential(_fromEposta, _password),
-                    EnableSsl = true
-                };
+            string body =
+                $"Merhaba {kullaniciAdi},<br><br>" +
+                $"Yeni bir göreviniz var:<br>" +
+                $"<b>{gorevBaslik}</b><br><br>" +
+                $"Görevi görmek için: <a href='{dashboardUrl}'>Tıklayın</a>";
 
-                string subject = "Yeni Göreviniz Var!";
-                string body =
-                    $"Merhaba {kullaniciAdi},\n\n" +
-                    $"Size yeni bir görev atandı:\n" +
-                    $"Görev: {gorevBaslik}\n\n" +
-                    $"Görevi görüntülemek için aşağıdaki bağlantıya tıklayın:\n{dashboardUrl}\n\n" +
-                    $"İyi çalışmalar dileriz.";
-
-                using var message = new MailMessage(_fromEposta, toEposta, subject, body);
-                await smtp.SendMailAsync(message);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"E-posta gönderme hatası: {ex.Message}");
-                // Hata olsa bile devam et, e-posta gönderimi kritik değil
-            }
+            await SendEmailAsync(toEposta, "Yeni Göreviniz Var", body);
         }
+        public async Task SendInviteMailAsync(string email, string evetLink, string hayirLink)
+        {
+            var subject = "Hesap Onay Daveti";
+            var body = $@"
+        <p>Merhaba,</p>
+        <p>Hesabınız oluşturuldu. Devam etmek için seçim yapın:</p>
+        <p>
+            <a href='{evetLink}'>Evet, hesabı aktifleştir</a><br/>
+            <a href='{hayirLink}'>Hayır, reddediyorum</a>
+        </p>
+    ";
+
+            await SendEmailAsync(email, subject, body, true);
+        }
+
+        public async Task SendPasswordMailAsync(string email, string tempPassword)
+        {
+            string body =
+                $"<p>Hesabınız onaylandı. Geçici şifreniz:</p>" +
+                $"<h2>{tempPassword}</h2>" +
+                $"<p>Giriş yaptıktan sonra şifreyi değiştirmeniz gerekir.</p>";
+
+            await SendEmailAsync(email, "Geçici Şifreniz", body);
+        }
+
     }
 }

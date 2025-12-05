@@ -17,10 +17,10 @@ namespace TekrarlayanIsProgrami.Models
         public string EPosta { get; set; }
         public int KullaniciTip_ID { get; set; }
 
-        [Required(ErrorMessage = "Bu Alan Zorunludur.")]
+        //[Required(ErrorMessage = "Bu Alan Zorunludur.")]
         public string Sifre { get; set; }
 
-        [Required(ErrorMessage = "Bu Alan Zorunludur.")]
+        //[Required(ErrorMessage = "Bu Alan Zorunludur.")]
         public string SifreTekrar { get; set; }
 
         public bool Aktif { get; set; }
