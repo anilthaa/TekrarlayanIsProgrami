@@ -236,9 +236,11 @@ namespace TekrarlayanIsProgrami.Repository
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Aktif""=true and ""DelDate"" is null";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta});
         }
-        public async Task<bool> UpdateSifreAsync(int userId, string newPassword)
+        public async Task<bool> UpdateSifreAsync(int userId, string tempPassword)
         {
             using var conn = GetConnection();
+
+            var hashed = PasswordHelper.HashPassword(tempPassword);
 
             var sql = @"
         UPDATE ""Kullanici""
@@ -246,11 +248,7 @@ namespace TekrarlayanIsProgrami.Repository
             ""UpdDate"" = NOW()
         WHERE ""ID"" = @ID";
 
-            var affected = await conn.ExecuteAsync(sql, new
-            {
-                ID = userId,
-                Sifre = newPassword // hashing kullanıyorsan burada hashleyebilirsin
-            });
+            var affected = await conn.ExecuteAsync(sql, new{ ID = userId, Sifre = hashed });
 
             return affected > 0;
         }

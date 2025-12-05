@@ -39,6 +39,10 @@
 					 @onclick="() => SelectedTabIndex = 4">
 					Pasif Görevler
 				</div>
+				<div class="my-tab @(SelectedTabIndex == 5 ? "active" : "")"
+					 @onclick="() => SelectedTabIndex = 5">
+					Tüm Görevler
+				</div>
 			</div>
 
 			@if (!AktifListe.Any())
@@ -51,7 +55,7 @@
 			{
 				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListe" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick" Style="width:100%; overflow-x:visible;" ColumnWidth="120px">
 					<Columns>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="80px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="100px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Title="Atanan Kişi" Width="250px">
 							<Template Context="g">
@@ -76,8 +80,8 @@
 								}
 							</Template>
 						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Kategori_ID" Title="Kategori" Width="100px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Kategori_ID" Title="Kategori" Width="150px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="150px">
 							<Template Context="g">
 								@(string.IsNullOrWhiteSpace(g.OnemDerecesi) ? "Yok" : g.OnemDerecesi)
 							</Template>
@@ -87,22 +91,22 @@
 								</span>
 							</Template>
 						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarlamaTipi" Title="Tekrarlama" Width="120px">
+						<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarlamaTipi" Title="Tekrarlama" Width="150px">
 							<Template Context="g">
 								@(string.IsNullOrWhiteSpace(g.TekrarlamaTipi) ? "Yok" : g.TekrarlamaTipi)
 							</Template>
 						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı" Width="120px">
+						<RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı" Width="180px">
 							<Template Context="g">
 								@(g.TekrarAraligi.HasValue? g.TekrarAraligi.ToString() : "Yok")
 							</Template>
 						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü" Width="150px">
+						<RadzenDataGridColumn TItem="ItemGorev" Property="HaftaninGunu" Title="Haftanın Günü" Width="180px">
 							<Template Context="g">
 								@(string.IsNullOrWhiteSpace(g.HaftaninGunu) ? "Yok" : g.HaftaninGunu)
 							</Template>
 						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="AyinGunu" Title="Ayın Günü" Width="100px">
+						<RadzenDataGridColumn TItem="ItemGorev" Property="AyinGunu" Title="Ayın Günü" Width="150px">
 							<Template Context="g">
 								@(g.AyinGunu.HasValue? g.AyinGunu.ToString() : "Yok")
 							</Template>
@@ -110,13 +114,13 @@
 						<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px">
 						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="180px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Kilitli" Title="Kilitli Mi?" Width="100px">
+						<RadzenDataGridColumn TItem="ItemGorev" Property="SonrakiCalismaTarihi" Title="Sonraki Çalışma Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="220px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Kilitli" Title="Kilitli Mi?" Width="150px">
 							<Template Context="g">
 								@(g.Kilitli ? "Evet" : "Hayır")
 							</Template>
 						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="120px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="150px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
 							<Template Context="gorev">
 								@* Admin sadece görüntüleyebilir, değiştiremez *@
 								<RadzenCheckBox Value="gorev.Tamamlandi" TValue="bool" Disabled="true"></RadzenCheckBox>
@@ -182,6 +186,10 @@ else if (kullaniciTip.Adi == "Standart")
 				<div class="my-tab @(SelectedTabIndex2 == 5 ? "active" : "")"
 					 @onclick="() => SelectedTabIndex2 = 5">
 					Size Özel Görevler
+				</div>
+				<div class="my-tab @(SelectedTabIndex == 6 ? "active" : "")"
+					 @onclick="() => SelectedTabIndex = 6">
+					Tüm Görevler
 				</div>
 			</div>
 
@@ -283,6 +291,7 @@ else if (kullaniciTip.Adi == "Standart")
 				2 => tamamlananGorevler,
 				3 => gecmisGorevler,
 				4 => pasifGorevler,
+				5 =>TumGorevler,
 				_ => aktifGorevler,
 			};
 		}
@@ -293,17 +302,24 @@ else if (kullaniciTip.Adi == "Standart")
 	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
 	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
 	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> TumGorevler =>
+	 GorevListt.Where(g => g.DelUser == 0);
 
 	private IEnumerable<ItemGorev> SAktifGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> SYaklasanGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && !g.Kilitli && g.Aktif && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && g.DelUser == 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7);
 	private IEnumerable<ItemGorev> STamamlananGorevler =>
-		GorevListt.Where(g =>
-			g.Tamamlandi &&
-			g.DelUser == 0 &&
-			(!g.Kilitli || g.Kullanici_ID == currentUserId) // kilitli değil veya kullanıcıya ait
-		); private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
+	GorevListt.Where(g =>
+		g.Tamamlandi &&
+		g.DelUser == 0 &&
+		(!g.Kilitli || g.Kullanici_ID == currentUserId)
+	);
+	private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
 	private IEnumerable<ItemGorev> SPasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId) && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> STumGorevler =>
+		 GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0);
+
+
 
 	protected override async Task OnInitializedAsync()
 
@@ -817,6 +833,7 @@ else if (kullaniciTip.Adi == "Standart")
 				3 => SGecmisGorevler,
 				4 => SPasifGorevler,
 				5 => SizeOzelGorevler,
+				6 => STumGorevler,
 				_ => SAktifGorevler,
 			};
 		}

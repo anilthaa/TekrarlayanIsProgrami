@@ -227,8 +227,6 @@ else
 
 	private async Task OnSubmit()
 	{
-		Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
-
 		if (!EpostaGecerliMi(newUser.EPosta))
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
@@ -245,7 +243,6 @@ else
 		newUser.KullaniciTip_ID = secilenTipId;
 
 		newUser.Sifre = "00000000";
-		Console.WriteLine($"Şifre:{newUser.Sifre}");
 		newUser.SifreTekrar = "00000000";
 
 
@@ -256,7 +253,6 @@ else
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
 			await ListeyiYenileAsync(); 
 			StateHasChanged();
-			Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
 		}
 		else
 		{
@@ -264,7 +260,6 @@ else
 		}
 
 		DialogService.Close(true);
-		Console.WriteLine($"Seçilen Tip ID: {secilenTipId}");
 	}
 	private bool EpostaGecerliMi(string eposta)
 	{
