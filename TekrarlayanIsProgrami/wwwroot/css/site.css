@@ -493,3 +493,41 @@ button RadzenIcon {
         background-color: #4a148c;
         transform: scale(1.15);
     }
+
+.buttonSifreUnuttum {
+    background-color: transparent;
+    color: mediumpurple;
+    margin-top: 15px;
+    box-shadow: none !important;
+}
+
+/* Görev listesi dialog için scroll kaldırma */
+.gorev-list-dialog {
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+    .gorev-list-dialog .rz-datatable-scrollable-body {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .gorev-list-dialog .rz-datatable-scrollable-wrapper {
+        overflow: visible !important;
+        max-height: none !important;
+    }
+
+.link-sifreUnuttum {
+    color: mediumpurple;
+    text-decoration: underline;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 15px;
+    transition: all .50s;
+}
+
+    .link-sifreUnuttum:hover {
+        color: black;
+        text-decoration: none;
+        transition: all .50s;
+    }
