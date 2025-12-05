@@ -129,6 +129,23 @@
 
 	private async Task Sil(ItemKategori item)
 	{
+		// Bu kategoriye ait aktif görevler var mı kontrol et
+		var tumGorevler = await DataService.GetGorevler();
+		var kategoriyeAitAktifGorevler = tumGorevler
+			.Where(g => g.Kategori_ID == item.ID && g.Aktif && (g.DelUser == null || g.DelUser == 0))
+			.ToList();
+
+		if (kategoriyeAitAktifGorevler.Any())
+		{
+			var gorevSayisi = kategoriyeAitAktifGorevler.Count;
+			var mesaj = gorevSayisi == 1 
+				? "Bu kategoriye ait 1 aktif görev bulunmaktadır. Lütfen önce bu kategoriye ait görevi silin veya pasif hale getirin."
+				: $"Bu kategoriye ait {gorevSayisi} aktif görev bulunmaktadır. Lütfen önce bu kategoriye ait görevleri silin veya pasif hale getirin.";
+			
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", mesaj);
+			return;
+		}
+
 		bool? onay = await DialogService.Confirm("Silmek istediğinize emin misiniz?",
 			"Onay", new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" });
 
@@ -145,7 +162,7 @@
 			}
 			else
 			{
-				notificationService.Notify(NotificationSeverity.Error, "Hata", "Ekleme İşleminiz Başarısız.");
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Silme İşleminiz Başarısız.");
 			}
 		}
 		else
