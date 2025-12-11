@@ -262,7 +262,7 @@
         int creUserId = currentUser?.ID ?? 1; // giriş yoksa 1 yani adimse.
         newUser.CreUser = creUserId; 
 
-		var result = await girisSaglayici.KayitOlAsync(newUser,newUser.KullaniciTip_ID);
+		var result = await girisSaglayici.KayitOlAsync(newUser);
 	    if (result.Basarili)
 		{
 			notificationService.Notify(NotificationSeverity.Success, "Başarılı" ,result.Mesaj);

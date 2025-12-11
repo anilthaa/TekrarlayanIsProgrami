@@ -1,29 +1,28 @@
 ﻿@page "/kullanicilar"
-@using TekrarlayanIsProgrami.Components.Pages.Admin
 @layout MainLayout
 @attribute [Authorize]
 <RadzenDialog></RadzenDialog>
 
 <RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
-    <h2 class="text-center mb-4">Kullanıcılar Listesi</h2>
+    <h3 class="text-center mb-4">Kullanıcılar Listesi</h3>
 
     @if (_canWrite)
     {
         <div class="d-flex gap-2 mb-3">
-            <RadzenButton Text="Yeni Kullanıcı Ekle" Icon="add" Style=" background:#3498db; color:white;border-radius:10px;" Click="@OpenRegisterDialog"> </RadzenButton>
+            <RadzenButton Text="Yeni Kullanıcı Ekle" Icon="add" Style=" background:mediumpurple; color:white;border-radius:10px;" Click="@OpenRegisterDialog"> </RadzenButton>
         </div>
     }
 
     <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name"  TItem="User" RowSelect="@OnRowSelect"
                     AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="true"
                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                    class="text-center align-middle">
+                    class="align-middle">
 
         <Columns>
-            <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="auto" />
+            <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="auto"/>
             <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="auto" />
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px"/>
-            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-posta" Width="250px;" />
+            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-posta" Width="250px;"/>
             
             <RadzenDataGridColumn TItem="User" Title="Rol" Width="180px">
                 <Template Context="k">
@@ -56,8 +55,7 @@
             {
                 <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="240px">
                     <Template Context="user">
-                        <RadzenButton Icon="mail" Style="margin-right:5px;" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"
-                                      Click="@(() => IzinMailiGonder(user.ID))" />
+                        <RadzenButton Icon="mail" Style="margin-right:5px;" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@(user.Aktif)" Click="@(() => IzinMailiGonder(user.ID))" />                        
                         <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
                         <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="lock" Size="ButtonSize.Small" Style="margin-right:5px;"
                                       Click="@(() => NavigateToYetki(user.ID))" />

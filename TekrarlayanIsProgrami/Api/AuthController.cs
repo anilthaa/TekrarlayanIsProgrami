@@ -34,16 +34,7 @@ namespace TekrarlayanIsProgrami.Api
             var tokenToStore = !string.IsNullOrEmpty(token) && token.Length > 100 ? token.Substring(0, 100) : token;
 
             // Şifreyi hashlemeyin - UserRepository.KayitOlAsync zaten hashliyor
-            var yeniUser = await _userRepository.KayitOlAsync(
-                model.Adi,
-                model.Soyadi,
-                model.EPosta,
-                model.Sifre,      // ← Ham şifre gönderiliyor, repository'de hashlenecek
-                model.SifreTekrar ?? string.Empty,
-                tokenToStore,     // ← Token'ı ResetToken olarak kaydet (100 karakter sınırlı)
-                model.CreUser,
-                model.KullaniciTip_ID
-            );
+            var yeniUser = await _userRepository.KayitOlAsync(model);
 
             return Ok(new AuthResult
             {

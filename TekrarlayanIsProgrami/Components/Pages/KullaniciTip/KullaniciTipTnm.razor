@@ -1,10 +1,11 @@
 @inherits ComponentBase
 @if (ItemData.ID != 0)
 {
+	<div>
 	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
 		<ChildContent>
 			<DataAnnotationsValidator></DataAnnotationsValidator>
-			<h3 style="text-align:center;"> Kullanıcı Tipini Düzenle</h3>
+			<h4 style="text-align:center;"> Kullanıcı Tipini Düzenle</h4>
 
 			<RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-top:15px;">
 				<RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi"  />
@@ -22,13 +23,15 @@
 			</div>
 		</ChildContent>
 	</RadzenTemplateForm>
+	</div>
 }
 else
 {
+	<div>
 	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
 		<ChildContent>
 			<DataAnnotationsValidator></DataAnnotationsValidator>
-			<h3 style="text-align:center;"> Kullanıcı Tipi Ekle</h3>
+			<h4 style="text-align:center;"> Kullanıcı Tipi Ekle</h4>
 
 			<RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-top:15px;">
 				<RadzenTextBox @bind-Value="ItemData.Adi" />
@@ -46,6 +49,7 @@ else
 			</div>
 		</ChildContent>
 	</RadzenTemplateForm>
+	</div>
 }
 @code {
 	[Parameter] public ItemKullaniciTip ItemData { get; set; } = new();
