@@ -140,61 +140,29 @@ namespace TekrarlayanIsProgrami.Repository
             return await conn.QueryFirstOrDefaultAsync<User>(sql, new { EPosta = EPosta, Sifre = Sifre });
         }
 
-        public async Task<User> KayitOlAsync(
-        string Adi,
-        string Soyadi,
-        string EPosta,
-        string Sifre,
-        string SifreTekrar,
-        string? ResetToken,
-        int kaydedenUserId,
-        int? secilenKullaniciTipId = 0) // admin seçtiyse.
+        public async Task<User> KayitOlAsync(User user)  
         {
             using var conn = GetConnection();
-
-            var user = new User
-            {
-                Adi = Adi,
-                Soyadi = Soyadi,
-                EPosta = EPosta,
-                Sifre = Sifre,
-                Aktif = true,
-                CreUser = kaydedenUserId,
-                CreDate = DateTime.Now,
-                ResetToken = ResetToken
-            };
             // Şifreyi hashle
             user.Sifre = PasswordHelper.HashPassword(user.Sifre);
-
-            var sqlInsert = @"INSERT INTO ""Kullanici"" 
- (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
- VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, @CreDate, @ResetToken)
- RETURNING ""ID"";";
-
             int Tip_ID;
-            if (secilenKullaniciTipId == null || secilenKullaniciTipId == 0)
+
+            if (user.KullaniciTip_ID == null || user.KullaniciTip_ID == 0)
             {
                 Console.WriteLine("Hiç tip seçilmemiş, varsayılan tip atanacak.");
                 Tip_ID = 2;
             }
             else
             {
-                Tip_ID = secilenKullaniciTipId.Value;
+                Tip_ID = user.KullaniciTip_ID;
             }
             user.KullaniciTip_ID = Tip_ID;
-            user.ID = await conn.ExecuteScalarAsync<int>(sqlInsert, new
-            {
-                user.Adi,
-                user.Soyadi,
-                KullaniciTip_ID = user.KullaniciTip_ID, // admin seçtiyse onun tipini kullan, yoksa standartsecilenKullaniciTipId ?? 2    KullaniciTip_ID = user.KullaniciTip_ID !=0 ? user.KullaniciTip_ID : 2
-                user.EPosta,
-                user.Sifre,
-                user.Aktif,
-                user.CreUser,
-                user.CreDate,
-                user.ResetToken
-            });
-
+            user.Aktif = user.KullaniciTip_ID == 1 ? false : true;
+            user.ID = await conn.ExecuteScalarAsync<int>(@"INSERT INTO ""Kullanici"" 
+ (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
+ VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, Now(), @ResetToken)
+ RETURNING ""ID""", user);
+            //sonuç olarak true gelmiş.
             return user;
         }
 
@@ -236,19 +204,17 @@ namespace TekrarlayanIsProgrami.Repository
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Aktif""=true and ""DelDate"" is null";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta});
         }
-        public async Task<bool> UpdateSifreAsync(int userId, string tempPassword)
+        public async Task<bool> UpdateSifreAsync(int userId, string hashedPassword)
         {
             using var conn = GetConnection();
 
-            var hashed = PasswordHelper.HashPassword(tempPassword);
-
             var sql = @"
-        UPDATE ""Kullanici""
-        SET ""Sifre"" = @Sifre,
-            ""UpdDate"" = NOW()
-        WHERE ""ID"" = @ID";
+    UPDATE ""Kullanici""
+    SET ""Sifre"" = @Sifre,
+        ""UpdDate"" = NOW()
+    WHERE ""ID"" = @ID";
 
-            var affected = await conn.ExecuteAsync(sql, new{ ID = userId, Sifre = hashed });
+            var affected = await conn.ExecuteAsync(sql, new { ID = userId, Sifre = hashedPassword });
 
             return affected > 0;
         }

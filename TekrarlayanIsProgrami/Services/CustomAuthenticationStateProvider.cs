@@ -155,7 +155,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
-        public async Task<AuthResult> KayitOlAsync(User user, int KullaniciTip_ID)
+        public async Task<AuthResult> KayitOlAsync(User user)
         {
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
             {
