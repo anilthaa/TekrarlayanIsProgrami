@@ -1,5 +1,6 @@
 ﻿@page "/onay"
 @layout EmptyLayout
+
 <h3>@mesaj</h3>
 
 @code {
@@ -30,11 +31,12 @@
 
         if (ok == 1)
         {
-            string tempPass = Guid.NewGuid().ToString("N").Substring(0, 6);
+            string tempPass = Guid.NewGuid().ToString("N").Substring(0, 8);
             string hashed = PasswordHelper.HashPassword(tempPass);
-            kullanici.Sifre = hashed;
-            kullanici.Aktif = true;
 
+            kullanici.Aktif = true;
+            await _kullaniciRepo.UpdateAsync(kullanici);
+            kullanici.Sifre = hashed;
             await _kullaniciRepo.UpdateSifreAsync(kullanici.ID, hashed);
 
             await EpostaService.SendPasswordMailAsync(kullanici.EPosta, tempPass);
