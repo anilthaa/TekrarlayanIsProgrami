@@ -8,6 +8,14 @@ body {
     justify-content: center;
     align-items: center;*/
 }
+
+/* Radzen Dialog X butonunu gizle - GorevList ve GorevTnm için */
+.rz-dialog-header-close,
+.rz-dialog-close,
+button[aria-label="Close"],
+.rz-dialog-header button:last-child {
+    display: none !important;
+}
 .bodyAnasayfa {
     margin: 0;
     padding: 0;
@@ -471,15 +479,18 @@ button RadzenIcon {
     transition: transform 0.2s ease, background-color 0.2s ease;
     flex-shrink: 0;
     width: 200px;
+    
 }
 
     .my-tab:hover {
         background-color: #ba68c8;
+        cursor: pointer;
     }
 
     .my-tab.active {
         background-color: #4a148c;
         transform: scale(1.15);
+        cursor: default;
     }
 
 .buttonSifreUnuttum {
@@ -519,3 +530,12 @@ button RadzenIcon {
         text-decoration: none;
         transition: all .50s;
     }
+
+/* GorevTnm form alanları arasındaki boşlukları azalt */
+fieldset .rz-form-field {
+    margin-bottom: 0.5rem !important;
+}
+
+fieldset .rz-form-field-label {
+    margin-bottom: 0.25rem !important;
+}
