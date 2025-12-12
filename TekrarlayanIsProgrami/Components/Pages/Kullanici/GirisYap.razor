@@ -84,7 +84,7 @@
 	<!-- Slider Panel -->
 	<div class="slider-panel">
 		@* # 8968cd *@
-		<RadzenCard class="slider-content">
+		<div class="slider-content">
 			@if (!isRegisterActive)
 			{
 				<h2>Merhabalar!</h2>
@@ -97,7 +97,7 @@
 				<p>Zaten hesabınız var mı? Giriş yapın.</p>
 				<RadzenButton Click="@(() => isRegisterActive = false)" Text="GİRİŞ YAP" Style="background-color: white; color:rebeccapurple; margin-top:10px;" />
 			}
-		</RadzenCard>
+		</div>
 	</div>
 </div>
 @code {
