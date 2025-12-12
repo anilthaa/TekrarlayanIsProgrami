@@ -2,7 +2,7 @@
 @layout MainLayout
 
 @* Yeni Görev Bildirimi - Kapanabilir Uyarı Penceresi *@
-@if (showYeniGorevBildirimi && yeniGorevSayisi > 0 && !IsLoading)
+@if (showYeniGorevBildirimi && !IsLoading)
 {
 	<RadzenCard Style="margin:20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1000;">
 		<div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
@@ -11,13 +11,24 @@
 				<div>
 					<h4 style="margin:0; color:white; font-weight:600;">Yeni Görevleriniz Var!</h4>
 					<p style="margin:5px 0 0 0; color:rgba(255,255,255,0.9); font-size:14px;">
-						@GetYeniGorevMesaji()
+						@if (gosterilecekOzelGorevSayisi > 0 && gosterilecekGenelGorevSayisi > 0)
+						{
+							<span>@(gosterilecekOzelGorevSayisi + gosterilecekGenelGorevSayisi) yeni göreviniz var! (<a href="#" @onclick="@(async () => await NavigateToOzelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekOzelGorevSayisi size özel</a>, <a href="#" @onclick="@(async () => await NavigateToGenelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekGenelGorevSayisi herkese açık</a>) Dashboard'ınızı kontrol ediniz.</span>
+						}
+						else if (gosterilecekOzelGorevSayisi > 0)
+						{
+							<span><a href="#" @onclick="@(async () => await NavigateToOzelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekOzelGorevSayisi size özel</a> yeni göreviniz var! Dashboard'ınızı kontrol ediniz.</span>
+						}
+						else if (gosterilecekGenelGorevSayisi > 0)
+						{
+							<span><a href="#" @onclick="@(async () => await NavigateToGenelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekGenelGorevSayisi yeni göreviniz</a> var! Dashboard'ınızı kontrol ediniz.</span>
+						}
 					</p>
 				</div>
 			</div>
 			<RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 						  Style="background:rgba(255,255,255,0.2); color:white; border:none; min-width:auto;"
-						  Click="@(() => { showYeniGorevBildirimi = false; StateHasChanged(); })"></RadzenButton>
+						  Click="@(async () => { await BildirimiKapat(); })"></RadzenButton>
 		</div>
 	</RadzenCard>
 }
@@ -251,7 +262,12 @@
 					<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
 						<Columns>
 							<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
-							<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="250px"></RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Title="Atayan Kişi" Width="150px;">
+								<Template Context="g">
+									@GetAtayanKullaniciAdi(g.CreUser)
+								</Template>
+							</RadzenDataGridColumn>
 							<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
 							<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
 								<Template Context="onem">
@@ -649,6 +665,10 @@ else
 	private int yeniGorevSayisi = 0;
 	private int yeniGenelGorevSayisi = 0;
 	private int yeniOzelGorevSayisi = 0;
+	private int gosterilecekOzelGorevSayisi = 0;
+	private int gosterilecekGenelGorevSayisi = 0;
+	private bool ozelGorevBildirimiGoruldu = false;
+	private bool genelGorevBildirimiGoruldu = false;
 	private DateTime selectedMonth = DateTime.Now;
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -780,6 +800,13 @@ else
 				return;
 			}
 
+			// localStorage'dan bildirimin görüldü durumunu kontrol et
+			var ozelBildirimGoruldu = await Js.InvokeAsync<string>("localStorage.getItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}");
+			var genelBildirimGoruldu = await Js.InvokeAsync<string>("localStorage.getItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}");
+			
+			ozelGorevBildirimiGoruldu = ozelBildirimGoruldu == "true";
+			genelGorevBildirimiGoruldu = genelBildirimGoruldu == "true";
+
 			// En son çıkış tarihini al (çıkış yaptıktan sonra eklenen görevleri bulmak için)
 			var sonGirisTarihi = await DataService.GetSonGirisAsync(currentUserId.Value);
 
@@ -787,10 +814,19 @@ else
 			yeniOzelGorevSayisi = await DataService.GetYeniGorevDetaylariOzel(currentUserId.Value, sonGirisTarihi);
 			yeniGorevSayisi = yeniGenelGorevSayisi + yeniOzelGorevSayisi;
 
-			if (yeniGorevSayisi > 0)
+			// Görüldü olarak işaretlenmemiş görevleri hesapla
+			gosterilecekOzelGorevSayisi = ozelGorevBildirimiGoruldu ? 0 : yeniOzelGorevSayisi;
+			gosterilecekGenelGorevSayisi = genelGorevBildirimiGoruldu ? 0 : yeniGenelGorevSayisi;
+
+			// En az bir bildirim gösterilebilir durumdaysa bildirimi göster
+			if (gosterilecekOzelGorevSayisi > 0 || gosterilecekGenelGorevSayisi > 0)
 			{
 				showYeniGorevBildirimi = true;
-			}			
+			}
+			else
+			{
+				showYeniGorevBildirimi = false;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -905,28 +941,63 @@ else
 		};
 	}
 
-	private string GetYeniGorevMesaji()
+
+	private async Task NavigateToOzelGorevler()
 	{
-		if (yeniOzelGorevSayisi > 0 && yeniGenelGorevSayisi > 0)
+		if (currentUserId.HasValue)
 		{
-			// Hem genel hem özel görevler var
-			return $"{yeniGorevSayisi} yeni göreviniz var! ({yeniOzelGorevSayisi} size özel, {yeniGenelGorevSayisi} herkese açık) Dashboard'ınızı kontrol ediniz.";
+			await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}", "true");
 		}
-		else if (yeniOzelGorevSayisi > 0)
+		ozelGorevBildirimiGoruldu = true;
+		gosterilecekOzelGorevSayisi = 0;
+		
+		// Eğer her iki bildirim de görüldüyse bildirimi kapat
+		if (gosterilecekGenelGorevSayisi == 0)
 		{
-			// Sadece özel görevler var
-			return $"{yeniOzelGorevSayisi} size özel yeni göreviniz var! Dashboard'ınızı kontrol ediniz.";
+			showYeniGorevBildirimi = false;
 		}
-		else if (yeniGenelGorevSayisi > 0)
+		
+		StateHasChanged();
+		
+		// Kullanıcı tipine göre doğru tab index'i kullan
+		// Admin için tab=6, Standart kullanıcı için tab=5
+		int tabIndex = (kullaniciTip?.Adi == "Admin") ? 6 : 5;
+		NavigationManager.NavigateTo($"/gorevler?tab={tabIndex}");
+	}
+
+	private async Task NavigateToGenelGorevler()
+	{
+		if (currentUserId.HasValue)
 		{
-			// Sadece genel görevler var
-			return $"{yeniGenelGorevSayisi} yeni göreviniz var! Dashboard'ınızı kontrol ediniz.";
+			await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}", "true");
 		}
-		else
+		genelGorevBildirimiGoruldu = true;
+		gosterilecekGenelGorevSayisi = 0;
+		
+		// Eğer her iki bildirim de görüldüyse bildirimi kapat
+		if (gosterilecekOzelGorevSayisi == 0)
 		{
-			// Bu durumda banner gösterilmemeli ama yine de bir mesaj döndürelim
-			return $"{yeniGorevSayisi} yeni göreviniz var! Dashboard'ınızı kontrol ediniz.";
+			showYeniGorevBildirimi = false;
 		}
+		
+		StateHasChanged();
+		NavigationManager.NavigateTo("/gorevler");
+	}
+
+	private async Task BildirimiKapat()
+	{
+		if (currentUserId.HasValue)
+		{
+			// Her iki bildirimi de görüldü olarak işaretle
+			await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}", "true");
+			await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}", "true");
+		}
+		ozelGorevBildirimiGoruldu = true;
+		genelGorevBildirimiGoruldu = true;
+		gosterilecekOzelGorevSayisi = 0;
+		gosterilecekGenelGorevSayisi = 0;
+		showYeniGorevBildirimi = false;
+		StateHasChanged();
 	}
 
 	//Bitti.

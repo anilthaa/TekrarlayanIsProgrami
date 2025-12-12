@@ -6,7 +6,7 @@
 
 @if (kullaniciTip.Adi == "Admin")
 {
-	<RadzenCard Style="margin:20px;">
+	<RadzenCard Style="margin:0; margin-left:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
 		<h3 style="text-align:center;">Görev Listesi</h3>
 
 		<RadzenButton Text="Yeni Görev" Icon="add" Style=" background:mediumpurple; color:white" Click="@YeniGorev"></RadzenButton>
@@ -58,7 +58,7 @@
 			}
 			else
 			{
-				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListe" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick" Style="width:100%; overflow-x:visible;" ColumnWidth="120px">
+				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListe" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick" Style="width:100%; overflow-x:auto;" ColumnWidth="120px">
 					<Columns>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="100px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px"></RadzenDataGridColumn>
@@ -159,7 +159,7 @@
 else if (kullaniciTip.Adi == "Standart")
 {
 
-	<RadzenCard Style="margin:20px;">
+	<RadzenCard Style="margin:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
 		<h3 style="text-align:center;">Görev Listesi</h3>
 
 		@* Standart kullanıcı yeni görev ekleyemez, buton kaldırıldı *@
@@ -209,7 +209,7 @@ else if (kullaniciTip.Adi == "Standart")
 			}
 			else
 			{
-				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListee" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" Style="width:100%; overflow-x:visible;" ColumnWidth="120px">
+				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListee" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" Style="width:100%; overflow-x:auto;" ColumnWidth="120px">
 					<Columns>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="150px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px"></RadzenDataGridColumn>
@@ -298,9 +298,17 @@ else if (kullaniciTip.Adi == "Standart")
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		// Görev listesine gidildiğinde bildirimi görüldü olarak işaretle
-		if (currentUserId.HasValue)
+		if (firstRender && currentUserId.HasValue)
 		{
-			await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_{currentUserId.Value}", "true");
+			// Tab 6 (Bana Özel Görevler) ise özel görev bildirimini, diğer durumlarda genel görev bildirimini işaretle
+			if (SelectedTabIndex == 6)
+			{
+				await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}", "true");
+			}
+			else
+			{
+				await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}", "true");
+			}
 		}
 	}
 
@@ -310,7 +318,7 @@ else if (kullaniciTip.Adi == "Standart")
 		{
 			return SelectedTabIndex switch
 			{
-				0 => aktifGorevler.OrderBy(g => g.BaslangicTarihi).ThenBy(g => g.Baslik),
+				0 => aktifGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
 				1 => yaklasanGorevler,
 				2 => tamamlananGorevler,
 				3 => gecmisGorevler,
@@ -879,7 +887,7 @@ else if (kullaniciTip.Adi == "Standart")
 		{
 			return SelectedTabIndex2 switch
 			{
-				0 => SAktifGorevler.OrderBy(g => g.BaslangicTarihi).ThenBy(g => g.Baslik),
+				0 => SAktifGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
 				1 => SYaklasanGorevler,
 				2 => STamamlananGorevler,
 				3 => SGecmisGorevler,

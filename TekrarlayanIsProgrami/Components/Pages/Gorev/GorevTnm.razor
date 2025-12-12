@@ -790,18 +790,18 @@
 					{
 						if (Gorev.Kilitli && Gorev.Kullanici_ID > 0)
 						{
-							// Kilitli görev, sadece atanan kullanıcı için temizle
-							await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_{Gorev.Kullanici_ID}");
+							// Kilitli görev, sadece atanan kullanıcı için özel görev bildirimini temizle
+							await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_Ozel_{Gorev.Kullanici_ID}");
 						}
 						else if (!Gorev.Kilitli)
 						{
-							// Herkese açık görev, tüm kullanıcılar için temizle
+							// Herkese açık görev, tüm kullanıcılar için genel görev bildirimini temizle
 							try
 							{
 								var tumKullanicilar = await _kullaniciRepo.GetAllAsync();
 								foreach (var kullanici in tumKullanicilar)
 								{
-									await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_{kullanici.ID}");
+									await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_Genel_{kullanici.ID}");
 								}
 							}
 							catch (Exception ex)

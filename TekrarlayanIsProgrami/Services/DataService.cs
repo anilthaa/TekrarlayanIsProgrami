@@ -54,7 +54,7 @@ namespace TekrarlayanIsProgrami.Services
                 From ""Gorev"" g
                 Inner Join ""Kategori"" k on g.""Kategori_ID"" = k.""ID""
                 Where g.""DelDate"" Is Null
-                Order By g.""BaslangicTarihi""
+                Order By g.""ID"" desc
             ")).ToArray();
         }
 
