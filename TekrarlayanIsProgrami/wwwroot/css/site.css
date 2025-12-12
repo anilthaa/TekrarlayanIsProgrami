@@ -540,6 +540,16 @@ fieldset .rz-form-field-label {
     margin-bottom: 0.25rem !important;
 }
 
+/* GorevList için genişlik ayarları */
+.rz-body {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.rz-card {
+    max-width: 100% !important;
+}
+
 .rz-layout .rz-sidebar {
     grid-area:auto;
 }
