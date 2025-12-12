@@ -215,13 +215,15 @@
 									<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
 									<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
 									<RadzenDataGridColumn TItem="ItemGorev" Title="Önem">
-										<Template Context="g">
-											<span style="background-color:@GetOnemRengi(g.OnemDerecesi); font-size:12px; padding:3px 8px; border-radius:6px; color:white;">@g.OnemDerecesi</span>
+										<Template Context="onem">
+											<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+												@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+											</span>
 										</Template>
 									</RadzenDataGridColumn>
 									<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Durum">
 										<Template Context="durum">
-											<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+											<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Aktif ? "#4caf50" : "#e53935"); color:white;">
 												@(durum.Aktif ? "Aktif" : "Pasif")
 											</span>
 										</Template>
@@ -253,21 +255,21 @@
 							<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
 							<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
 								<Template Context="onem">
-									<span style="font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+									<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
 										@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
 									</span>
 								</Template>
 							</RadzenDataGridColumn>
 							<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Aktif" Width="80px">
 								<Template Context="durum">
-									<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Aktif ? "#4caf50" : "#e53935"); color:white;">
 										@(durum.Aktif ? "Aktif" : "Pasif")
 									</span>
 								</Template>
 							</RadzenDataGridColumn>
 							<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="100px">
 								<Template Context="durum">
-									<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Tamamlandi ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+									<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Tamamlandi ? "#4caf50" : "#e53935"); color:white;">
 										@(durum.Tamamlandi ? "Evet" : "Hayır")
 									</span>
 								</Template>
@@ -508,24 +510,30 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 					<Columns>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Title="Atayan Kişi" Width="150px">
+							<Template Context="g">
+								@GetAtayanKullaniciAdi(g.CreUser)
+							</Template>
+
+						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
 							<Template Context="onem">
-								<span style="font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+								<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
 									@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
 								</span>
 							</Template>
 						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Aktif" Width="80px">
 							<Template Context="durum">
-								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Aktif ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+								<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Aktif ? "#4caf50" : "#e53935"); color:white;">
 									@(durum.Aktif ? "Aktif" : "Pasif")
 								</span>
 							</Template>
 						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="100px">
 							<Template Context="durum">
-								<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(durum.Tamamlandi ? "#4caf50" : "#e53935")}; color:white; display:inline-block;")">
+								<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Tamamlandi ? "#4caf50" : "#e53935"); color:white;">
 									@(durum.Tamamlandi ? "Evet" : "Hayır")
 								</span>
 							</Template>
@@ -566,7 +574,7 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 
 					<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Durum">
 						<Template Context="item">
-							<span style="@($"font-size:12px; padding:3px 8px; border-radius:6px; background-color:{(item.Tamamlandi ? "#4caf50" : "#e53935")}; color:white;")">
+							<span style="@($"font-size:12px; padding:3px 8px; display:inline-block; text-align:center; width:90px; border-radius:6px; background-color:{(item.Tamamlandi ? "#4caf50" : "#e53935")}; color:white;")">
 								@(item.Tamamlandi ? "Tamamlandı" : "Devam Ediyor")
 							</span>
 						</Template>
@@ -608,6 +616,7 @@ else
 	private List<ItemGorev> kritikGorevler = new();
 	private List<ItemGorev> GorevListt = new();
 	private List<ItemGorev> adminGorevleri = new();
+	private List<ItemGorev> standartGorevleri = new();
 	private List<User> kullaniciListesi = new();
 	private bool IsLoading = true;
 	private int? currentUserId = null;
@@ -617,7 +626,7 @@ else
 	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
 	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
 	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-    private IEnumerable<ItemGorev> yuksekOnemliGorevler => aktifGorevler.Where(g => g.OnemDerecesi?.ToLower() == "yüksek").OrderBy(g => g.BitisTarihi);
+	private IEnumerable<ItemGorev> yuksekOnemliGorevler => aktifGorevler.Where(g => g.OnemDerecesi?.ToLower() == "yüksek").OrderBy(g => g.BitisTarihi);
 
 	private IEnumerable<ItemGorev> BugunkuGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && g.CreDate.Date == DateTime.Today);
 	private IEnumerable<ItemGorev> SAktifGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
@@ -657,7 +666,6 @@ else
 		showYeniGorevBildirimi = false; // Her sayfa yüklendiğinde bildirimi sıfırla
 		StateHasChanged();
 		kullaniciListesi = await _kullaniciRepo.GetAllAsync();
-
 		// URL parametrelerini kontrol et (e-posta linkinden geliyorsa)
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 		var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
@@ -749,9 +757,9 @@ else
 
 		kritikGorevler = GorevListt
 			.Where(g => g.OnemDerecesi?.ToLower() == "yüksek"
-					 && g.Aktif == true
-					 && g.Tamamlandi == false
-					 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Now))
+						&& g.Aktif == true
+						&& g.Tamamlandi == false
+						&& (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Now))
 			.ToList();
 
 		IsLoading = false;
@@ -816,12 +824,22 @@ else
 			// Admin'e atanan görevleri ayrı bir listede tut
 			if (currentUserId.HasValue)
 			{
-				adminGorevleri = tumGorevler.Where(g => g.Kilitli && g.Kullanici_ID == currentUserId.Value && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Now) && !g.Tamamlandi).ToList();
+				adminGorevleri = tumGorevler
+					.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif).ToList();
 			}
 			else
 			{
 				adminGorevleri = new List<ItemGorev>();
 			}
+			// if (currentUserId.HasValue)
+			// {
+			// 	standartGorevleri = tumGorevler
+			// 		.Where(g => g.Kullanici_ID == currentUserId && !g.Kilitli && g.Aktif && !g.Tamamlandi).ToList();
+			// }
+			// else
+			// {
+			// 	standartGorevleri = new List<ItemGorev>();
+			// }
 
 			// Tüm görevleri birleştir ve tekrarları kaldır
 			GorevListt = tumGorevler.Union(adminGorevleri).GroupBy(g => g.ID).Select(g => g.First()).ToList();
@@ -1007,7 +1025,7 @@ else
 		}
 		else
 		{
-			await DialogService.OpenAsync($"Bilgi - {date:dd.MM.yyyy}", ds =>
+			await DialogService.OpenAsync("Bilgi", ds =>
 				@<div style="padding:20px; text-align:center;">
 				<RadzenIcon Icon="event_busy" Style="font-size:48px; color:#999; margin-bottom:15px;" />
 				<h4 style="margin-bottom:10px; color:#666;">@dateStr</h4>
@@ -1062,5 +1080,19 @@ else
 			return "Bilinmiyor";
 
 		return $"{user.Adi} {user.Soyadi}";
+	}
+	private MarkupString GetAtayanKullaniciAdi(int? creUserId)
+	{
+		Console.WriteLine($"CreUserId: {creUserId}");
+		Console.WriteLine($"Kullanıcı sayısı: {kullaniciListesi.Count}");
+
+		if (!creUserId.HasValue || creUserId.Value == 0)
+			return (MarkupString)"—";
+
+		var kullanici = kullaniciListesi.FirstOrDefault(x => x.ID == creUserId.Value);
+		return kullanici != null
+			? (MarkupString)($"{kullanici.Adi} {kullanici.Soyadi}")
+			: (MarkupString)"-";
+
 	}
 }

@@ -1,4 +1,3 @@
-@inject DialogService DialogService
 
 <div style="padding:20px; width:100%;">
 	
@@ -9,15 +8,15 @@
 			<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Görev Başlığı" Width="500px"></RadzenDataGridColumn>
 			<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="200px"></RadzenDataGridColumn>
 			<RadzenDataGridColumn TItem="ItemGorev" Title="Önem" Width="150px">
-				<Template Context="g">
-					<span style="font-size:11px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetGorevRengi(g.OnemDerecesi ?? string.Empty)">
-						@(string.IsNullOrWhiteSpace(g.OnemDerecesi) ? "Normal" : g.OnemDerecesi)
-					</span>
-				</Template>
+				<Template Context="onem">
+						<span style="display:inline-block; width:60px; text-align:center; font-size:10px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+							@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+						</span>
+					</Template>
 			</RadzenDataGridColumn>
 			<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Durum" Width="150px">
 				<Template Context="g">
-					<span style="@($"font-size:11px; padding:3px 8px; border-radius:4px; background-color:{(g.Tamamlandi ? "#4caf50" : "#e53935")}; color:white;")">
+						<span style="@($"font-size:11px; padding:3px 8px; border-radius:10px;  background-color:{(g.Tamamlandi ? "#4caf50" : "#e74c3c")};color:white; display:inline-block; width:100px; text-align:center;")">
 						@(g.Tamamlandi ? "Tamamlandı" : "Devam Ediyor")
 					</span>
 				</Template>
@@ -34,14 +33,14 @@
 	[Parameter] public string DateStr { get; set; } = string.Empty;
 	[Parameter] public List<ItemGorev> Gorevler { get; set; } = new();
 
-	private string GetGorevRengi(string onem)
+	private string GetOnemRengi(string onem)
 	{
 		return onem?.ToLower() switch
 		{
 			"yüksek" => "#e74c3c",
-			"orta" => "#f39c12",
-			"düşük" => "#2ecc71",
-			_ => "#3498db"
+			"orta" => "#f1c40f",
+			"düşük" => "#2ecc71"
+
 		};
 	}
 }
