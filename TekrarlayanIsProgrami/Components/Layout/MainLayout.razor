@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="/js/site.js"/>
    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 </HeadContent>
-<RadzenDialog></RadzenDialog>
+
 <RadzenNotification></RadzenNotification>
 <RadzenLayout>
     @{
@@ -15,7 +15,7 @@
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/admin/kullanici-loglari") || uri.Contains("/kullaniciprofil") || uri.Contains("/admin/kullanici-yetkileri") || uri.Contains("/profil"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/gorev-loglari") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/admin/kullanici-loglari") || uri.Contains("/kullaniciprofil") || uri.Contains("/admin/kullanici-yetkileri") || uri.Contains("/profil"))
             {
                 @if (!IsLoading)
                 {
@@ -142,7 +142,8 @@
         "/kullanicilar",
         "/kategori", 
         "/admin/kullanicitipleri",
-        "/admin/kullanici-yetkileri"
+        "/admin/kullanici-yetkileri",
+        "/gorev-loglari"
     };
 
     // Görevler sayfası için sabit menü öğesi (PermissionService'den bağımsız)
