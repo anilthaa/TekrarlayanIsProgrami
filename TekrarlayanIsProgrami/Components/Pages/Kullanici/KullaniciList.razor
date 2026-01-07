@@ -221,7 +221,7 @@
     private async Task  NavigateToYetki(int Id)
     {
        await DialogService.OpenAsync<KullaniciYetkileri>(
-         " ",
+         "Kullanıcı Sayfa Yetkileri",
              new Dictionary<string, object>() { { "KullaniciId", Id } },
              new DialogOptions() { Width = "800px", Height = "auto" }
         );

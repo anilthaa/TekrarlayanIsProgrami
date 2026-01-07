@@ -49,12 +49,14 @@ else
 	private bool degisiklikYapildiMi = false;
 	private string originalKategori;
 
+	//kod, bileşen başlatıldığında çalışır ve şunları yapar:
 	protected override void OnInitialized()
 	{
 		IsEdit = ItemData.ID != 0;
 		originalKategori = ItemData.Adi;
 	}
 
+	//kategori formunun submit (kaydet) işlemini yapar:
 	private async Task OnSubmit(ItemKategori item)
 	{
 		if (isProcessing)
@@ -105,6 +107,7 @@ else
 		}
 	}
 
+	//kategori formunda iptal işlemini yönetir:
 	private async Task Iptal()
 	{
 		if (IsEdit)
