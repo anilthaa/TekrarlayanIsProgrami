@@ -1,42 +1,195 @@
-﻿@page "/Profil"
+﻿@page "/profil"
 @layout MainLayout
-@attribute [Authorize]
 
-    @if (kullanici != null)
+<RadzenCard Style="width:100%;">
+
+    @if (!editMode)
     {
-     <RadzenCard class="profile-card">
-     <h2>Profil</h2>
-    <h3>@kullanici.Adi @kullanici.Soyadi</h3>
-    <p>@kullanici.EPosta</p>
-    <RadzenButton @onclick="CikisYap" class="radzenprofile-but" Text="Çıkış Yap"></RadzenButton>
-    </RadzenCard>
+        <p><b>Ad:</b> @user.Adi</p>
+        <p><b>Soyad:</b> @user.Soyadi</p>
+        <p><b>E-posta:</b> @user.EPosta</p>
+
+        <RadzenButton Text="Düzenle"
+                      ButtonStyle="ButtonStyle.Success"
+                      Disabled="@sifreFormAcik"
+                      Click="@(() => editMode = true)"
+                      Style="margin-top:10px; width:30%;"
+                      class="radzen-buttonKaydet" />
     }
     else
     {
-        <p>Kullanıcı bilgileri yükleniyor veya bulunamadı...</p>
+        <RadzenTemplateForm Data="@user" TItem="User" Submit="@KaydetProfil">
+
+            <RadzenFormField Text="Ad" Style="width:48%; margin-left:3px;">
+                <RadzenTextBox @bind-Value="user.Adi" />
+            </RadzenFormField>
+
+            <RadzenFormField Text="Soyad" Style="width:48%">
+                <RadzenTextBox @bind-Value="user.Soyadi" />
+            </RadzenFormField>
+
+            <div class="btn-group">
+                <RadzenButton Text="Kaydet"
+                              ButtonType="ButtonType.Submit"
+                              Style="width:20%; margin:auto;"
+                              class="radzen-buttonKaydet" />
+
+                <RadzenButton Text="İptal"
+                              ButtonType="ButtonType.Button"
+                              Click="@IptalProfil"
+                              Style="width:20%; margin:auto;"
+                              class="radzen-buttonIptal" />
+            </div>
+
+        </RadzenTemplateForm>
     }
+
+    <hr />
+
+    <RadzenButton Text="Şifreyi Değiştir"
+                  ButtonStyle="ButtonStyle.Warning"
+                  Disabled="@editMode"
+                  Click="@(() => sifreFormAcik = true)"
+                  Style="margin-top:10px; width:40%;"
+                  class="radzen-buttonSifreDegistir" />
+
+    @if (sifreFormAcik)
+    {
+        <hr />
+        <h4>Şifre Değiştir</h4>
+
+        <EditForm Model="@this" OnValidSubmit="@SifreDegistir">
+
+            <RadzenFormField Text="Mevcut Şifre" Style="width:48%; margin-left:3px;">
+                <RadzenPassword @bind-Value="eskiSifre" />
+            </RadzenFormField>
+
+            <RadzenFormField Text="Yeni Şifre" Style="width:48%">
+                <RadzenPassword @bind-Value="yeniSifre" />
+            </RadzenFormField>
+
+            <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:48%; margin-left:115px">
+                <RadzenPassword @bind-Value="yeniSifreTekrar" />
+            </RadzenFormField>
+
+            <div class="btn-group">
+                <RadzenButton Text="Kaydet"
+                              ButtonType="ButtonType.Submit"
+                              Style="width:20%; margin:auto;"
+                              class="radzen-buttonKaydet" />
+
+                <RadzenButton Text="İptal"
+                              ButtonType="ButtonType.Button"
+                              Click="@IptalSifre"
+                              Style="width:20%; margin:auto;"
+                              class="radzen-buttonIptal" />
+            </div>
+
+        </EditForm>
+    }
+
+</RadzenCard>
 
 @code {
-    private User? kullanici;
+    User user = new();
+    User backup = new();
+    int currentUserId;
+    bool editMode = false;
+    bool sifreFormAcik = false;
+    string? eskiSifre;
+    string? yeniSifre;
+    string? yeniSifreTekrar;
 
+    //sayfa ilk açıldığında oturumdaki kullanıcının profil bilgilerini yüklemek ve düzenleme için yedeklemek amacıyla çalışır.
     protected override async Task OnInitializedAsync()
     {
-        var girisDurumu = await girisSaglayici.GetAuthenticationStateAsync();
-         var userClaims = girisDurumu.User;
+        currentUserId = await girisSaglayici.GetUserIdAsync();
+        if (currentUserId == 0) return;
 
-        // if (userClaims.Identity != null && userClaims.Identity.IsAuthenticated)
-        //  {
-        //     var eposta = userClaims.FindFirst("eposta")?.Value;
-
-        //      if (!string.IsNullOrEmpty(eposta))
-        //      {
-        //          kullanici = await _kullaniciRepo.GetByE_postaAsync(eposta);
-        //      }
-            
-        //  }
+        user = await _kullaniciRepo.GetByIDAsync(currentUserId) ?? new User();
+        backup = Clone(user);
     }
-    private void CikisYap()
+
+    //kullanıcının profil bilgilerini kaydetmek için kullanılır.
+    async Task KaydetProfil(User u)
     {
-        NavigationManager.NavigateTo("/GirisYap", true);
+        if (sifreFormAcik) return;
+
+        u.ID = currentUserId;
+        await _kullaniciRepo.UpdateUserProfile(u);
+
+        backup = Clone(u);
+        editMode = false;
+
+        notificationService.Notify(
+            NotificationSeverity.Success,
+            "Profil",
+            "Profil güncellendi"
+        );
     }
+
+    //Düzenleme işleminin iptal edilmesi için kullanılır.
+    void IptalProfil()
+    {
+        user = Clone(backup);
+        editMode = false;
+    }
+
+    //Şifre değiştirme işlemini iptal etmek için kullanılır.
+    void IptalSifre()
+    {
+        eskiSifre = yeniSifre = yeniSifreTekrar = null;
+        sifreFormAcik = false;
+    }
+
+    //Değiştirdiğimiz şifreyi kaydetmek için kullanılır.
+    async Task SifreDegistir()
+    {
+        if (editMode) return;
+
+        if (yeniSifre != yeniSifreTekrar)
+        {
+            notificationService.Notify(
+                NotificationSeverity.Error,
+                "Hata",
+                "Şifreler uyuşmuyor"
+            );
+            return;
+        }
+
+        var dbUser = await _kullaniciRepo.GetByIDAsync(currentUserId);
+
+        if (dbUser == null || !PasswordHelper.VerifyPassword(eskiSifre!, dbUser.Sifre!))
+        {
+            notificationService.Notify(
+                NotificationSeverity.Error,
+                "Hata",
+                "Eski şifre yanlış"
+            );
+            return;
+        }
+
+        await _kullaniciRepo.UpdateSifreAsync(
+            currentUserId,
+            PasswordHelper.HashPassword(yeniSifre!)
+        );
+
+        notificationService.Notify(
+            NotificationSeverity.Success,
+            "Şifre",
+            "Şifre değiştirildi"
+        );
+
+        eskiSifre = yeniSifre = yeniSifreTekrar = null;
+        sifreFormAcik = false;
+    }
+
+    //bir User nesnesinin alanlarını kopyalayarak yeni ve bağımsız bir User nesnesi üretmek için kullanılır.
+    User Clone(User u) => new()
+    {
+        ID = u.ID,
+        Adi = u.Adi,
+        Soyadi = u.Soyadi,
+        EPosta = u.EPosta
+    };
 }

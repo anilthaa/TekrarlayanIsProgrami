@@ -2,12 +2,12 @@
 @layout MainLayout
 @attribute [Authorize]
 <RadzenCard Style="margin:20px;">
-	<h3 style="text-align:center;">Kategori Listesi</h3>
+	<h3 style="text-align:center; font-family:Calibri;font-weight: bold; ">Kategori Listesi</h3>
 
 	@if (_canWrite)
 	{
 		<RadzenButton Text="Yeni Kategori" Icon="add_circle"
-					  Style="margin-bottom:15px; background:mediumpurple; color:white;border-radius:10px;"
+					  Style="margin-bottom:15px; background:#ba76d3; color:white;border-radius:10px;"
 					  Click="@Ekle" />
 	}
 
@@ -23,7 +23,12 @@
 						AllowPaging="true" PageSize="20"
 						AllowSorting="true" AllowFiltering="true">
 			<Columns>
-				<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="150px" />
+				<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="0px" />
+				<RadzenDataGridColumn Title="No" Width="100px">
+					<Template Context="g">
+						@(DataList.ToList().IndexOf(g) + 1)
+					</Template>
+				</RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemKategori" Property="Adi" Title="Kategori Adı" />
 				@if (_canWrite)
 				{
@@ -48,7 +53,6 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		// Yazma yetkisi kontrolü (yetki >= 2)
 		_canWrite = await PermissionService.CanWriteAsync("kategori");
 		await YukleDataAsync();
 	}
@@ -129,7 +133,6 @@
 
 	private async Task Sil(ItemKategori item)
 	{
-		// Bu kategoriye ait aktif görevler var mı kontrol et
 		var tumGorevler = await DataService.GetGorevler();
 		var kategoriyeAitAktifGorevler = tumGorevler
 			.Where(g => g.Kategori_ID == item.ID && g.Aktif && (g.DelUser == null || g.DelUser == 0))

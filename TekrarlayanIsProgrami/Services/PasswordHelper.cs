@@ -4,6 +4,7 @@ namespace TekrarlayanIsProgrami.Services
 {
     public class PasswordHelper
     {
+        //şifreyi güvenli şekilde hash’lemek için kullanılır.
         public static string HashPassword(string password)
         {
             byte[] salt = new byte[16];
@@ -15,6 +16,7 @@ namespace TekrarlayanIsProgrami.Services
             return Convert.ToBase64String(salt) + ":" + Convert.ToBase64String(hash);
         }
 
+        //veritabanında saklanan hash’lenmiş şifreyi doğrulamak için kullanılır.
         public static bool VerifyPassword(string Sifre, string stored)
         {
             var parts = stored.Split(':');

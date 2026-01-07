@@ -1,15 +1,7 @@
 body {
-  /*  margin: 0;
-    padding: 0;
-    background: linear-gradient(135deg, #1d2b64, #f8cdda);
-    font-family: 'Segoe UI', sans-serif;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;*/
+
 }
 
-/* Radzen Dialog X butonunu gizle - GorevList ve GorevTnm için */
 .rz-dialog-header-close,
 .rz-dialog-close,
 button[aria-label="Close"],
@@ -24,75 +16,17 @@ button[aria-label="Close"],
     background: linear-gradient(to bottom right, #1d2b64, #f8cdda);
 }
 
-.login-card {
-    background: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    width: 350px;
-    text-align: center;
-}
 
-.login-card h2 {
-    margin-bottom: 10px;
-    color: #333;
-    }
-
-.subtitle {
-    font-size: 14px;
-    color: #777;
-    margin-bottom: 20px;
-}
-
-.form-group {
-    text-align: left;
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-    color: #444;
-    }
-
-.form-control {
+.for.m-control {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
 }
 
-.btn {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    margin-top: 10px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.btn-primary {
-    background-color: #5563DE;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #4050c5;
-}
-
-.btn-secondary {
-    background-color: #ccc;
-    color: #333;
-}
-
-.btn-secondary:hover {
-        background-color: #aaa;
-}
 /*Dashboard Navmenu Ayarları*/
 .dashboard-nav {
-    background-color: #473c8b;
+    background-color: #4a148c;
     color: white !important;
     width: 250px;
     height: 100vh;
@@ -137,20 +71,6 @@ button[aria-label="Close"],
     flex-direction: column;
     justify-content: center;
 }
-footer {
-    text-align: center;
-    padding: 20px;
-    margin-top: 40px;
-    color: #777;
-    border-top: 1px solid #ddd;
-}
-
-/* Form başlıkları */
-.form h3 {
-    font-size: 26px;
-    margin-bottom: 10px;
-    color: #1d2b64;
-}
 
 /* Buton genel */
 .radzen-button, .slider-content button {
@@ -169,13 +89,6 @@ footer {
 button RadzenIcon {
     color: #555 !important;
 }
-.form h3 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 24px;
-    font-weight: bold;
-}
 .sifreBaglanti {
    
 }
@@ -185,30 +98,6 @@ button RadzenIcon {
     text-shadow:1px 1px 3px purple;
 }
 
-.radzen-textbox,
-.radzen-password,
-/*.radzen-button {
-    width: 20%;*/
-   /* margin-bottom: 15px;*/
-/*}*/
-
-.radzen-textbox input,
-.radzen-password input {
-    padding: 12px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    transition: border-color 0.3s;
-}
-.radzen-textbox input:focus,
-.radzen-password input:focus {
-    border-color: #3f51b5;
-    outline: none;
-    }
-
-.radzen-labell {
-    color: #363636;
-    font-weight: 15;
-}
 .radzen-button {
     background-color: #6959cd !important;
     color: #fff !important;
@@ -246,16 +135,27 @@ button RadzenIcon {
 }
    .radzen-buttonIptal:hover{
        background-color:darkred !important;
-    } 
+    }
 
-   
-        /*kullanıcı düzenle sayfası ayarları.*/
+.radzen-buttonSifreDegistir {
+    background-color: orange !important;
+    color: #fff !important;
+    padding: 12px !important;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    width: 10%;
+}
+.radzen-buttonSifreDegistir:hover {
+    background-color: darkorange !important;
+}
+/*kullanıcı düzenle sayfası ayarları.*/
 .form-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
-    height:80px;
-    width:300px;
+    height: 80px;
+    width: 300px;
     background-color: #f0f0f0;
 }
 
@@ -321,19 +221,8 @@ button RadzenIcon {
     margin-left: 8px;
 }
 
-.button-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-}
 
-.save-button {
-    background: #3498db;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 12px 24px;
-}
+
 .login-container {
     width: 930px;
     height: 560px;
@@ -343,7 +232,7 @@ button RadzenIcon {
     border-radius: 32px;
     backdrop-filter: blur(18px);
     background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 20px 60px purple;
+    box-shadow: 2px 6px 18px purple;
     transition: 0.6s ease-in-out;
 }
 
@@ -420,7 +309,7 @@ button RadzenIcon {
     }
 
 .girisButton {
-    background-color: plum !important;
+    background-color: rebeccapurple !important;
     color: white !important;
     padding: 12px !important;
     border-radius: 6px;
@@ -430,7 +319,7 @@ button RadzenIcon {
 }
 
 .girisButton:hover {
-    background-color: rebeccapurple !important;
+    background-color:  #ba76d3 !important;
 }
 /*Standart Tip Kartları*/
 .cards {
@@ -553,3 +442,59 @@ fieldset .rz-form-field-label {
 .rz-layout .rz-sidebar {
     grid-area:auto;
 }
+.compact-grid .rz-datatable-data tr {
+    height: 27px;
+}
+
+/* Hücre padding */
+.compact-grid .rz-datatable-data td {
+    padding: 2px 4px !important;
+}
+
+/* Hücre içi tüm Radzen bileşenleri */
+.compact-grid .rz-datatable-data td * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.1;
+}
+.compact-grid .rz-datatable-thead th {
+    font-family: "Montserrat", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+.radzen-grid .rz-datatable-thead th {
+    font-weight:bold;
+}
+.radzen-hover-effect {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+    .radzen-hover-effect:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(0, 0, 0,0.2) !important;
+    }
+
+.shimmer-wrapper {
+    position: relative;
+    overflow: hidden;
+    background-color: #f6f7f8;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    background-size: 800px 100%;
+    animation-duration: 1.2s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: shimmer;
+    animation-timing-function: linear;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -468px 0;
+    }
+
+    100% {
+        background-position: 468px 0;
+    }
+}
+

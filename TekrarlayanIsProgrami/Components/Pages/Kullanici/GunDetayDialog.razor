@@ -1,30 +1,35 @@
-
 <div style="padding:20px; width:100%;">
 	
 	<p style="margin-bottom:15px; color:#666;">Bu tarihte <strong>@Gorevler.Count</strong> görev bulunuyor:</p>
 	<div style="overflow:visible; max-height:none;">
-		<RadzenDataGrid Data="@Gorevler" TItem="ItemGorev" AllowPaging="false" class="gorev-list-dialog">
+		<RadzenDataGrid Data="@GorevlerGoster" TItem="ItemGorev" AllowPaging="false" RowSelect="@GorevSecildi" class="gorev-list-dialog">
 		<Columns>
 			<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Görev Başlığı" Width="500px"></RadzenDataGridColumn>
 			<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="200px"></RadzenDataGridColumn>
-			<RadzenDataGridColumn TItem="ItemGorev" Title="Önem" Width="150px">
-				<Template Context="onem">
-						<span style="display:inline-block; width:60px; text-align:center; font-size:10px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
-							@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+				<RadzenDataGridColumn TItem="ItemGorev" Title="Önem" Width="150px">
+					<Template Context="g">
+						<span style="display:inline-block; width:60px; text-align:center;
+                     font-size:10px; padding:3px 8px; border-radius:6px;
+                     color:white; background-color:@GetOnemRengi(g)">
+							@(string.IsNullOrWhiteSpace(g.OnemDerecesi) ? "Yok" : g.OnemDerecesi)
 						</span>
 					</Template>
-			</RadzenDataGridColumn>
-			<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Durum" Width="150px">
-				<Template Context="g">
-						<span style="@($"font-size:11px; padding:3px 8px; border-radius:10px;  background-color:{(g.Tamamlandi ? "#4caf50" : "#e74c3c")};color:white; display:inline-block; width:100px; text-align:center;")">
-						@(g.Tamamlandi ? "Tamamlandı" : "Devam Ediyor")
-					</span>
-				</Template>
-			</RadzenDataGridColumn>
-		</Columns>
+				</RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Durum" Width="150px">
+                <Template Context="g">
+						@{
+							bool suresiDolmus =g.BitisTarihi.HasValue &&g.BitisTarihi.Value < DateTime.Now &&!g.Tamamlandi;
+							string text = g.Tamamlandi? "Tamamlandı": suresiDolmus? "Tamamlanmamış": "Devam Ediyor";
+							string renk = g.Tamamlandi ? "#4caf50" : suresiDolmus ? "#9e9e9e" : "#e74c3c";
+						}
+
+        <span style="@($"font-size:11px; padding:3px 8px; border-radius:6px;background-color:{renk};color:white;display:inline-block;width:110px;text-align:center;")"> @text </span>
+                </Template>
+            </RadzenDataGridColumn>		
+        </Columns>
 		</RadzenDataGrid>
 	</div>
-	<div style="margin-top:20px; text-align:right;">
+	<div style="margin-top:240px; text-align:right;">
 		<RadzenButton Text="Kapat" ButtonStyle="ButtonStyle.Secondary" Click="@(() => DialogService.Close())" />
 	</div>
 </div>
@@ -32,16 +37,64 @@
 @code {
 	[Parameter] public string DateStr { get; set; } = string.Empty;
 	[Parameter] public List<ItemGorev> Gorevler { get; set; } = new();
+	private int? currentUserId = null;
+	[Parameter] public int? gorevId { get; set; } 
+	private List<ItemGorev> GorevlerGoster => Gorevler.Where(g => g.Aktif).ToList();
+	private List<ItemGorev> SeciliGorevler => gorevId.HasValue ? GorevlerGoster.Where(g => g.ID == gorevId.Value).ToList() : new List<ItemGorev>();
 
-	private string GetOnemRengi(string onem)
+	//Popup ilk yüklendiğinde yüklenecek olan vilgiler için kullanılır.
+	protected override async Task OnInitializedAsync()
 	{
-		return onem?.ToLower() switch
+		var currentUser = await girisSaglayici.GetCurrentUserAsync();
+		if (currentUser != null)
 		{
-			"yüksek" => "#e74c3c",
-			"orta" => "#f1c40f",
-			"düşük" => "#2ecc71"
-
-		};
+			currentUserId = currentUser.ID;
+		}
 	}
+
+	//Öneme göre renk belirleniyor bu metotta.
+	private string GetOnemRengi(ItemGorev g)
+	{
+		var val = g.OnemDerecesi.Trim().ToLower();
+
+		if (val.Contains("yüksek"))
+			return "#e74c3c";
+
+		if (val.Contains("orta"))
+			return "#f39c12";
+
+		if (val.Contains("düşük"))
+			return "#4caf50";
+
+		return "#9e9e9e";
+	}
+
+	//Gun detayda görevin üzerine tıklayınca görev sayfasında görevin olduğu taba gönderiyor.
+	void GorevSecildi(ItemGorev gorev)
+	{
+		var tab = GorevinTabiniBul(gorev);
+		NavigationManager.NavigateTo($"/gorevler?tab={tab}&gorevId={gorev.ID}");
+	}
+
+	//Göreve tıklayınca görevin olduğu  tabi bulmak için kullanılır.
+	int GorevinTabiniBul(ItemGorev g)
+   {
+    if (g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif)
+	{
+		return 6;
+	}
+
+	if (g.BitisTarihi.HasValue &&g.BitisTarihi.Value < DateTime.Now &&!g.Tamamlandi)
+	{
+		return 3;
+	}
+
+	if (g.Tamamlandi)
+	{
+		return 2;
+	}
+
+	return 0;
+}
 }
 
