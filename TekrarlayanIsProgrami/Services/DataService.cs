@@ -54,7 +54,7 @@ namespace TekrarlayanIsProgrami.Services
                        g.""TekrarAraligi"", g.""HaftaninGunu"", g.""AyinGunu"", g.""SonrakiCalismaTarihi"", g.""Tamamlandi"",
                        g.""CreUser"", g.""CreDate"", g.""UpdUser"", g.""UpdDate"", g.""DelUser"", g.""DelDate""
                 From ""Gorev"" g
-                Inner Join ""Kategori"" k on g.""Kategori_ID"" = k.""ID""
+                Left Join ""Kategori"" k on g.""Kategori_ID"" = k.""ID""
                 Where g.""DelDate"" Is Null
                 Order By g.""ID"" desc
             ")).ToArray();
@@ -220,9 +220,34 @@ namespace TekrarlayanIsProgrami.Services
                                 
                 return new() { Data = item.ID };
             }
-            catch (Exception ex)
+            catch
             {
                 throw;
+            }
+        }
+
+        //görev işlemlerini loglamak (kaydetmek) için kullanılır.
+        public async Task<DataResult<int>> SetGorevLog(ItemGorevLoglari item)
+        {
+            try
+            {                
+                if (item.IslemTarih == default(DateTime))
+                {
+                    item.IslemTarih = DateTime.Now;
+                }
+                
+                item.ID = await SQLExecuteScalar<int>(@"
+                    INSERT INTO ""GorevLoglari"" (""Gorev_ID"", ""IslemTipi"", ""AlanAdi"", ""EskiDeger"", ""YeniDeger"", ""IslemKullanici_ID"", ""IslemTarih"")
+                    VALUES (@Gorev_ID, @IslemTipi, @AlanAdi, @EskiDeger, @YeniDeger, @IslemKullanici_ID, @IslemTarih)
+                    RETURNING ""ID""", item);
+                                
+                return new() { Data = item.ID };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SetGorevLog hatası: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return new() { SonucKodu = -1, SonucAciklama = ex.Message };
             }
         }
 
@@ -344,6 +369,32 @@ namespace TekrarlayanIsProgrami.Services
             else
             {
                 return (await SQLQueryAsync<ItemKullaniciLog>(sql)).ToArray();
+            }
+        }
+
+        //tüm görevlerin veya tek bir görevin işlem loglarını sıralı şekilde döndürür.
+        public async Task<ItemGorevLoglari[]> GetGorevLoglari(int? gorevId = null)
+        {
+            var sql = @"
+                SELECT gl.""ID"", gl.""Gorev_ID"", gl.""IslemTipi"", gl.""AlanAdi"", gl.""EskiDeger"", 
+                       gl.""YeniDeger"", gl.""IslemKullanici_ID"", gl.""IslemTarih""
+                FROM ""GorevLoglari"" gl
+                WHERE 1=1";
+            
+            if (gorevId.HasValue)
+            {
+                sql += @" AND gl.""Gorev_ID"" = @GorevId";
+            }
+            
+            sql += @" ORDER BY gl.""IslemTarih"" DESC";
+            
+            if (gorevId.HasValue)
+            {
+                return (await SQLQueryAsync<ItemGorevLoglari>(sql, new { GorevId = gorevId.Value })).ToArray();
+            }
+            else
+            {
+                return (await SQLQueryAsync<ItemGorevLoglari>(sql)).ToArray();
             }
         }
 
