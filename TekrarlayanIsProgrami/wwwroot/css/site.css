@@ -182,11 +182,11 @@ button RadzenIcon {
 
 .empty-layout {
     width: 100%;
-    min-height: 100vh; /* sayfa tüm yüksekliği kapsar */
+    min-height: 100vh; 
     display: flex;
     justify-content: center;
-    align-items: center; /* içerik ortalanır */
-    padding: 20px; /* üst-alt boşluk */
+    align-items: center; 
+    padding: 20px; 
     box-sizing: border-box;
 }
 .pw-toggle {
@@ -497,4 +497,3 @@ fieldset .rz-form-field-label {
         background-position: 468px 0;
     }
 }
-

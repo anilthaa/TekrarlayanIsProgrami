@@ -10,9 +10,10 @@ else
 {
 	@if (kullanicilar.ID != 0)
 	{
-		<RadzenCard Style="max-width:600px; margin:auto; padding:20px;">
+		<div Style="max-width:600px; margin:auto; padding:20px;">
 			<h3 class="text-center mb-4">Kullanıcı Düzenle</h3>
 			<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@Kaydet" Style="align-items:center; border:none;">
+			  <RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 
 				<RadzenFormField Text="Ad" Style="width:85%; margin-left:41px; margin-top:4px;">
 					<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Adi" />
@@ -37,8 +38,9 @@ else
 					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
 								  Style="width:30%; margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
 				</div>
+				</RadzenFieldset>
 			</RadzenTemplateForm>
-		</RadzenCard>
+		</div>
 	}
 	else
 	{

@@ -312,7 +312,6 @@ else if (kullaniciTip.Adi == "Standart")
 	private int? currentUserId = null;
 	[SupplyParameterFromQuery(Name = "tab")]
 	public int QueryTabIndex { get; set; } = 0;
-
 	int? gorevId;
 	int? hedefTab = null;
 	List<ItemGorev> SeciliGorevler = new();
@@ -334,6 +333,7 @@ else if (kullaniciTip.Adi == "Standart")
 	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId) && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> STumGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0);
 
+	//URL’den gelen tab parametresine göre ekrandaki sekmelerin doğru seçili kalmasını sağlar.
 	protected override void OnParametersSet()
 	{
 		if (SelectedTabIndex != QueryTabIndex)
@@ -346,6 +346,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//sayfa ilk render edildikten sonra sekme seçimini ve görev otomatik seçimini yapmak için kullanılır.
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (!firstRender) return;
@@ -393,6 +394,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//görevler sayfası ilk açıldığında URL parametrelerini okuyup gerekli verileri yükleyen başlangıç sürecidir.
 	protected override async Task OnInitializedAsync()
 	{
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -423,6 +425,7 @@ else if (kullaniciTip.Adi == "Standart")
 		await YukleKullanicilar();
 	}
 
+	//oturumda bulunan kullanıcının ID sini sisteme yüklemek için kullanılır.
 	private async Task YukleKullaniciId()
 	{
 		try
@@ -439,11 +442,13 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//sistemde kayıtlı tüm kullanıcıları veritabanından yüklemek için kullanılır.
 	private async Task YukleKullanicilar()
 	{
 		TumKullanicilar = await _kullaniciRepo.GetAllAsync();
 	}
 
+	//tüm görevleri veritabanından alıp belleğe yükler.
 	private async Task YukleGorevler()
 	{
 		try
@@ -457,6 +462,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//yeni görev oluşturma akışını başlatır.
 	private async Task YeniGorev()
 	{
 		if (currentUserId == null)
@@ -485,6 +491,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//görevin kime atandığını ekranda göstermek için kullanılır.
 	private MarkupString GetAtananKullaniciAdi(int kullaniciId, bool kilitli)
 	{
 		if (!kilitli)
@@ -502,6 +509,7 @@ else if (kullaniciTip.Adi == "Standart")
 		return (MarkupString)adSoyad;
 	}
 
+	//aynı görevin kaç kullanıcıya atanmış olduğunu hesaplar.
 	private int GetAtananKullaniciSayisi(ItemGorev gorev)
 	{
 		if (!gorev.Kilitli)
@@ -519,6 +527,7 @@ else if (kullaniciTip.Adi == "Standart")
 		return ayniBaslikliGorevler.Count;
 	}
 
+	//aynı görevin kaç kişide tamamlandığını ve toplam kaç kişiye atandığını döner.
 	private (int Tamamlanan, int Toplam) GetTamamlanmaBilgisi(ItemGorev gorev)
 	{
 		if (!gorev.Kilitli)
@@ -539,6 +548,7 @@ else if (kullaniciTip.Adi == "Standart")
 		return (tamamlanan, toplam);
 	}
 
+	//bir görevin kimlere atandığını ve kimin tamamladığını modal pencerede gösterir.
 	private async Task ShowAtananKisilerDialog(ItemGorev gorev)
 	{
 		var ayniBaslikliGorevler = GorevListt.Where(g =>
@@ -605,10 +615,12 @@ else if (kullaniciTip.Adi == "Standart")
 			<div style="margin-top: 20px; text-align: right;">
 				<RadzenButton Text="Kapat" ButtonStyle="ButtonStyle.Secondary" Click="@(() => ds.Close())" />
 			</div>
-		</div>,
+		</div>
+	,
 		new DialogOptions { Width = "600px", Height = "auto", ShowClose = false });
 	}
 
+	//seçilen görevi düzenlemek için dialog açar ve sonucu uygular.
 	private async Task Duzenle(ItemGorev gorev)
 	{
 		if (currentUserId.HasValue)
@@ -623,7 +635,7 @@ else if (kullaniciTip.Adi == "Standart")
 		{
 			if (guncellendi.ID == 0)
 			{
-				// notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev eklendi!");
+
 			}
 			else
 			{
@@ -634,6 +646,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//, bir görev silme sürecini yönetir. İşleyişi şöyle:
 	private async Task Sil(ItemGorev gorev)
 	{
 		bool? onay = await DialogService.Confirm("Görevi silmek istiyor musunuz?", "Onay",
@@ -649,6 +662,19 @@ else if (kullaniciTip.Adi == "Standart")
 
 			if (wsCvp.SonucKodu == 0)
 			{
+				// if (currentUserId.HasValue)
+				// {
+				// 	await DataService.SetGorevLog(new ItemGorevLoglari
+				// 	{
+				// 		Gorev_ID = gorev.ID,
+				// 		IslemTipi = "Silindi",
+				// 		AlanAdi = "Tümü",
+				// 		EskiDeger = $"Görev: {gorev.Baslik}",
+				// 		YeniDeger = "",
+				// 		IslemKullanici_ID = currentUserId.Value,
+				// 		IslemTarih = DateTime.Now
+				// 	});
+				// }
 				GorevListt.Remove(gorev);
 				await GrdGorev!.Reload();
 				notificationService.Notify(NotificationSeverity.Success, "Silindi", "Görev silindi!");
@@ -660,11 +686,13 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//Satırlara çift tıklayınca olcak olan şeyleri yapar.
 	private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<ItemGorev> args)
 	{
 		await Duzenle(args.Data);
 	}
 
+	//bir görevin aktif/pasif durumunu değiştirme işlevini yönetir. Adım adım açıklayalım:
 	private async Task ToggleDurum(ItemGorev item)
 	{
 		try
@@ -684,6 +712,19 @@ else if (kullaniciTip.Adi == "Standart")
 
 			if (sonuc.SonucKodu == 0)
 			{
+				// if (currentUserId.HasValue)
+				// {
+				// 	await DataService.SetGorevLog(new ItemGorevLoglari
+				// 	{
+				// 		Gorev_ID = item.ID,
+				// 		IslemTipi = "Güncellendi",
+				// 		AlanAdi = "Aktif",
+				// 		EskiDeger = (!item.Aktif).ToString(),
+				// 		YeniDeger = item.Aktif.ToString(),
+				// 		IslemKullanici_ID = currentUserId.Value,
+				// 		IslemTarih = DateTime.Now
+				// 	});
+				// }
 				notificationService.Notify(NotificationSeverity.Success, "Durum Güncellendi", item.Aktif ? "Görev aktif hale getirildi." : "Görev pasif hale getirildi.");
 
 				GorevListt = (await DataService.GetGorevler()).ToList();
@@ -704,6 +745,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//bir görevin tamamlandı/tamamlanmadı durumunu değiştirme işlemini yönetir. İ
 	private async Task ToggleTamamlandi(ItemGorev item)
 	{
 		try
@@ -722,7 +764,6 @@ else if (kullaniciTip.Adi == "Standart")
 
 			if (sonuc.SonucKodu == 0)
 			{
-				// Görev tamamlandı ve tekrarlama tipi varsa yeni görev oluştur
 				if (item.Tamamlandi && !string.IsNullOrEmpty(item.TekrarlamaTipi) && item.TekrarlamaTipi != "Yok")
 				{
 					await OlusturTekrarlayanGorev(item);
@@ -771,7 +812,6 @@ else if (kullaniciTip.Adi == "Standart")
 	{
 		try
 		{
-			// Yeni görev oluştur (eski görevin kopyası)
 			var yeniGorev = new ItemGorev
 			{
 				Kullanici_ID = eskiGorev.Kullanici_ID,
@@ -787,21 +827,17 @@ else if (kullaniciTip.Adi == "Standart")
 				Tamamlandi = false,
 				CreUser = currentUserId ?? 0,
 
-				// Yeni başlangıç tarihi = eski görevin SonrakiCalismaTarihi
 				BaslangicTarihi = eskiGorev.SonrakiCalismaTarihi ?? DateTime.Now
 			};
 
-			// Bitiş tarihini hesapla (eski görevdeki süre farkı kadar)
 			if (eskiGorev.BaslangicTarihi.HasValue && eskiGorev.BitisTarihi.HasValue)
 			{
 				var sureFarki = eskiGorev.BitisTarihi.Value - eskiGorev.BaslangicTarihi.Value;
 				yeniGorev.BitisTarihi = yeniGorev.BaslangicTarihi.Value.Add(sureFarki);
 			}
 
-			// Yeni SonrakiCalismaTarihi hesapla
 			HesaplaSonrakiCalismaTarihi(yeniGorev);
 
-			// Veritabanına kaydet
 			var sonuc = await DataService.SetGorev(yeniGorev);
 
 			if (sonuc.SonucKodu == 0)
@@ -848,16 +884,16 @@ else if (kullaniciTip.Adi == "Standart")
 						{
 							var bitisTarihi = gorev.BitisTarihi.Value.Date;
 							var ilkGun = seciliGunler.First();
-							
+
 							// Bitiş tarihinden bir sonraki haftanın ilk seçili gününü bul
 							var sonrakiHaftaBaslangic = bitisTarihi.AddDays(1); // Bitiş tarihinden sonraki gün
-							
+
 							// Sonraki haftanın ilk seçili gününe ulaş
 							while (sonrakiHaftaBaslangic.DayOfWeek != ilkGun)
 							{
 								sonrakiHaftaBaslangic = sonrakiHaftaBaslangic.AddDays(1);
 							}
-							
+
 							// Saat bilgisini başlangıç tarihinden al
 							gorev.SonrakiCalismaTarihi = sonrakiHaftaBaslangic.Add(baslangic.TimeOfDay);
 						}
@@ -908,6 +944,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//bir Türkçe gün adını alıp karşılık gelen DayOfWeek enum değerine çevirir.
 	private DayOfWeek MapHaftaninGunu(string gun)
 	{
 		return gun?.ToLower() switch
@@ -923,6 +960,7 @@ else if (kullaniciTip.Adi == "Standart")
 		};
 	}
 
+	//bir görevin önem derecesini alıp ona karşılık gelen renk kodunu döndürür.
 	private string GetOnemRengi(string onem)
 	{
 		return onem?.ToLower() switch
@@ -930,7 +968,7 @@ else if (kullaniciTip.Adi == "Standart")
 			"yüksek" => "#e74c3c",
 			"orta" => "#f1c40f",
 			"düşük" => "#2ecc71",
-			_ => "#95a5a6" // varsayılan gri ton
+			_ => "#95a5a6" 
 		};
 	}
 
@@ -953,6 +991,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
+	//bir görevi oluşturan kullanıcının adını alır ve döndürür.
 	private MarkupString GetAtayanKullaniciAdi(int? creUserId)
 	{
 		Console.WriteLine($"CreUserId: {creUserId}");
@@ -968,16 +1007,173 @@ else if (kullaniciTip.Adi == "Standart")
 
 	}
 
+	//bir görev satırı seçildiğinde çalışır ve seçili görev listesini düzenlemeye geçer.
 	private void OnRowSelect(ItemGorev gorev)
 	{
 		SeciliGorevler.Clear();
 		SeciliGorevler.Add(gorev);
 	}
 
+	//bir görev satırının stilini (renklendirmesini) belirler.
 	private string GorevRowStyle(ItemGorev g, int rowIndex)
 	{
 		if (SeciliGorevler.Any() && g.ID == SeciliGorevler.First().ID)
 			return "background-color:#d1e7dd; !important";
 		return string.Empty;
 	}
+	// private async Task KaydetGorevLoglari(bool yeniKayıt)
+	// {
+	// 	try
+	// 	{
+	// 		int currentUserId = await girisSaglayici.GetUserIdAsync();
+	// 		if (currentUserId == 0)
+	// 		{
+	// 			return;
+	// 		}
+
+	// 		if (Gorev.ID == 0)
+	// 		{
+	// 			return;
+	// 		}
+
+	// 		if (yeniKayıt)
+	// 		{
+	// 			// Yeni görev oluşturuldu
+	// 			var log = new ItemGorevLoglari
+	// 			{
+	// 				Gorev_ID = Gorev.ID,
+	// 				IslemTipi = "Oluşturuldu",
+	// 				AlanAdi = "Tümü",
+	// 				EskiDeger = "",
+	// 				YeniDeger = $"Görev oluşturuldu: {Gorev.Baslik}",
+	// 				IslemKullanici_ID = currentUserId,
+	// 				IslemTarih = DateTime.Now
+	// 			};
+	// 			var logSonuc = await DataService.SetGorevLog(log);
+	// 			if (logSonuc.SonucKodu != 0)
+	// 			{
+					
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			// Görev güncellendi - değişen alanları logla
+	// 			if (originalGorev.Baslik != Gorev.Baslik)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "Baslik",
+	// 					EskiDeger = originalGorev.Baslik ?? "",
+	// 					YeniDeger = Gorev.Baslik ?? "",
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+
+	// 			if (originalGorev.Kategori_ID != Gorev.Kategori_ID)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "Kategori_ID",
+	// 					EskiDeger = originalGorev.Kategori_ID.ToString(),
+	// 					YeniDeger = Gorev.Kategori_ID.ToString(),
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+
+	// 			if (originalGorev.OnemDerecesi != Gorev.OnemDerecesi)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "OnemDerecesi",
+	// 					EskiDeger = originalGorev.OnemDerecesi ?? "",
+	// 					YeniDeger = Gorev.OnemDerecesi ?? "",
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+
+	// 			if (originalGorev.BaslangicTarihi != Gorev.BaslangicTarihi)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "BaslangicTarihi",
+	// 					EskiDeger = originalGorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+	// 					YeniDeger = Gorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+
+	// 			if (originalGorev.BitisTarihi != Gorev.BitisTarihi)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "BitisTarihi",
+	// 					EskiDeger = originalGorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+	// 					YeniDeger = Gorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+
+	// 			if (originalGorev.TekrarlamaTipi != Gorev.TekrarlamaTipi)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "TekrarlamaTipi",
+	// 					EskiDeger = originalGorev.TekrarlamaTipi ?? "",
+	// 					YeniDeger = Gorev.TekrarlamaTipi ?? "",
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+
+	// 			if (originalGorev.Kilitli != Gorev.Kilitli)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "Kilitli",
+	// 					EskiDeger = originalGorev.Kilitli.ToString(),
+	// 					YeniDeger = Gorev.Kilitli.ToString(),
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+
+	// 			if (originalGorev.Kullanici_ID != Gorev.Kullanici_ID)
+	// 			{
+	// 				await DataService.SetGorevLog(new ItemGorevLoglari
+	// 				{
+	// 					Gorev_ID = Gorev.ID,
+	// 					IslemTipi = "Güncellendi",
+	// 					AlanAdi = "Kullanici_ID",
+	// 					EskiDeger = originalGorev.Kullanici_ID.ToString(),
+	// 					YeniDeger = Gorev.Kullanici_ID.ToString(),
+	// 					IslemKullanici_ID = currentUserId,
+	// 					IslemTarih = DateTime.Now
+	// 				});
+	// 			}
+	// 		}
+	// 	}
+	// 	catch (Exception ex)
+	// 	{
+			
+	// 	}
+	// }
 }
