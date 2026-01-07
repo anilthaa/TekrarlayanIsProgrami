@@ -8,7 +8,7 @@ namespace TekrarlayanIsProgrami.Models
         [Required(ErrorMessage ="Bu Alan Zorunludur.")]
         public string Baslik {  get; set; } 
         public int Kategori_ID {  get; set; }
-        public string? KategoriAdi { get; set; } // SQL join ile gelecek
+        public string? KategoriAdi { get; set; } 
         public string? OnemDerecesi {  get; set; }
         public DateTime? BaslangicTarihi {  get; set; }
         public DateTime? BitisTarihi { get; set; }

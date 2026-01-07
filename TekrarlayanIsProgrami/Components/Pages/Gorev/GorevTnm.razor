@@ -8,7 +8,6 @@
 		<fieldset class="border rounded p-3 mb-4">
 			<legend class="float-none w-auto px-2">Görev Bilgileri</legend>
 
-			<!-- Önem Derecesi ve Tekrarlama Tipi - Yan Yana -->
 			<div class="row g-2">
 				<div class="col-md-6">
 					<RadzenFormField Text="Önem Derecesi" style="width:100%;">
@@ -22,7 +21,6 @@
 				</div>
 			</div>
 
-			<!-- Tekrarlama Tipi Seçilince - Altında Ortalı -->
 			@if (Gorev.TekrarlamaTipi == "Günlük")
 			{
 				<div style="display: flex; justify-content: center; margin-top: 5px;">
@@ -78,7 +76,6 @@
 					</RadzenFormField>
 			}
 
-			<!-- Başlangıç ve Bitiş Tarihi - Yan Yana -->
 			<div class="row g-2" style="margin-top: 5px;">
 				<div class="col-md-6">
 					<RadzenFormField Text="Başlangıç Tarihi" style="width:100%;">
@@ -92,7 +89,6 @@
 				</div>
 			</div>
 
-			<!-- Başlık ve Kategori - Yan Yana -->
 			<div class="row g-2" style="margin-top: 5px;">
 				<div class="col-md-6">
 					<RadzenFormField Text="Başlık" style="width:100%;">
@@ -107,13 +103,11 @@
 				</div>
 			</div>
 
-			<!-- Kilitli Görev Checkbox - Tam Genişlik -->
 			<div style="margin-top: 5px;">
 				<RadzenCheckBox @bind-Value="Gorev.Kilitli" TValue="bool" Change="@OnKilitliChanged" />
 				<span class="ms-2">Kilitli Görev</span>
 			</div>
 
-			<!-- Kullanıcı Seçme Dropdown - Tam Genişlik, Kilitli Görev seçilince -->
 			@if (Gorev.Kilitli)
 			{
 				<RadzenFormField Text="Görev Sahibi (birden fazla seçebilirsiniz)" style="width:100%; margin-top:5px;">
@@ -191,7 +185,7 @@
 	private List<string> haftaninGunleri = new() { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
 	private List<ItemKategori> DataKategoriList = new();
 	private List<User> kullanicilar = new();
-	private ItemGorev originalGorev = new(); // Orijinal görev bilgilerini saklamak için
+	private ItemGorev originalGorev = new(); 
 	private bool isSaving = false;
 	private string tekrarAraligiString = string.Empty;
 	private string ayinGunuString = string.Empty;
@@ -199,8 +193,8 @@
 	private List<int> seciliKullaniciIdler = new();
 	private bool hepsiHaftaninGunleriSecili = false;
 	private bool hepsiKullanicilarSecili = false;
-	private bool haftaninGunleriDropdownAcik = false; // Haftanın günleri dropdown açık/kapalı durumu
-	private bool kullanicilarDropdownAcik = false; // Kullanıcılar dropdown açık/kapalı durumu
+	private bool haftaninGunleriDropdownAcik = false;
+	private bool kullanicilarDropdownAcik = false; 
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -256,7 +250,6 @@
 
 		if (Gorev.ID == 0)
 		{
-			// Yeni görev modunda varsayılan değerleri set et
 			Gorev.Aktif = true;
 			Gorev.Kilitli = false;
 			Gorev.BaslangicTarihi = DateTime.Now;
@@ -264,20 +257,16 @@
 		}
 		else
 		{
-			// Düzenleme modunda kilitli görevse mevcut kullanıcıyı listeye ekle
 			if (Gorev.Kilitli && Gorev.Kullanici_ID > 0)
 			{
 				seciliKullaniciIdler = new List<int> { Gorev.Kullanici_ID };
 			}
 		}
 
-		// TekrarAraligi değerini string'e çevir
 		tekrarAraligiString = Gorev.TekrarAraligi.HasValue ? Gorev.TekrarAraligi.Value.ToString() : string.Empty;
 
-		// AyinGunu değerini string'e çevir
 		ayinGunuString = Gorev.AyinGunu.HasValue ? Gorev.AyinGunu.Value.ToString() : string.Empty;
 
-		// HaftaninGunu değerini listeye çevir (virgülle ayrılmış string'den)
 		if (!string.IsNullOrEmpty(Gorev.HaftaninGunu))
 		{
 			seciliHaftaninGunleri = Gorev.HaftaninGunu.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -290,7 +279,6 @@
 			seciliHaftaninGunleri = new List<string>();
 		}
 
-		// Hepsini seç checkbox'larını güncelle
 		hepsiHaftaninGunleriSecili = seciliHaftaninGunleri.Count == haftaninGunleri.Count && haftaninGunleri.Any();
 		hepsiKullanicilarSecili = seciliKullaniciIdler.Count == kullanicilar.Count && kullanicilar.Any();
 
@@ -307,14 +295,11 @@
 
 	private void OnTekrarlamaTipiChanged(object value)
 	{
-		// Dropdown'ları kapat
 		haftaninGunleriDropdownAcik = false;
 		kullanicilarDropdownAcik = false;
 		
-		// Tekrarlama tipi değiştiğinde, ilgili string'leri temizle veya güncelle
 		if (Gorev.TekrarlamaTipi == "Günlük")
 		{
-			// Günlük seçildiyse ve mevcut bir değer varsa, string'e çevir
 			if (Gorev.TekrarAraligi.HasValue)
 			{
 				tekrarAraligiString = Gorev.TekrarAraligi.Value.ToString();
@@ -325,7 +310,6 @@
 		}
 		else if (Gorev.TekrarlamaTipi == "Haftalık")
 		{
-			// Haftalık seçildiyse ve mevcut bir değer varsa, listeye çevir
 			if (!string.IsNullOrEmpty(Gorev.HaftaninGunu))
 			{
 				seciliHaftaninGunleri = Gorev.HaftaninGunu.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -341,7 +325,6 @@
 			ayinGunuString = string.Empty;
 			hepsiHaftaninGunleriSecili = seciliHaftaninGunleri.Count == haftaninGunleri.Count && haftaninGunleri.Any();
 
-			// Eğer günler seçildiyse, tarihleri ayarla
 			if (seciliHaftaninGunleri.Any())
 			{
 				AyarlaHaftalikTarihler();
@@ -349,7 +332,6 @@
 		}
 		else if (Gorev.TekrarlamaTipi == "Aylık")
 		{
-			// Aylık seçildiyse ve mevcut bir değer varsa, string'e çevir
 			if (Gorev.AyinGunu.HasValue)
 			{
 				ayinGunuString = Gorev.AyinGunu.Value.ToString();
@@ -360,7 +342,6 @@
 		}
 		else
 		{
-			// Diğer durumlarda string'leri temizle
 			tekrarAraligiString = string.Empty;
 			ayinGunuString = string.Empty;
 			seciliHaftaninGunleri = new List<string>();
@@ -382,7 +363,6 @@
 			seciliHaftaninGunleri.Clear();
 		}
 
-		// Haftalık tekrarlama seçiliyse ve günler seçildiyse, tarihleri ayarla
 		if (Gorev.TekrarlamaTipi == "Haftalık" && seciliHaftaninGunleri.Any())
 		{
 			AyarlaHaftalikTarihler();
@@ -405,10 +385,8 @@
 			seciliHaftaninGunleri.Remove(gun);
 		}
 
-		// Hepsini seç checkbox'ını güncelle
 		hepsiHaftaninGunleriSecili = seciliHaftaninGunleri.Count == haftaninGunleri.Count;
 
-		// Haftalık tekrarlama seçiliyse ve günler seçildiyse, tarihleri ayarla
 		if (Gorev.TekrarlamaTipi == "Haftalık" && seciliHaftaninGunleri.Any())
 		{
 			AyarlaHaftalikTarihler();
@@ -445,7 +423,6 @@
 			seciliKullaniciIdler.Remove(kullaniciId);
 		}
 
-		// Hepsini seç checkbox'ını güncelle
 		hepsiKullanicilarSecili = seciliKullaniciIdler.Count == kullanicilar.Count;
 		StateHasChanged();
 	}
@@ -471,7 +448,6 @@
 		if (seciliHaftaninGunleri == null || !seciliHaftaninGunleri.Any())
 			return;
 
-		// Seçilen günleri DayOfWeek'e çevir ve sırala
 		var seciliGunler = seciliHaftaninGunleri
 			.Select(g => MapHaftaninGunu(g))
 			.OrderBy(g => g)
@@ -480,11 +456,9 @@
 		if (!seciliGunler.Any())
 			return;
 
-		// Bugünün tarihini ve gününü al
 		var bugun = DateTime.Now.Date;
 		var bugunGunu = DateTime.Now.DayOfWeek;
 
-		// Bugün seçili günlerden biri mi kontrol et
 		bool bugunSeciliMi = seciliGunler.Contains(bugunGunu);
 
 		DayOfWeek ilkGun;
@@ -492,63 +466,51 @@
 
 		if (bugunSeciliMi)
 		{
-			// Bugün seçili günlerden biri, bugünü başlangıç olarak kullan
 			ilkGun = bugunGunu;
 			yeniBaslangic = bugun;
 		}
 		else
 		{
-			// Bugün seçili günlerden değil, bugünden sonraki ilk seçili günü bul
 			ilkGun = seciliGunler.First();
 			yeniBaslangic = bugun;
 
-			// Bugünden itibaren ilk seçilen güne ulaş
 			while (yeniBaslangic.DayOfWeek != ilkGun)
 			{
 				yeniBaslangic = yeniBaslangic.AddDays(1);
 			}
 
-			// Eğer bugünden önceyse (bu durumda olmamalı ama kontrol edelim), bir sonraki haftaya al
 			if (yeniBaslangic < bugun)
 			{
 				yeniBaslangic = yeniBaslangic.AddDays(7);
 			}
 		}
 
-		// Saat bilgisini mevcut başlangıç tarihinden al (varsa)
 		if (Gorev.BaslangicTarihi.HasValue)
 		{
 			yeniBaslangic = yeniBaslangic.Date.Add(Gorev.BaslangicTarihi.Value.TimeOfDay);
 		}
 		else
 		{
-			// Varsayılan olarak bugünün saatini kullan
 			yeniBaslangic = yeniBaslangic.Date.Add(DateTime.Now.TimeOfDay);
 		}
 
-		// Son seçilen günü bul (başlangıç tarihinden itibaren aynı hafta içinde)
 		var sonGun = seciliGunler.Last();
 		var yeniBitis = yeniBaslangic.Date;
 
-		// Başlangıç tarihinden itibaren son seçilen güne ulaş
-		// Seçilen günler sıralı olduğu için, son gün her zaman ilk günden sonra olacak (aynı hafta içinde)
 		while (yeniBitis.DayOfWeek != sonGun)
 		{
 			yeniBitis = yeniBitis.AddDays(1);
 		}
 
-		// Saat bilgisini mevcut bitiş tarihinden al (varsa), yoksa başlangıç tarihinin saatini kullan
 		if (Gorev.BitisTarihi.HasValue)
 		{
 			yeniBitis = yeniBitis.Date.Add(Gorev.BitisTarihi.Value.TimeOfDay);
 		}
 		else
 		{
-			// Varsayılan olarak başlangıç tarihinin saatini kullan
 			yeniBitis = yeniBitis.Date.Add(yeniBaslangic.TimeOfDay);
 		}
 
-		// Tarihleri güncelle
 		Gorev.BaslangicTarihi = yeniBaslangic;
 		Gorev.BitisTarihi = yeniBitis;
 	}
@@ -569,7 +531,6 @@
 				return;
 			}
 
-			// Kilitli görevde en az bir kullanıcı seçilmeli
 			if (Gorev.Kilitli && (seciliKullaniciIdler == null || !seciliKullaniciIdler.Any()))
 			{
 				notificationService.Notify(NotificationSeverity.Error, "Hata", "Kilitli görev için en az bir kullanıcı seçmeniz gerekiyor!");
@@ -577,7 +538,6 @@
 			}
 
 
-			// TekrarAraligi string'ini int'e çevir
 			if (Gorev.TekrarlamaTipi == "Günlük")
 			{
 				if (string.IsNullOrWhiteSpace(tekrarAraligiString))
@@ -596,11 +556,9 @@
 			}
 			else
 			{
-				// Günlük değilse TekrarAraligi'yi null yap
 				Gorev.TekrarAraligi = null;
 			}
 
-			// HaftaninGunu listesini virgülle ayrılmış string'e çevir
 			if (Gorev.TekrarlamaTipi == "Haftalık")
 			{
 				if (seciliHaftaninGunleri == null || !seciliHaftaninGunleri.Any())
@@ -609,16 +567,13 @@
 					return;
 				}
 
-				// Seçilen günleri virgülle ayrılmış string olarak kaydet
 				Gorev.HaftaninGunu = string.Join(",", seciliHaftaninGunleri);
 			}
 			else
 			{
-				// Haftalık değilse HaftaninGunu'nu null yap
 				Gorev.HaftaninGunu = null;
 			}
 
-			// AyinGunu string'ini int'e çevir
 			if (Gorev.TekrarlamaTipi == "Aylık")
 			{
 				if (string.IsNullOrWhiteSpace(ayinGunuString))
@@ -637,18 +592,16 @@
 			}
 			else
 			{
-				// Aylık değilse AyinGunu'nu null yap
 				Gorev.AyinGunu = null;
 			}
 
 			HesaplaSonrakiCalismaTarihi(Gorev);
 
-			// Yeni ve kilitli görevde birden fazla kullanıcı seçildiyse
 			if (yeniKayıt && Gorev.Kilitli && seciliKullaniciIdler.Count > 1)
 			{
 				ItemGorev? ilkGorev = null;
 				int basariliSayisi = 0;
-				var kullaniciGorevIdleri = new Dictionary<int, int>(); // Kullanıcı ID -> Görev ID mapping
+				var kullaniciGorevIdleri = new Dictionary<int, int>(); 
 
 				foreach (var kullaniciId in seciliKullaniciIdler)
 				{
@@ -687,26 +640,21 @@
 						ilkGorev = yeniGorev;
 					}
 					
-					// Kullanıcı ID ve görev ID mapping'ini sakla
 					if (sonuc.Data > 0)
 					{
 						kullaniciGorevIdleri[kullaniciId] = sonuc.Data;
 					}
 				}
 
-				// Sadece bir kez başarı mesajı göster
 				notificationService.Notify(NotificationSeverity.Success, "Başarılı", $"{basariliSayisi} kullanıcıya görev başarıyla atandı.");
 				
-				// Yeni görev eklendiğinde ilgili kullanıcılar için bildirim localStorage'ını temizle
 				foreach (var kullaniciId in seciliKullaniciIdler)
 				{
 					await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_{kullaniciId}");
 				}
 				
-				// Liste ekranı için ilk görevi geri döndürüyoruz
 				DialogService.Close(ilkGorev);
 				
-				// E-posta gönderme işlemini arka planda çalıştır (popup kapandıktan sonra)
 				if (ilkGorev != null)
 				{
 					var gorevBilgileri = new
@@ -729,7 +677,6 @@
 									var kullanici = await _kullaniciRepo.GetByIDAsync(kullaniciId);
 									if (kullanici != null && !string.IsNullOrEmpty(kullanici.EPosta))
 									{
-										// Kullanıcıya atanan görev ID'sini al
 										if (gorevBilgileri.KullaniciGorevIdleri.TryGetValue(kullaniciId, out int gorevId))
 										{
 											var urlParams = new Dictionary<string, string>
@@ -751,7 +698,6 @@
 								catch (Exception ex)
 								{
 									Console.WriteLine($"E-posta gönderme hatası (Kullanıcı ID: {kullaniciId}): {ex.Message}");
-									// E-posta hatası kritik değil, devam et
 								}
 							}
 						}
@@ -766,7 +712,6 @@
 			}
 			else
 			{
-				// Tek kullanıcıya atama (yeni veya düzenleme)
 				if (Gorev.Kilitli && seciliKullaniciIdler.Any())
 				{
 					Gorev.Kullanici_ID = seciliKullaniciIdler.First();
@@ -785,17 +730,14 @@
 						Gorev.ID = sonuc.Data;
 					}
 
-					// Yeni görev eklendiğinde ilgili kullanıcılar için bildirim localStorage'ını temizle
 					if (yeniKayıt)
 					{
 						if (Gorev.Kilitli && Gorev.Kullanici_ID > 0)
 						{
-							// Kilitli görev, sadece atanan kullanıcı için özel görev bildirimini temizle
 							await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_Ozel_{Gorev.Kullanici_ID}");
 						}
 						else if (!Gorev.Kilitli)
 						{
-							// Herkese açık görev, tüm kullanıcılar için genel görev bildirimini temizle
 							try
 							{
 								var tumKullanicilar = await _kullaniciRepo.GetAllAsync();
@@ -807,7 +749,6 @@
 							catch (Exception ex)
 							{
 								Console.WriteLine($"localStorage temizleme hatası: {ex.Message}");
-								// Hata kritik değil, devam et
 							}
 						}
 					}
@@ -815,7 +756,6 @@
 					notificationService.Notify(NotificationSeverity.Success, "Başarılı", yeniKayıt ? "Görev eklendi!" : "Görev güncellendi!");
 					DialogService.Close(Gorev);
 					
-					// E-posta gönderme işlemini arka planda çalıştır (popup kapandıktan sonra)
 					if (yeniKayıt)
 					{
 						var gorevKopyasi = new ItemGorev
@@ -872,7 +812,6 @@
 			case "Haftalık":
 				if (!string.IsNullOrEmpty(gorev.HaftaninGunu))
 				{
-					// Virgülle ayrılmış günleri parse et ve sırala
 					var seciliGunler = gorev.HaftaninGunu.Split(',', StringSplitOptions.RemoveEmptyEntries)
 						.Select(g => g.Trim())
 						.Select(g => MapHaftaninGunu(g))
@@ -881,46 +820,36 @@
 
 					if (seciliGunler.Any())
 					{
-						// Bitiş tarihi varsa, bir sonraki haftanın ilk seçili gününü bul
 						if (gorev.BitisTarihi.HasValue)
 						{
 							var bitisTarihi = gorev.BitisTarihi.Value.Date;
 							var ilkGun = seciliGunler.First();
 							
-							// Bitiş tarihinden bir sonraki haftanın ilk seçili gününü bul
 							var sonrakiHaftaBaslangic = bitisTarihi.AddDays(1); // Bitiş tarihinden sonraki gün
 							
-							// Sonraki haftanın ilk seçili gününe ulaş
 							while (sonrakiHaftaBaslangic.DayOfWeek != ilkGun)
 							{
 								sonrakiHaftaBaslangic = sonrakiHaftaBaslangic.AddDays(1);
 							}
 							
-							// Saat bilgisini başlangıç tarihinden al
 							gorev.SonrakiCalismaTarihi = sonrakiHaftaBaslangic.Add(baslangic.TimeOfDay);
 						}
 						else
 						{
-							// Bitiş tarihi yoksa, başlangıç tarihinden sonraki en yakın seçilen günü bul
 							DateTime? enYakinTarih = null;
 
-							// Önce aynı hafta içinde başlangıç tarihinden sonraki günleri kontrol et
 							foreach (var hedefGun in seciliGunler)
 							{
 								var tarih = baslangic.Date;
-								// Başlangıç tarihinden itibaren hedef güne ulaş
 								while (tarih.DayOfWeek != hedefGun)
 								{
 									tarih = tarih.AddDays(1);
 								}
 
-								// Eğer başlangıç tarihinden sonra veya eşitse
 								if (tarih > baslangic.Date)
 								{
-									// Saat bilgisini ekle
 									tarih = tarih.Add(baslangic.TimeOfDay);
 
-									// En yakın tarihi güncelle
 									if (!enYakinTarih.HasValue || tarih < enYakinTarih.Value)
 									{
 										enYakinTarih = tarih;
@@ -928,7 +857,6 @@
 								}
 							}
 
-							// Eğer aynı hafta içinde bulunamadıysa, bir sonraki haftanın ilk gününü bul
 							if (!enYakinTarih.HasValue)
 							{
 								var ilkGun = seciliGunler.First();
@@ -982,8 +910,6 @@
 	{
 		bool yeniKayıt = Gorev.ID == 0;
 
-		// Hem yeni kayıt hem düzenleme modunda değişiklik kontrolü yap
-		// Tarih karşılaştırmalarında sadece tarih kısmını karşılaştır (saat farklarını göz ardı et)
 		bool degisiklikVar =
 			!string.Equals(Gorev.Baslik?.Trim() ?? string.Empty, originalGorev.Baslik?.Trim() ?? string.Empty, StringComparison.Ordinal) ||
 			Gorev.Kategori_ID != originalGorev.Kategori_ID ||
@@ -1004,7 +930,6 @@
 
 		if (degisiklikVar)
 		{
-			// Değişiklik varsa onay iste
 			bool? onay = await DialogService.Confirm(
 				"Yaptığınız değişiklikler kaybolacaktır. İptal etmek istediğinize emin misiniz?",
 				"Değişiklikleri Kaydetmeden Çık",
@@ -1017,10 +942,9 @@
 
 			if (onay != true)
 			{
-				return; // Kullanıcı iptal etmekten vazgeçti
+				return; 
 			}
 
-			// Onay verildiyse, değişiklikleri geri al (originalGorev ile geri yükle)
 			Gorev.Baslik = originalGorev.Baslik ?? string.Empty;
 			Gorev.Kategori_ID = originalGorev.Kategori_ID;
 			Gorev.OnemDerecesi = originalGorev.OnemDerecesi;
@@ -1034,18 +958,15 @@
 			Gorev.Kullanici_ID = originalGorev.Kullanici_ID;
 			Gorev.Aktif = originalGorev.Aktif;
 
-			// İptal mesajı göster
 			string mesaj = yeniKayıt ? "Görev ekleme işleminiz iptal edildi." : "Görev düzenleme işleminiz iptal edildi.";
 			notificationService.Notify(NotificationSeverity.Info, "Bilgi", mesaj);
 		}
 		else
 		{
-			// Değişiklik yoksa direkt iptal mesajı göster
 			string mesaj = yeniKayıt ? "Görev ekleme işleminiz iptal edildi." : "Görev düzenleme işleminiz iptal edildi.";
 			notificationService.Notify(NotificationSeverity.Info, "Bilgi", mesaj);
 		}
 
-		// Dialog'u kapat (null döndürerek iptal edildiğini belirt)
 		DialogService.Close();
 	}
 
@@ -1055,11 +976,9 @@
 		{
 			if (gorev.Kilitli && gorev.Kullanici_ID > 0)
 			{
-				// Kilitli görev - sadece atanan kullanıcıya gönder
 				var kullanici = await _kullaniciRepo.GetByIDAsync(gorev.Kullanici_ID);
 				if (kullanici != null && !string.IsNullOrEmpty(kullanici.EPosta))
 				{
-					// Dashboard URL'ini oluştur ve imzala (görev ID ve kullanıcı ID ile)
 					var urlParams = new Dictionary<string, string>
 					{
 						{ "gorevId", gorev.ID.ToString() },
@@ -1078,7 +997,6 @@
 			}
 			else if (!gorev.Kilitli)
 			{
-				// Herkese açık görev - tüm aktif kullanıcılara gönder
 				var tumKullanicilar = await _kullaniciRepo.GetAllAsync();
 				var aktifKullanicilar = tumKullanicilar.Where(k => k.Aktif && !string.IsNullOrEmpty(k.EPosta)).ToList();
 
@@ -1086,7 +1004,6 @@
 				{
 					try
 					{
-						// Dashboard URL'ini oluştur ve imzala (görev ID ve kullanıcı ID ile)
 						var urlParams = new Dictionary<string, string>
 						{
 							{ "gorevId", gorev.ID.ToString() },
@@ -1105,7 +1022,6 @@
 					catch (Exception ex)
 					{
 						Console.WriteLine($"E-posta gönderme hatası ({kullanici.EPosta}): {ex.Message}");
-						// Bir kullanıcıya gönderilemese bile diğerlerine göndermeye devam et
 					}
 				}
 			}
@@ -1113,7 +1029,6 @@
 		catch (Exception ex)
 		{
 			Console.WriteLine($"E-posta bildirimi hatası: {ex.Message}");
-			// E-posta gönderimi kritik değil, hata olsa bile devam et
 		}
 	}
 }

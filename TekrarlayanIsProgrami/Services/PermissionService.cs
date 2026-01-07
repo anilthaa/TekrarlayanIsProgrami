@@ -46,6 +46,7 @@ namespace TekrarlayanIsProgrami.Services
             _authenticationStateProvider = authenticationStateProvider;
         }
 
+        //kullanıcının menüde görebileceği formları/alacak menüyü döndüren bir yöntemdir. Adım adım açıklaması:
         public async Task<IReadOnlyList<ItemForm>> GetMenuAsync(bool forceRefresh = false)
         {
             var forms = await GetFormsForCurrentUserAsync(forceRefresh);
@@ -58,71 +59,10 @@ namespace TekrarlayanIsProgrami.Services
                 .ToList();
         }
 
+        //_permissionOptions listesini dışarıya salt okunur (read-only) olarak expose eden bir propertydir.
         public IReadOnlyList<PermissionLevelOption> PermissionOptions => _permissionOptions;
 
-        public string GetPermissionDescription(int yetki)
-            => _permissionOptions.FirstOrDefault(x => x.Value == yetki)?.Description ?? string.Empty;
-
-        public async Task<bool> CanReadAsync(string? routeOrName)
-            => await HasPermissionAsync(routeOrName, minimumYetki: 1);
-
-        public async Task<bool> CanWriteAsync(string? routeOrName)
-            => await HasPermissionAsync(routeOrName, minimumYetki: 2);
-
-        public async Task<bool> HasPermissionAsync(string? routeOrName, int minimumYetki)
-        {
-            if (minimumYetki <= 0)
-            {
-                return true;
-            }
-
-            if (await IsAdminAsync())
-            {
-                return true;
-            }
-
-            var form = await FindFormAsync(routeOrName);
-            if (form is null)
-            {
-                return false;
-            }
-
-            return GetCachedPermission(form.ID) >= minimumYetki;
-        }
-
-        public async Task RefreshAsync()
-        {
-            await _cacheLock.WaitAsync();
-            try
-            {
-                _cachedForms = Array.Empty<ItemForm>();
-                _cachedFormPermissions = new Dictionary<int, int>();
-                _cachedUserId = null;
-            }
-            finally
-            {
-                _cacheLock.Release();
-            }
-        }
-
-        private async Task<ItemForm?> FindFormAsync(string? routeOrName)
-        {
-            if (string.IsNullOrWhiteSpace(routeOrName))
-            {
-                return null;
-            }
-
-            var normalizedTarget = NormalizeKey(routeOrName);
-            var forms = await GetFormsForCurrentUserAsync();
-
-            return forms.FirstOrDefault(form =>
-            {
-                var normalizedRoute = NormalizeKey(ResolveRoute(form));
-                var normalizedName = NormalizeKey(form.Adi);
-                return normalizedRoute == normalizedTarget || normalizedName == normalizedTarget;
-            });
-        }
-
+        //mevcut kullanıcı için form listesini ve yetkilerini getirip önbelleğe alır.
         private async Task<IReadOnlyList<ItemForm>> GetFormsForCurrentUserAsync(bool forceRefresh = false)
         {
             var userId = await GetCurrentUserIdAsync();
@@ -170,6 +110,73 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
+        public string GetPermissionDescription(int yetki)
+            => _permissionOptions.FirstOrDefault(x => x.Value == yetki)?.Description ?? string.Empty;
+
+        public async Task<bool> CanReadAsync(string? routeOrName)
+            => await HasPermissionAsync(routeOrName, minimumYetki: 1);
+
+        public async Task<bool> CanWriteAsync(string? routeOrName)
+            => await HasPermissionAsync(routeOrName, minimumYetki: 2);
+
+        //bir kullanıcının belirli bir sayfa veya form için minimum yetkiye sahip olup olmadığını kontrol eder.
+        public async Task<bool> HasPermissionAsync(string? routeOrName, int minimumYetki)
+        {
+            if (minimumYetki <= 0)
+            {
+                return true;
+            }
+
+            if (await IsAdminAsync())
+            {
+                return true;
+            }
+
+            var form = await FindFormAsync(routeOrName);
+            if (form is null)
+            {
+                return false;
+            }
+
+            return GetCachedPermission(form.ID) >= minimumYetki;
+        }
+
+        //orm ve yetki önbelleğini temizler / sıfırlar.
+        public async Task RefreshAsync()
+        {
+            await _cacheLock.WaitAsync();
+            try
+            {
+                _cachedForms = Array.Empty<ItemForm>();
+                _cachedFormPermissions = new Dictionary<int, int>();
+                _cachedUserId = null;
+            }
+            finally
+            {
+                _cacheLock.Release();
+            }
+        }
+
+        //kullanıcının mevcut formları arasında bir formu rota veya adıyla arar.
+        private async Task<ItemForm?> FindFormAsync(string? routeOrName)
+        {
+            if (string.IsNullOrWhiteSpace(routeOrName))
+            {
+                return null;
+            }
+
+            var normalizedTarget = NormalizeKey(routeOrName);
+            var forms = await GetFormsForCurrentUserAsync();
+
+            return forms.FirstOrDefault(form =>
+            {
+                var normalizedRoute = NormalizeKey(ResolveRoute(form));
+                var normalizedName = NormalizeKey(form.Adi);
+                return normalizedRoute == normalizedTarget || normalizedName == normalizedTarget;
+            });
+        }
+
+        //önbellekteki bir form için kullanıcının yetki seviyesini döndürür.
         private int GetCachedPermission(int formId)
         {
             if (_cachedFormPermissions.TryGetValue(formId, out var yetki))
@@ -180,6 +187,7 @@ namespace TekrarlayanIsProgrami.Services
             return 0;
         }
 
+        //şu anki oturum açmış kullanıcının ID’sini alır.
         private async Task<int?> GetCurrentUserIdAsync()
         {
             var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
@@ -193,6 +201,7 @@ namespace TekrarlayanIsProgrami.Services
             return null;
         }
 
+        //verilen bir string değeri standart bir anahtar formatına dönüştürür.
         private static string NormalizeKey(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -203,6 +212,7 @@ namespace TekrarlayanIsProgrami.Services
             return value.Trim().TrimStart('/').ToLowerInvariant();
         }
 
+        //bir ItemForm nesnesi için kullanılacak URL/route değerini belirler.
         private static string ResolveRoute(ItemForm form)
         {
             var routeCandidate = form.SayfaURL;
@@ -226,6 +236,7 @@ namespace TekrarlayanIsProgrami.Services
             return routeCandidate;
         }
 
+        //güncel kullanıcının admin olup olmadığını kontrol eder.
         private async Task<bool> IsAdminAsync()
         {
             var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();

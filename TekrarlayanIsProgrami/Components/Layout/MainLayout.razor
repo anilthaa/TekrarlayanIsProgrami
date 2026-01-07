@@ -4,7 +4,7 @@
  <HeadContent>
   <link href="css/site.css" rel="stylesheet" />
   <link rel="stylesheet" href="/js/site.js"/>
-  <link rel="stylesheet" href="/css/AdminDashboard.css" />
+   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 </HeadContent>
 <RadzenDialog></RadzenDialog>
 <RadzenNotification></RadzenNotification>
@@ -15,7 +15,7 @@
     @if (!uri.Contains("/girisyap"))
     {
         <RadzenSidebar>
-            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/admin/kullanici-loglari") || uri.Contains("/kullaniciprofil") || uri.Contains("/admin/kullanici-yetkileri"))
+            @if (uri.Contains("/dashboard") || uri.Contains("/kategori") || uri.Contains("/kullanicilar") || uri.Contains("/gorevler") || uri.Contains("/admin/kullanicitipleri") || uri.Contains("/admin/kullanici-loglari") || uri.Contains("/kullaniciprofil") || uri.Contains("/admin/kullanici-yetkileri") || uri.Contains("/profil"))
             {
                 @if (!IsLoading)
                 {
@@ -91,7 +91,24 @@
                             }
                         }
 
-                        <RadzenButton Text="Çıkış" Click="@CikisYap" style="width:100%; margin-top:auto;" class="radzen-button" />
+                        <div style="
+                position:fixed;
+                bottom:20px;
+                left:0;
+                width:250px;
+                display:flex;
+                flex-direction:column;
+                gap:10px;
+                padding:10px;
+            ">
+                            <RadzenButton Text="Profil"
+                                          Click="@ProfilPopupAc"
+                                          Style="width:100%; background-color:transparent; color:white;" />
+
+                            <RadzenButton Text="Çıkış Yap"
+                                          Click="@CikisYap"
+                                          Style="width:100%; background-color:transparent; color:white;" />
+                        </div>
                     </RadzenCard>
                 }
             }
@@ -108,17 +125,17 @@
     private bool IsLoading = true;
     private IReadOnlyList<ItemForm> _menuItems = Array.Empty<ItemForm>();
     private bool _isMenuLoading = true;
-    
+
     // Dropdown state'leri
     private bool _adminMenuOpen = true;
     private bool _userMenuOpen = true;
-    
+
     // Ortak sayfalar (hem admin hem kullanıcı için - dropdown dışında)
     private static readonly HashSet<string> _commonRoutes = new(StringComparer.OrdinalIgnoreCase)
     {
         "/gorevler"
     };
-    
+
     // Admin sayfaları
     private static readonly HashSet<string> _adminRoutes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -127,7 +144,7 @@
         "/admin/kullanicitipleri",
         "/admin/kullanici-yetkileri"
     };
-    
+
     // Görevler sayfası için sabit menü öğesi (PermissionService'den bağımsız)
     private ItemForm _gorevlerMenuItem => new ItemForm
     {
@@ -138,7 +155,7 @@
         IsMenu = true,
         Sira = 0
     };
-    
+
     // Menü öğelerini kategorilere ayır
     private IEnumerable<ItemForm> _commonMenuItems
     {
@@ -155,14 +172,14 @@
     }
     private IEnumerable<ItemForm> _adminMenuItems => _menuItems.Where(m => IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
     private IEnumerable<ItemForm> _userMenuItems => _menuItems.Where(m => !IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
-    
+
     private bool IsCommonPage(string route)
     {
         if (string.IsNullOrWhiteSpace(route)) return false;
         var normalizedRoute = route.ToLowerInvariant().TrimEnd('/');
         return _commonRoutes.Contains(normalizedRoute);
     }
-    
+
     private bool IsAdminPage(string route)
     {
         if (string.IsNullOrWhiteSpace(route)) return false;
@@ -174,7 +191,7 @@
     {
         // Authentication state değişikliklerini dinle
         girisSaglayici.AuthenticationStateChanged += OnAuthenticationStateChanged;
-        
+
         await LoadUserDataAsync();
     }
 
@@ -202,7 +219,7 @@
             kullaniciTip = null;
         }
         IsLoading = false;
-        
+
         // Menü öğelerini yükle
         await LoadMenuAsync();
     }
@@ -267,7 +284,6 @@
 
     private async void CikisYap()
     {
-        // Çıkış logunu kaydet
         try
         {
             var currentUser = await girisSaglayici.GetCurrentUserAsync();
@@ -286,13 +302,26 @@
         }
         catch (Exception ex)
         {
-            // Log hatası kritik değil, sessizce devam et
             Console.WriteLine($"Çıkış log kaydı hatası: {ex.Message}");
         }
-        
+
         await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
         await PermissionService.RefreshAsync();
         NavigationManager.NavigateTo("/GirisYap", true);
+    }
+    async Task ProfilPopupAc()
+    {
+        await DialogService.OpenAsync<KullaniciProfil>(
+          "Profil Bilgileri ",
+          null,
+          new DialogOptions
+          {
+              Width = "550px",
+              Height = "auto",
+              Resizable = false,
+              Draggable = true,
+              CloseDialogOnOverlayClick = true
+          });
     }
 
     public void Dispose()

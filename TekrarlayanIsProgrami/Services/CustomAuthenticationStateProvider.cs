@@ -32,9 +32,9 @@ namespace TekrarlayanIsProgrami.Services
             _nav=nav;
         }
 
+        //Blazor’da mevcut kullanıcıyı doğrulamak ve AuthenticationState oluşturmak için kullanılır.
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            // Eğer _currentUser yoksa localStorage'dan yükle
             if (_currentUser == null)
             {
                 try
@@ -47,7 +47,7 @@ namespace TekrarlayanIsProgrami.Services
                 }
                 catch
                 {
-                    // localStorage'a erişilemezse sessizce devam et
+
                 }
             }
 
@@ -70,7 +70,8 @@ namespace TekrarlayanIsProgrami.Services
             var user = new ClaimsPrincipal(identity);
             return new AuthenticationState(user);
         }
-        //Kullanıcının giriş yaptığını sisteme bildirmek.
+
+        //kullanıcıyı oturum açmış olarak işaretler.
         public async Task MarkUserAsAuthenticated(User user)
         {
             _currentUser = user;
@@ -78,7 +79,8 @@ namespace TekrarlayanIsProgrami.Services
             await _Js.InvokeVoidAsync("localStorage.setItem", "_currentUser", json);
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
-        //Kullanıcının çıkış yaptığını sisteme bildirmek
+
+        //kullanıcıyı çıkış yapmış olarak işaretler.
         public async Task MarkUserAsLoggedOut()
         {
             _currentUser = null;
@@ -86,7 +88,8 @@ namespace TekrarlayanIsProgrami.Services
             await _Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
-        //
+
+        //tarayıcıdaki localStorage’dan kullanıcı bilgilerini yükler.
         public async Task LoadUserFromLocalStorageAsync()
         {
             var userJson = await _Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
@@ -97,6 +100,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
+        //kullanıcının giriş (login) işlemini gerçekleştirir ve sonucu döndürür.
         public async Task<AuthResult> GirisYapAsync(string EPosta, string Sifre)
         {
             var response = await _http.PostAsJsonAsync("api/auth/login",
@@ -118,11 +122,8 @@ namespace TekrarlayanIsProgrami.Services
                 return new AuthResult { Basarili = false, Mesaj = "Giriş başarısız." };
             }
 
-            // Eğer User null ise, API'den dönen user bilgisini manuel olarak oluştur
             if (result.User == null)
             {
-                Console.WriteLine("[DEBUG] result.User null, API'den user bilgisi alınıyor...");
-                // API'den dönen user bilgisini almak için repository'yi kullan
                 var user = await _kullaniciRepo.GetByGirisAsync(EPosta);
                 if (user != null)
                 {
@@ -134,11 +135,10 @@ namespace TekrarlayanIsProgrami.Services
                         EPosta = user.EPosta,
                         KullaniciTip_ID = user.KullaniciTip_ID
                     };
-                    Console.WriteLine($"[DEBUG] User bilgisi repository'den alındı - ID: {result.User.ID}, Ad: {result.User.Adi}");
                 }
                 else
                 {
-                    Console.WriteLine("[DEBUG] UYARI: Repository'den de user bulunamadı!");
+
                 }
             }
 
@@ -155,6 +155,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
+        //kullanıcının kayıt (register) işlemini gerçekleştirir ve sonucu döndürür.
         public async Task<AuthResult> KayitOlAsync(User user)
         {
             if (string.IsNullOrWhiteSpace(user.Sifre) || user.Sifre.Length < 8)
@@ -180,7 +181,6 @@ namespace TekrarlayanIsProgrami.Services
 
                 if (result != null && result.Basarili)
                 {
-                    // **Token ve authenticate yok**
                     return new AuthResult
                     {
                         Basarili = true,
@@ -200,35 +200,16 @@ namespace TekrarlayanIsProgrami.Services
                 };
             }
         }
-        public async Task<AuthResult> UpdateAsync(User user)
-        {
-            var kullanici = await _kullaniciRepo.GetByEmailAsync(user.EPosta, user.Sifre);
-            if (kullanici == null)
-            {
-            }
 
-            // Yeni ClaimsIdentity oluştur
-            var identity = new ClaimsIdentity(new[]
-            {
-            new Claim(ClaimTypes.NameIdentifier, kullanici.ID.ToString()),
-            new Claim(ClaimTypes.Name, kullanici.Adi + " " + kullanici.Soyadi),
-            new Claim(ClaimTypes.Email, kullanici.EPosta)
-        }, "apiauth");
-            return new AuthResult
-            {
-                Basarili = true,
-                Mesaj = "Giriş başarılı"
-            };
-        }
-
-        public async Task<User?> GetCurrentUserAsync() //Bu metot şu anda giriş yapmış olan kullanıcıyı sistemden bulur ve döndürür.
+        //Bu metot şu anda giriş yapmış olan kullanıcıyı sistemden bulur ve döndürür.
+        public async Task<User?> GetCurrentUserAsync() 
         {
             var authState = await GetAuthenticationStateAsync();
             var user = authState.User;
 
             if (user.Identity?.IsAuthenticated == true)
             {
-                return new User
+                return new User     
                 {
                     ID = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0,
                     Adi = user.FindFirst(ClaimTypes.Name)?.Value?.Split(' ').FirstOrDefault() ?? "",
@@ -239,27 +220,24 @@ namespace TekrarlayanIsProgrami.Services
 
             return null;
         }
-        //Tarayıcıda kullanıcının token ı gelsin diye yazdık.
-        public async Task<AuthResult> Login(string eposta, string sifre)
-        {
-            var loginData = new { Email = eposta, Password = sifre };
-            var response = await _http.PostAsJsonAsync("api/auth/login", loginData);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<AuthResult>();
-                if (result.Basarili)
-                {
-                    await _Js.InvokeVoidAsync("localStorage.setItem", "jwtToken", result.Token);
-                }
-                return result;
-            }
-
-            return new AuthResult { Basarili = false, Mesaj = "Hata" };
-        }
+        //kullanıcının kayıt işlemini API üzerinden yapar ve sonucu döndürür.
         public async Task CikisYapAsync()
         {
             await MarkUserAsLoggedOut(); 
+        }
+
+        //mevcut oturum açmış kullanıcının ID’sini alır.
+        public async Task<int> GetUserIdAsync()
+        {
+            var authState = await GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated != true)
+                return 0;
+
+            var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+            return idClaim == null ? 0 : int.Parse(idClaim.Value);
         }
     }
 }

@@ -2,12 +2,12 @@
 @layout MainLayout
 @attribute [Authorize]
 <RadzenCard Style="margin:20px;">
-	<h3 style="text-align:center;">Kullanıcı Tipleri</h3>
+	<h3 style="text-align:center; font-family:Calibri;font-weight: bold; ">Kullanıcı Tipleri</h3>
 
 	@if (_canWrite)
 	{
 		<RadzenButton Text="Yeni Tip" Icon="add"
-					  Style="margin-bottom:15px; background:mediumpurple; color:white;border-radius:10px;"
+					  Style="margin-bottom:15px; background:#ba76d3; color:white;border-radius:10px;"
 					  Click="@YeniTip" />
 	}
 
@@ -26,7 +26,12 @@
 						AllowSorting="true" AllowFiltering="true"
 						RowDoubleClick="@(_canWrite ? OnRowDoubleClick : null)">
 			<Columns>
-				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="150px" />
+				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="0px" />
+				<RadzenDataGridColumn Title="No" Width="100px">
+					<Template Context="g">
+						@(DataList.ToList().IndexOf(g) + 1)
+					</Template>
+				</RadzenDataGridColumn>
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
 					<Template Context="item">
@@ -51,20 +56,21 @@
 </RadzenCard>
 
 @code {
-	private List<ItemKullaniciTip> DataList = new();
-	private RadzenDataGrid<ItemKullaniciTip>? grid;
-	private bool isLoading = true;
-	private int? currentUserId;
-	private bool _canWrite = false;
+	    private List<ItemKullaniciTip> DataList = new();
+	    private RadzenDataGrid<ItemKullaniciTip>? grid;
+	    private bool isLoading = true;
+	    private int? currentUserId;
+	    private bool _canWrite = false;
 
-	protected override async Task OnInitializedAsync()
-	{
-		// Yazma yetkisi kontrolü (yetki >= 2)
-		_canWrite = await PermissionService.CanWriteAsync("admin/kullanicitipleri");
-		await YukleKullaniciAsync();
-		await YukleDataAsync();
-	}
+		//sayfa yüklendiğinde başlangıç işlemlerini yapar.
+        protected override async Task OnInitializedAsync()
+	    {
+		   _canWrite = await PermissionService.CanWriteAsync("admin/kullanicitipleri");
+		   await YukleKullaniciAsync();
+		   await YukleDataAsync();
+	    }
 
+		// mevcut kullanıcı bilgilerini yükler.
 		private async Task YukleKullaniciAsync()
 		{
 			try
@@ -79,6 +85,7 @@
 			}
 		}
 
+		//kullanıcı tipleri verilerini yükler.
 		private async Task YukleDataAsync()
 		{
 			try
@@ -99,6 +106,7 @@
 			}
 		}
 
+		//Yeni tip eklemek için kullanılır.
 		private async Task YeniTip()
 		{
 			var yeniItem = new ItemKullaniciTip
@@ -127,6 +135,7 @@
 			}
 		}
 
+		//Mevcut olan tipinin düzenleme işllemini yapmak için kullanılır.
 		private async Task Duzenle(ItemKullaniciTip item)
 		{
 			var payload = new ItemKullaniciTip
@@ -162,6 +171,7 @@
 			}
 		}
 
+		//Tip silme işlemi için kullanılır.
 		private async Task Sil(ItemKullaniciTip item)
 		{
 			bool? onay = await DialogService.Confirm($"'{item.Adi}' tipini silmek istediğinize emin misiniz?", "Onay",
@@ -199,6 +209,7 @@
 			}
 		}
 
+		//Satıra iki kere tıklayınca düzenleme işlemini açar.
 		private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<ItemKullaniciTip> args)
 	{
 		await Duzenle(args.Data);

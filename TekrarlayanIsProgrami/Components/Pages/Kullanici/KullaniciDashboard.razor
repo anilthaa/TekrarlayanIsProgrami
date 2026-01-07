@@ -1,7 +1,6 @@
 ﻿@page "/dashboard"
 @layout MainLayout
 
-@* Yeni Görev Bildirimi - Kapanabilir Uyarı Penceresi *@
 @if (showYeniGorevBildirimi && !IsLoading)
 {
 	<RadzenCard Style="margin:20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1000;">
@@ -36,10 +35,10 @@
 @if (kullaniciTip != null && kullaniciTip.Adi == "Admin")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
-		<h2> Admin Kontrol Paneli</h2>
+		<h2 style="font-family:'Century Schoolbook';font-weight: bold; "> Admin Kontrol Paneli</h2>
 		@if (IsLoading)
 		{
-			<p>Veriler yükleniyor...</p>
+			<p style="text-align:center;">Veriler yükleniyor...</p>
 			<RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:300px;"></RadzenProgressBar>
 
 			<div class="row mt-4">
@@ -54,57 +53,56 @@
 		else
 		{
 			<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1.5rem">
-				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => NavigateToGorevler(0))">
+				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => NavigateToGorevler(5))">
 					<div style="display:flex; justify-content:space-between; align-items:center;">
 						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Tüm Aktif Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(aktifGorevler.Count())</RadzenText>
+							<RadzenText TextStyle="TextStyle.Subtitle2">Tüm  Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4">@(TumGorevler.Count())</RadzenText>
 						</div>
 						<RadzenIcon Icon="list" Style=" font-size:32px; color:#3498db; opacity:0.6;"></RadzenIcon>
 					</div>
 				</RadzenCard>
-				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left: 5px solid #f1c40f; cursor:pointer;" @onclick="@(() => NavigateToGorevler(1))">
+
+				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #f1c40f; cursor:pointer;" @onclick="@(() => NavigateToGorevler(0))">
 					<div style="display:flex; justify-content:space-between; align-items:center;">
 						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Yaklaşan Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(yaklasanGorevler.Count())</RadzenText>
+							<RadzenText TextStyle="TextStyle.Subtitle2">Aktif Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4" >@(aktifGorevler.Count())</RadzenText>
 						</div>
 						<RadzenIcon Icon="schedule" Style=" font-size:32px; opacity:0.6; color:#f1c40f; "></RadzenIcon>
 					</div>
 				</RadzenCard>
 
-				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left: 5px solid #9b59b6; cursor:pointer;" @onclick="@(() => NavigateToGorevler(2))">
+
+				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #e74c3c; cursor:pointer;" @onclick="@(() => NavigateToGorevler(1))">
 					<div style="display:flex; justify-content:space-between; align-items:center;">
 						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Tamamlanan Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(tamamlananGorevler.Count())</RadzenText>
+							<RadzenText TextStyle="TextStyle.Subtitle2">Bugünkü Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4">@(BugunkuGorevler.Count())</RadzenText>
+						</div>
+						<RadzenIcon Icon="schedule" Style="font-size:32px; opacity:0.6; color:#e74c3c;"></RadzenIcon>
+					</div>
+				</RadzenCard>
+
+				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #9b59b6; cursor:pointer;" @onclick="@(() => NavigateToGorevler(2))">
+					<div style="display:flex; justify-content:space-between; align-items:center;">
+						<div>
+							<RadzenText TextStyle="TextStyle.Subtitle2">Tamamlanan Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4">@(tamamlananGorevler.Count())</RadzenText>
 						</div>
 						<RadzenIcon Icon="done_all" Style="font-size:32px; opacity:0.6; color:#9b59b6;"></RadzenIcon>
 					</div>
 				</RadzenCard>
 
-				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left:5px solid #e74c3c; cursor:pointer;" @onclick="@(() => NavigateToGorevler(3))">
+				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #f39c12; cursor:pointer;" @onclick="@(() => NavigateToGorevler(6))">
 					<div style="display:flex; justify-content:space-between; align-items:center;">
 						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Süresi Dolan Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(gecmisGorevler.Count())</RadzenText>
+							<RadzenText TextStyle="TextStyle.Subtitle2">Size Özel Görevler</RadzenText>
+							<RadzenText TextStyle="TextStyle.H4">@(SizeOzelGorevler.Count())</RadzenText>
 						</div>
+						<RadzenIcon Icon="lock" Style="font-size:32px; opacity:0.6; color:#f39c12;"></RadzenIcon>
 					</div>
-					<RadzenIcon Icon="alarm_off" Style="font-size:32px; opacity:0.6; color:#e74c3c;"></RadzenIcon>
 				</RadzenCard>
-
-				<RadzenCard class="radzen-hover-effect" Style="width:250px; border-left:5px solid #f39c12; cursor:pointer;" @onclick="@(() => NavigateToGorevler(4))">
-					<div style="display:flex; justify-content:space-between; align-items:center;">
-						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mb-0">Pasif Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4" class="rz-mb-0">@(pasifGorevler.Count())</RadzenText>
-						</div>
-					</div>
-					<RadzenIcon Icon="pause_circle_outline" Style=" font-size:32px; color:#f39c12; opacity:0.6;"></RadzenIcon>
-				</RadzenCard>
-
-
-
 			</RadzenStack>
 
 			<div class="row">
@@ -145,14 +143,12 @@
 				</div>
 			</div>
 
-			@* Takvim Görünümü - Admin *@
 			<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
 				<h5 style="color:#3498db; font-weight:600; margin-bottom:15px;">Görev Takvimi</h5>
 				<p style="color:#555; font-size:14px; margin-bottom:15px;">
 					Tüm görevleri tarihlerine göre görüntüleyin
 				</p>
 				<div class="calendar-container" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-top:20px;">
-					@* Hafta günleri başlıkları *@
 					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Pzt</div>
 					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Sal</div>
 					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Çar</div>
@@ -161,7 +157,6 @@
 					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cmt</div>
 					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Paz</div>
 
-					@* Takvim günleri *@
 					@foreach (var day in GetCalendarDays())
 					{
 						var dayGorevler = GetGorevlerForDate(day);
@@ -201,7 +196,6 @@
 					}
 				</div>
 
-				@* Ay navigasyonu *@
 				<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
 					<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 								  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
@@ -221,8 +215,20 @@
 
 						@if (kritikGorevler != null && kritikGorevler.Any())
 						{
-							<RadzenDataGrid Data="@kritikGorevler" TItem="ItemGorev" Style="max-height:250px; overflow-y:auto;">
+							<RadzenDataGrid Data="@kritikGorevler" TItem="ItemGorev" RowSelect="GorevSecildi" Style="max-height:250px; overflow-y:auto;">
 								<Columns>
+									<RadzenDataGridColumn TItem="ItemGorev" Width="55px">
+										<Template Context="g">
+											@if (g.BitisTarihi.HasValue &&
+																			g.BitisTarihi.Value < DateTime.Now &&
+																			!g.Tamamlandi)
+											{
+												<RadzenIcon Icon="warning"
+															Style="color:#e74c3c;"
+															Title="Süresi dolmuş görev" />
+											}
+										</Template>
+									</RadzenDataGridColumn>
 									<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
 									<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
 									<RadzenDataGridColumn TItem="ItemGorev" Title="Önem">
@@ -259,10 +265,26 @@
 				</p>
 				@if (adminGorevleri != null && adminGorevleri.Any())
 				{
-					<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
+					<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" RowSelect="GorevSecildi" AllowPaging="true" PageSize="5" AllowSorting="true" class="radzen-grid">
 						<Columns>
-							<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
-							<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="250px"></RadzenDataGridColumn>
+							<RadzenDataGridColumn TItem="ItemGorev" Width="55px">
+								<Template Context="g">
+									@if (g.BitisTarihi.HasValue &&
+															g.BitisTarihi.Value < DateTime.Now &&
+															!g.Tamamlandi)
+									{
+										<RadzenIcon Icon="warning"
+													Style="color:#e74c3c;"
+													Title="Süresi dolmuş görev" />
+									}
+								</Template>
+							</RadzenDataGridColumn>
+							<RadzenDataGridColumn Title="No" Width="100px">
+								<Template Context="g">
+									@(adminGorevleri.ToList().IndexOf(g) + 1)
+								</Template>
+							</RadzenDataGridColumn>
+ 							<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="250px"></RadzenDataGridColumn>
 							<RadzenDataGridColumn TItem="ItemGorev" Title="Atayan Kişi" Width="150px;">
 								<Template Context="g">
 									@GetAtayanKullaniciAdi(g.CreUser)
@@ -316,13 +338,17 @@
 				<p style="color:#555; font-size:14px; margin-bottom:10px;">
 					Sistemdeki tüm görevlerin genel durumu
 				</p>
-				<RadzenDataGrid Data="@GorevListt" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
+				<RadzenDataGrid Data="@kullaniciGorevler" TItem="ItemGorev" RowSelect="GorevSecildi" AllowPaging="true" PageSize="5" AllowSorting="true" class="radzen-grid">
 					<Columns>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="0px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn Title="No" Width="100px">
+							<Template Context="g">
+								@(kullaniciGorevler.ToList().IndexOf(g) + 1)
+							</Template>
+						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Title="Atanan Kişi">
 							<Template Context="g">
-
 								@if (!g.Kilitli)
 								{
 									<span>—</span>
@@ -332,11 +358,6 @@
 									var list = GetAtananKisiListesi(g);
 
 									<div style="display:flex; flex-direction:column; gap:4px;">
-
-										@* <div style="font-size:12px; color:#666;">
-											Bu görev birden fazla kişiye atandı
-										</div> *@
-
 										<div style="display:flex; flex-wrap:wrap; gap:6px;">
 											@foreach (var ad in list)
 											{
@@ -352,7 +373,6 @@
 								{
 									<span>@GetTekKisiAdi(g)</span>
 								}
-
 							</Template>
 						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="120px">
@@ -390,10 +410,10 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
 
-		<h2>Gösterge Paneli</h2>
+		<h2 style="font-family:'Century Schoolbook';font-weight: bold; ">Gösterge Paneli</h2>
 		<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
 
-			<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left:5px solid #3498db;" @onclick="@(() => NavigateToGorevler2(6))">
+			<RadzenCard class="radzen-hover-effect" Style="width:230px;cursor:pointer; border-left:5px solid #3498db;" @onclick="@(() => NavigateToGorevler2(6))">
 				<div style="display:flex; justify-content:space-between; align-items:center;">
 					<div>
 						<RadzenText TextStyle="TextStyle.Subtitle2">Toplam Görev</RadzenText>
@@ -404,7 +424,7 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 			</RadzenCard>
 
 			<RadzenCard class="radzen-hover-effect"
-						Style="width:230px; border-left:5px solid #27ae60;" @onclick="@(() => NavigateToGorevler2(0))">
+						Style="width:230px; border-left:5px solid #27ae60; cursor:pointer;"  @onclick="@(() => NavigateToGorevler2(0))">
 				<div style="display:flex; justify-content:space-between; align-items:center;">
 					<div>
 						<RadzenText TextStyle="TextStyle.Subtitle2">Aktif Görevler</RadzenText>
@@ -426,7 +446,7 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 			</RadzenCard>
 
 			<RadzenCard class="radzen-hover-effect"
-						Style="width:230px; border-left:5px solid #9b59b6;" @onclick="@(() => NavigateToGorevler2(2))">
+						Style="width:230px; border-left:5px solid #9b59b6; cursor:pointer;" @onclick="@(() => NavigateToGorevler2(2))">
 				<div style="display:flex; justify-content:space-between; align-items:center;">
 					<div>
 						<RadzenText TextStyle="TextStyle.Subtitle2">Tamamlanan</RadzenText>
@@ -437,7 +457,7 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 			</RadzenCard>
 
 			<RadzenCard class="radzen-hover-effect"
-						Style="width:230px; border-left:5px solid pink;" @onclick="@(() => NavigateToGorevler2(5))">
+						Style="width:230px; border-left:5px solid pink; cursor:pointer;" @onclick="@(() => NavigateToGorevler2(5))">
 				<div style="display:flex; justify-content:space-between; align-items:center;">
 					<div>
 						<RadzenText TextStyle="TextStyle.Subtitle2">Size Özel Görevler</RadzenText>
@@ -449,14 +469,15 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 
 		</RadzenStack>
 
-		@* Takvim Görünümü *@
+		
+
+
 		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
 			<h5 style="color:#3498db; font-weight:600; margin-bottom:15px;">Görev Takvimi</h5>
 			<p style="color:#555; font-size:14px; margin-bottom:15px;">
 				Görevlerinizi tarihlerine göre görüntüleyin
 			</p>
 			<div class="calendar-container" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-top:20px;">
-				@* Hafta günleri başlıkları *@
 				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Pzt</div>
 				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Sal</div>
 				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Çar</div>
@@ -465,7 +486,6 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cmt</div>
 				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Paz</div>
 
-				@* Takvim günleri *@
 				@foreach (var day in GetCalendarDays())
 				{
 					var dayGorevler = GetGorevlerForDate(day);
@@ -505,7 +525,6 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 				}
 			</div>
 
-			@* Ay navigasyonu *@
 			<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
 				<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
 							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
@@ -514,6 +533,58 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
 			</div>
 		</RadzenCard>
+		<div class="row mt-4">
+			<div class="col-md-12">
+				<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0,0.1); border-left:5px solid #e74c3c;">
+					<h5 style="color:#e74c3c; font-weight:600; margin-bottom:10px;">Kritik Aktif Görevler </h5>
+					<p style="color:#555; font-size:14px; margin-bottom:10px;">
+						Yüksek öneme sahip aktif görevlerin listesi
+					</p>
+
+					@if (kritikGorevler != null && kritikGorevler.Any())
+					{
+						<RadzenDataGrid Data="@kritikGorevler" TItem="ItemGorev" RowSelect="GorevSecildi" Style="max-height:250px; overflow-y:auto;">
+							<Columns>
+								<RadzenDataGridColumn TItem="ItemGorev" Width="55px">
+									<Template Context="g">
+										@if (g.BitisTarihi.HasValue &&
+																		g.BitisTarihi.Value < DateTime.Now &&
+																		!g.Tamamlandi)
+										{
+											<RadzenIcon Icon="warning"
+														Style="color:#e74c3c;"
+														Title="Süresi dolmuş görev" />
+										}
+									</Template>
+								</RadzenDataGridColumn>
+								<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
+								<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
+								<RadzenDataGridColumn TItem="ItemGorev" Title="Önem">
+									<Template Context="onem">
+										<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
+											@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
+										</span>
+									</Template>
+								</RadzenDataGridColumn>
+								<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Durum">
+									<Template Context="durum">
+										<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Aktif ? "#4caf50" : "#e53935"); color:white;">
+											@(durum.Aktif ? "Aktif" : "Pasif")
+										</span>
+									</Template>
+								</RadzenDataGridColumn>
+							</Columns>
+						</RadzenDataGrid>
+					}
+					else
+					{
+						<div style="padding:10px; color:#888;">Kritik aktif görev bulunmuyor.</div>
+					}
+
+				</RadzenCard>
+			</div>
+
+		</div>
 
 		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid lightskyblue; margin-top:20px;">
 			<h5 style="color:lightskyblue; font-weight:600; margin-bottom:10px;">Bana Atanan Görevler</h5>
@@ -522,9 +593,26 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 			</p>
 			@if (adminGorevleri != null && adminGorevleri.Any())
 			{
-				<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" AllowPaging="true" PageSize="5" AllowSorting="true">
+				<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" RowSelect="GorevSecildi" AllowPaging="true" PageSize="5" AllowSorting="true" class="radzen-grid">
 					<Columns>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="60px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Width="55px">
+							<Template Context="g">
+								@if (g.BitisTarihi.HasValue &&
+														g.BitisTarihi.Value < DateTime.Now &&
+														!g.Tamamlandi)
+								{
+									<RadzenIcon Icon="warning"
+												Style="color:#e74c3c;"
+												Title="Süresi dolmuş görev" />
+								}
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="No" Width="0px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn Title="No" Width="100px">
+							<Template Context="g">
+								@(adminGorevleri.ToList().IndexOf(g) + 1)
+							</Template>
+						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Title="Atayan Kişi" Width="150px">
 							<Template Context="g">
@@ -582,8 +670,15 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 							TItem="ItemGorev"
 							AllowPaging="true"
 							PageSize="5"
-							AllowSorting="true">
+							RowSelect="GorevSecildi"
+							AllowSorting="true"
+							class="radzen-grid">
 				<Columns>
+					<RadzenDataGridColumn Title="No" Width="100px">
+						<Template Context="g">
+							@(kullaniciGorevler.ToList().IndexOf(g) + 1)
+						</Template>
+					</RadzenDataGridColumn>
 					<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Görev" />
 					<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş"
 										  FormatString="{0:dd.MM.yyyy HH:mm}" />
@@ -622,36 +717,32 @@ else
 	[Inject] private UrlSigningService urlSigningService { get; set; } = null!;
 
 	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
-	private int toplamGorev = 0;
-	private int aktifGorev = 0;
-	private int bugunkuGorev = 0;
-	private int tamamlananGorev = 0;
-
 	private List<ItemGorev> kullaniciGorevler = new();
-	//Admin Dashboard Alanı
 	private List<ItemGorev> kritikGorevler = new();
 	private List<ItemGorev> GorevListt = new();
 	private List<ItemGorev> adminGorevleri = new();
-	private List<ItemGorev> standartGorevleri = new();
 	private List<User> kullaniciListesi = new();
 	private bool IsLoading = true;
 	private int? currentUserId = null;
+	ItemGorev? SeciliGorev;
+	int? gorevId;
 
+	private IEnumerable<ItemGorev> TumGorevler => GorevListt.Where(g => g.DelUser == 0).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).OrderBy(g => g.BitisTarihi);
-	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
+	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
-	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> yuksekOnemliGorevler => aktifGorevler.Where(g => g.OnemDerecesi?.ToLower() == "yüksek").OrderBy(g => g.BitisTarihi);
+	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> yuksekOnemliGorevler => aktifGorevler.Where(g => g.OnemDerecesi?.ToLower() == "yüksek").OrderBy(g => g.BitisTarihi).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 
-	private IEnumerable<ItemGorev> BugunkuGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && g.CreDate.Date == DateTime.Today);
-	private IEnumerable<ItemGorev> SAktifGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> SYaklasanGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && !g.Kilitli && g.Aktif && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && g.DelUser == 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7);
+	private IEnumerable<ItemGorev> BugunkuGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && g.CreDate.Date == DateTime.Today).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> SAktifGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> SYaklasanGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && !g.Kilitli && g.Aktif && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && g.DelUser == 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 	private IEnumerable<ItemGorev> STamamlananGorevler =>GorevListt.Where(g => g.Tamamlandi && g.DelUser == 0 && (!g.Kilitli || g.Kullanici_ID == currentUserId));
 	private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
-	private IEnumerable<ItemGorev> SPasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif);
-	private IEnumerable<ItemGorev> STumGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0);
+	private IEnumerable<ItemGorev> SPasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> STumGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 
 	class GorevDurum
 	{
@@ -659,7 +750,6 @@ else
 		public double Value { get; set; }
 	}
 	private List<GorevDurum> GorevDurumData = new();
-
 	private bool _isInitialized = false;
 	private bool showYeniGorevBildirimi = false;
 	private int yeniGorevSayisi = 0;
@@ -671,6 +761,7 @@ else
 	private bool genelGorevBildirimiGoruldu = false;
 	private DateTime selectedMonth = DateTime.Now;
 
+	//sayfa ilk kez ekrana çizildikten sonra dashboard verilerini yüklemek için kullanılır.
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		if (firstRender && !_isInitialized)
@@ -680,17 +771,16 @@ else
 		}
 	}
 
+	//Dashboard açılırken gereken tüm veriyi yükleyen ve ekranı hazırlayan ana yükleme sürecidir.
 	private async Task LoadDashboardAsync()
 	{
 		IsLoading = true;
-		showYeniGorevBildirimi = false; // Her sayfa yüklendiğinde bildirimi sıfırla
+		showYeniGorevBildirimi = false;
 		StateHasChanged();
 		kullaniciListesi = await _kullaniciRepo.GetAllAsync();
-		// URL parametrelerini kontrol et (e-posta linkinden geliyorsa)
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 		var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
 
-		// URL token'ını doğrula ve parametreleri çıkar
 		Dictionary<string, string> urlParameters = new();
 		if (queryParams.ContainsKey("token"))
 		{
@@ -702,7 +792,6 @@ else
 				return;
 			}
 
-			// Token'dan parametreleri çıkar
 			urlParameters = urlSigningService.ParseSignedUrl(NavigationManager.Uri, out bool valid);
 			if (!valid)
 			{
@@ -716,33 +805,28 @@ else
 
 		await YukleKullaniciId();
 
-		// E-posta linkinden geldiyse ve hedef kullanıcı farklıysa çıkış yap ve giriş sayfasına yönlendir
 		if (!string.IsNullOrEmpty(hedefUserIdParam) && int.TryParse(hedefUserIdParam, out int hedefUserId))
 		{
 			if (!currentUserId.HasValue || currentUserId.Value != hedefUserId)
 			{
-				// Farklı kullanıcı giriş yapmışsa önce çıkış yap
 				if (currentUserId.HasValue)
 				{
 					await girisSaglayici.CikisYapAsync();
 					await PermissionService.RefreshAsync();
 				}
 
-				// Giriş yapmamış veya farklı kullanıcı giriş yapmış
-				var returnUrl = NavigationManager.Uri; // Mevcut URL'i returnUrl olarak sakla
+				var returnUrl = NavigationManager.Uri;
 				NavigationManager.NavigateTo($"/GirisYap?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
 				return;
 			}
 		}
 
-		// Giriş yapmamış kullanıcıları yönlendir
 		if (!currentUserId.HasValue)
 		{
 			NavigationManager.NavigateTo("/GirisYap", forceLoad: false);
 			return;
 		}
 
-		Console.WriteLine($"CurrentUserId: {currentUserId}");
 		kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
 		if (kullaniciTip == null)
 		{
@@ -754,71 +838,74 @@ else
 
 		await YukleGorevler();
 
-		// Standart kullanıcı için: kendisine atanan kilitli görevler + herkese açık görevler (sadece aktif olanlar)
-		// Admin için: tüm görevler
 		if (kullaniciTip.Adi == "Standart")
 		{
 			kullaniciGorevler = GorevListt
 				.Where(x => (x.Kullanici_ID == currentUserId || !x.Kilitli) && x.Aktif)
+				.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First())
 				.ToList();
 		}
 		else
 		{
-			// Admin için tüm görevler
-			kullaniciGorevler = GorevListt.ToList();
+			kullaniciGorevler = GorevListt.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()).ToList();
 		}
-
-		toplamGorev = kullaniciGorevler.Count;
-		aktifGorev = kullaniciGorevler.Count(x => x.Aktif && !x.Tamamlandi);
-		bugunkuGorev = kullaniciGorevler.Count(x => x.BitisTarihi?.Date == DateTime.Today);
-		tamamlananGorev = kullaniciGorevler.Count(x => x.Tamamlandi);
 
 		HazirlaDashboardVerileri();
 
-		kritikGorevler = GorevListt
-			.Where(g => g.OnemDerecesi?.ToLower() == "yüksek"
-						&& g.Aktif == true
-						&& g.Tamamlandi == false
-						&& (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Now))
-			.ToList();
+		if (kullaniciTip?.Adi == "Admin")
+		{
+			kritikGorevler = GorevListt
+				.Where(g => g.OnemDerecesi?.ToLower() == "yüksek"
+							&& g.Aktif
+							&& !g.Tamamlandi).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First())
+				.ToList();
+		}
+		else if (kullaniciTip?.Adi == "Standart")
+		{
+			kritikGorevler = GorevListt
+				.Where(g => g.OnemDerecesi?.ToLower() == "yüksek"
+							&& g.Aktif
+							&& !g.Tamamlandi
+							&& (!g.Kilitli || g.Kullanici_ID == currentUserId)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First())
+				.ToList();
+		}
+		else
+		{
+			kritikGorevler = new List<ItemGorev>();
+		}
 
 		IsLoading = false;
 		await InvokeAsync(StateHasChanged);
 
-		// Yeni görevleri kontrol et (IsLoading false olduktan sonra)
 		await KontrolEtYeniGorevler();
-		await InvokeAsync(StateHasChanged); // Banner'ı göstermek için tekrar render et
+		await InvokeAsync(StateHasChanged); 
 	}
 
+	//kullanıcı için yeni görev bildirimi gösterilip gösterilmeyeceğini kontrol eden metottur.
 	private async Task KontrolEtYeniGorevler()
 	{
 		try
 		{
 			if (!currentUserId.HasValue)
 			{
-				Console.WriteLine("KontrolEtYeniGorevler: currentUserId null");
 				return;
 			}
 
-			// localStorage'dan bildirimin görüldü durumunu kontrol et
 			var ozelBildirimGoruldu = await Js.InvokeAsync<string>("localStorage.getItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}");
 			var genelBildirimGoruldu = await Js.InvokeAsync<string>("localStorage.getItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}");
-			
+
 			ozelGorevBildirimiGoruldu = ozelBildirimGoruldu == "true";
 			genelGorevBildirimiGoruldu = genelBildirimGoruldu == "true";
 
-			// En son çıkış tarihini al (çıkış yaptıktan sonra eklenen görevleri bulmak için)
 			var sonGirisTarihi = await DataService.GetSonGirisAsync(currentUserId.Value);
 
 			yeniGenelGorevSayisi = await DataService.GetYeniGorevDetaylariGenel(currentUserId.Value, sonGirisTarihi);
 			yeniOzelGorevSayisi = await DataService.GetYeniGorevDetaylariOzel(currentUserId.Value, sonGirisTarihi);
 			yeniGorevSayisi = yeniGenelGorevSayisi + yeniOzelGorevSayisi;
 
-			// Görüldü olarak işaretlenmemiş görevleri hesapla
 			gosterilecekOzelGorevSayisi = ozelGorevBildirimiGoruldu ? 0 : yeniOzelGorevSayisi;
 			gosterilecekGenelGorevSayisi = genelGorevBildirimiGoruldu ? 0 : yeniGenelGorevSayisi;
 
-			// En az bir bildirim gösterilebilir durumdaysa bildirimi göster
 			if (gosterilecekOzelGorevSayisi > 0 || gosterilecekGenelGorevSayisi > 0)
 			{
 				showYeniGorevBildirimi = true;
@@ -830,11 +917,11 @@ else
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Yeni görev kontrolü hatası: {ex.Message}");
-			Console.WriteLine($"Stack trace: {ex.StackTrace}");
+			
 		}
 	}
 
+	//oturum açmış olan kullanıcının kimliğini sisteme yüklemek için kullanılır.
 	private async Task YukleKullaniciId()
 	{
 		try
@@ -851,13 +938,13 @@ else
 		}
 	}
 
+	//istemdeki görevleri veritabanından çekip belleğe yüklemek için kullanılır.
 	private async Task YukleGorevler()
 	{
 		try
 		{
-			var tumGorevler = (await DataService.GetGorevler()).ToList();
+			var tumGorevler = (await DataService.GetGorevler()).OrderBy(x=>x.ID).ToList();
 
-			// Admin'e atanan görevleri ayrı bir listede tut
 			if (currentUserId.HasValue)
 			{
 				adminGorevleri = tumGorevler
@@ -867,18 +954,8 @@ else
 			{
 				adminGorevleri = new List<ItemGorev>();
 			}
-			// if (currentUserId.HasValue)
-			// {
-			// 	standartGorevleri = tumGorevler
-			// 		.Where(g => g.Kullanici_ID == currentUserId && !g.Kilitli && g.Aktif && !g.Tamamlandi).ToList();
-			// }
-			// else
-			// {
-			// 	standartGorevleri = new List<ItemGorev>();
-			// }
 
-			// Tüm görevleri birleştir ve tekrarları kaldır
-			GorevListt = tumGorevler.Union(adminGorevleri).GroupBy(g => g.ID).Select(g => g.First()).ToList();
+			GorevListt = tumGorevler.ToList();
 		}
 		catch (Exception ex)
 		{
@@ -886,6 +963,7 @@ else
 		}
 	}
 
+	//dashboard’da gösterilecek görev durum özetlerini hazırlamak için kullanılır. Grafik için
 	private void HazirlaDashboardVerileri()
 	{
 		if (GorevListt == null || !GorevListt.Any())
@@ -904,24 +982,25 @@ else
 
 		GorevDurumData.AddRange(list.Where(d => d.Value > 0));
 
-		Console.WriteLine("Grafik veri sayısı: " + GorevDurumData.Count);
 		foreach (var item in GorevDurumData)
 		{
-			Console.WriteLine($"{item.Category}=> {item.Value}");
+
 		}
 	}
 
+	//kullanıcıyı görevler sayfasına belirli bir sekme açık olacak şekilde yönlendirmek için kullanılır.Admin için.
 	private void NavigateToGorevler(int tabIndex)
 	{
 		NavigationManager.NavigateTo($"/Gorevler?tab={tabIndex}");
 	}
 
+	//kullanıcıyı görevler sayfasına belirli bir sekme açık olacak şekilde yönlendirmek için kullanılır.Standart tipi için.
 	private void NavigateToGorevler2(int tabIndex)
 	{
 		NavigationManager.NavigateTo($"/Gorevler?tab={tabIndex}");
 	}
 
-
+	//Görevin önemine göre öneme renk verilen metot.
 	private string GetOnemRengi(string onem)
 	{
 		return onem?.ToLower() switch
@@ -932,16 +1011,8 @@ else
 
 		};
 	}
-	private string GetDurumRengi(string durum)
-	{
-		return durum?.ToLower() switch
-		{
-			"evet" => "#4caf50",
-			"hayır" => "#e53935"
-		};
-	}
 
-
+	//kullanıcıyı özel görevler sekmesine yönlendirmeden önce özel görev bildirimini kapatmak için kullanılır.
 	private async Task NavigateToOzelGorevler()
 	{
 		if (currentUserId.HasValue)
@@ -950,21 +1021,19 @@ else
 		}
 		ozelGorevBildirimiGoruldu = true;
 		gosterilecekOzelGorevSayisi = 0;
-		
-		// Eğer her iki bildirim de görüldüyse bildirimi kapat
+
 		if (gosterilecekGenelGorevSayisi == 0)
 		{
 			showYeniGorevBildirimi = false;
 		}
-		
+
 		StateHasChanged();
-		
-		// Kullanıcı tipine göre doğru tab index'i kullan
-		// Admin için tab=6, Standart kullanıcı için tab=5
+
 		int tabIndex = (kullaniciTip?.Adi == "Admin") ? 6 : 5;
 		NavigationManager.NavigateTo($"/gorevler?tab={tabIndex}");
 	}
 
+	//Kullanıcıyı genel görevler ekranına yönlendirmeden önce genel görev bildirimini kapatmak için kullanılır.
 	private async Task NavigateToGenelGorevler()
 	{
 		if (currentUserId.HasValue)
@@ -973,22 +1042,21 @@ else
 		}
 		genelGorevBildirimiGoruldu = true;
 		gosterilecekGenelGorevSayisi = 0;
-		
-		// Eğer her iki bildirim de görüldüyse bildirimi kapat
+
 		if (gosterilecekOzelGorevSayisi == 0)
 		{
 			showYeniGorevBildirimi = false;
 		}
-		
+
 		StateHasChanged();
 		NavigationManager.NavigateTo("/gorevler");
 	}
 
+	//kullanıcıya gösterilen “yeni görev” bildirimini kalıcı olarak kapatmak
 	private async Task BildirimiKapat()
 	{
 		if (currentUserId.HasValue)
 		{
-			// Her iki bildirimi de görüldü olarak işaretle
 			await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}", "true");
 			await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}", "true");
 		}
@@ -1000,22 +1068,14 @@ else
 		StateHasChanged();
 	}
 
-	//Bitti.
-	void GoHome()
-	{
-		NavigationManager.NavigateTo("/", forceLoad: true);
-	}
-
-	// Takvim metodları
+	//Takvim Günlerini oluşturan metot.
 	private List<DateTime> GetCalendarDays()
 	{
 		var days = new List<DateTime>();
 		var firstDayOfMonth = new DateTime(selectedMonth.Year, selectedMonth.Month, 1);
 		var lastDayOfMonth = firstDayOfMonth.AddMonths(1).AddDays(-1);
 
-		// Ayın ilk gününden önceki boş günleri ekle
 		var startDayOfWeek = (int)firstDayOfMonth.DayOfWeek;
-		// Pazartesi = 0 olacak şekilde ayarla
 		startDayOfWeek = startDayOfWeek == 0 ? 6 : startDayOfWeek - 1;
 
 		for (int i = 0; i < startDayOfWeek; i++)
@@ -1023,13 +1083,11 @@ else
 			days.Add(firstDayOfMonth.AddDays(-(startDayOfWeek - i)));
 		}
 
-		// Ayın günlerini ekle
 		for (var day = firstDayOfMonth; day <= lastDayOfMonth; day = day.AddDays(1))
 		{
 			days.Add(day);
 		}
 
-		// Ayın son gününden sonraki boş günleri ekle (takvimi 42 güne tamamla)
 		var remainingDays = 42 - days.Count;
 		for (int i = 1; i <= remainingDays; i++)
 		{
@@ -1039,46 +1097,73 @@ else
 		return days;
 	}
 
+	//Takvimde her tarih için gösterilen görevler metodu.
 	private IEnumerable<ItemGorev> GetGorevlerForDate(DateTime date)
 	{
 		if (GorevListt == null || !GorevListt.Any())
 			return Enumerable.Empty<ItemGorev>();
 
-		// Tarih filtresi
-		var tarihFiltreliGorevler = GorevListt.Where(g =>
+		var tarihFiltreli = GorevListt
+		.Where(g => g.Aktif) 
+		.Where(g =>
 			(g.BitisTarihi.HasValue && g.BitisTarihi.Value.Date == date.Date) ||
-			(g.BaslangicTarihi.HasValue && g.BaslangicTarihi.Value.Date == date.Date)
-		);
+			(g.BaslangicTarihi.HasValue && g.BaslangicTarihi.Value.Date == date.Date));
+		var tekil = tarihFiltreli
+			.GroupBy(g => new
+			{
+				Gun = (g.BitisTarihi ?? g.BaslangicTarihi)?.Date,
+				g.Baslik,
+				g.Kullanici_ID
+			})
+			.Select(x => x.First());
 
-		// Standart kullanıcı için: sadece kendisine ait kilitli görevler ve herkese açık görevler
-		if (kullaniciTip != null && kullaniciTip.Adi == "Standart" && currentUserId.HasValue)
+		if (!currentUserId.HasValue)
+			return Enumerable.Empty<ItemGorev>();
+
+		if (kullaniciTip?.Adi == "Standart")
 		{
-			return tarihFiltreliGorevler.Where(g =>
-				(g.Kullanici_ID == currentUserId.Value || !g.Kilitli) && g.Aktif
+			return tekil.Where(g =>
+				!g.Kilitli ||
+				g.Kullanici_ID == currentUserId.Value
 			);
 		}
 
-		// Admin için: tüm görevler
-		return tarihFiltreliGorevler;
+		if (kullaniciTip?.Adi == "Admin")
+		{
+			return tekil.Where(g =>
+				!g.Kilitli ||
+				g.Kullanici_ID == currentUserId.Value
+			);
+		}
+		return Enumerable.Empty<ItemGorev>();
 	}
 
+	//Takvim tarihinde her bir görevin önemine yada süresine göre renk verilen metot.
 	private string GetGorevRengi(ItemGorev gorev)
 	{
-		if (gorev.Tamamlandi)
-			return "#4caf50"; // Yeşil - tamamlandı
+		if (gorev.BitisTarihi.HasValue &&
+			gorev.BitisTarihi.Value < DateTime.Now &&
+			!gorev.Tamamlandi)
+			return "#f1b0b7";
 
-		if (gorev.BitisTarihi.HasValue && gorev.BitisTarihi.Value < DateTime.Now)
-			return "#e74c3c"; // Kırmızı - süresi doldu
+		var onem = gorev.OnemDerecesi?.Trim().ToLower();
 
-		if (gorev.OnemDerecesi?.ToLower() == "yüksek")
-			return "#e74c3c"; // Kırmızı - yüksek önem
+		if (onem == "yüksek")
+			return "#e74c3c";
 
-		if (gorev.OnemDerecesi?.ToLower() == "orta")
-			return "#f39c12"; // Turuncu - orta önem
+		if (onem == "orta")
+			return "#f39c12";
 
-		return "#3498db"; // Mavi - normal
+		if (onem == "düşük")
+			return "#4caf50";
+		if (currentUserId.HasValue &&
+			gorev.Kullanici_ID == currentUserId.Value)
+			return "#8e44ad";
+
+		return "#3498db";
 	}
 
+	//Takvimde tarihe özel görev detaylarını gösteren metot.
 	private async Task ShowDayDetails(DateTime date, IEnumerable<ItemGorev> gorevler)
 	{
 		var gorevList = gorevler.ToList();
@@ -1092,7 +1177,7 @@ else
 					{ "DateStr", dateStr },
 					{ "Gorevler", gorevList }
 				},
-				new DialogOptions { Width = "1200px", Height = "80vh", Resizable = true, Draggable = true });
+				new DialogOptions { Width = "1200px", Height = "auto"});
 		}
 		else
 		{
@@ -1109,7 +1194,7 @@ else
 		}
 	  }
 
-
+	//Aynı görevin kaç kişiye atandığını saymak için kullanılır.
 	private int GetAtananKisiSayisi(ItemGorev gorev)
 	{
 		if (!gorev.Kilitli)
@@ -1124,6 +1209,8 @@ else
 			g.DelUser == 0
 		).Count();
 	}
+
+	//Dashboard görevlerim özet kartında atanan kişileri göstermek için kullanılan metot.
 	private List<string> GetAtananKisiListesi(ItemGorev gorev)
 	{
 		var liste = GorevListt.Where(g =>
@@ -1139,19 +1226,25 @@ else
 
 		return liste;
 	}
+
+	//Görev nesnesini alır.İçindeki Kullanici_ID’yi çıkarır.İsme çevirmek için alttaki metodu çağırır.
 	private string GetTekKisiAdi(ItemGorev gorev)
 	{
 		return GetKullaniciAdi(gorev.Kullanici_ID);
 	}
+
+	//Kullanıcı listesinden ID’ye göre kullanıcıyı bulur.Bulamazsa "-" döner.Bulursa "Ad Soyad" döner.
 	private string GetKullaniciAdi(int kullaniciId)
 	{
 		var user = kullaniciListesi.FirstOrDefault(x => x.ID == kullaniciId);
 
 		if (user == null)
-			return "Bilinmiyor";
+			return "-";
 
 		return $"{user.Adi} {user.Soyadi}";
 	}
+
+	// standart tipindeki Kullanıcı dashboard undaki görevlerim özeti yerinde atayan kişinin beli olmasına yarayan bir metot.
 	private MarkupString GetAtayanKullaniciAdi(int? creUserId)
 	{
 		Console.WriteLine($"CreUserId: {creUserId}");
@@ -1165,5 +1258,39 @@ else
 			? (MarkupString)($"{kullanici.Adi} {kullanici.Soyadi}")
 			: (MarkupString)"-";
 
+	}
+
+	//Bir görevin üzerine tıklayınca görev listesinde olduğu tabin yerine götüren metot.
+	int GorevinTabiniBul(ItemGorev g)
+	{
+		if (g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif)
+		{
+			return 6;
+		}
+
+		if (g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi)
+		{
+			return 3;
+		}
+
+		if (g.Tamamlandi)
+		{
+			return 2;
+		}
+
+		return 0;
+	}
+
+	//Dashboarddan üzerine tıklanan görevin belli olması için görev listesinde üstü boyalı gelmesine yarayan metot.
+	void GorevSecildi(ItemGorev gorev)
+	{
+		var tab = GorevinTabiniBul(gorev);
+		NavigationManager.NavigateTo($"/gorevler?tab={tab}&gorevId={gorev.ID}");
+	}
+
+	//Giriş sayfasına yönlendiren metot.
+	void GoHome()
+	{
+		NavigationManager.NavigateTo("/", forceLoad: true);
 	}
 }

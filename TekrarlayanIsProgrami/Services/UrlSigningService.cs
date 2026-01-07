@@ -6,27 +6,20 @@ namespace TekrarlayanIsProgrami.Services
 {
     public class UrlSigningService
     {
-        private readonly string _secretKey = "BuUrlImzaCokGizliBirAnahtar123456789!@#"; // En az 32 karakter
+        private readonly string _secretKey = "BuUrlImzaCokGizliBirAnahtar123456789!@#";
 
-        /// <summary>
-        /// URL parametrelerini ÅŸifreleyip tek bir token olarak dÃ¶ndÃ¼rÃ¼r
-        /// </summary>
+        //verilen URL’yi parametrelerle birlikte imzalý hale getirir.
         public string SignUrl(string baseUrl, Dictionary<string, string> parameters)
         {
-            // Parametreleri JSON'a Ã§evir
             var json = JsonSerializer.Serialize(parameters);
             
-            // JSON'Ä± ÅŸifrele (AES)
             var encrypted = Encrypt(json);
             
-            // URL'e sadece token'Ä± ekle
             var separator = baseUrl.Contains('?') ? "&" : "?";
             return $"{baseUrl}{separator}token={Uri.EscapeDataString(encrypted)}";
         }
 
-        /// <summary>
-        /// ÅžifrelenmiÅŸ token'dan parametreleri Ã§Ä±karÄ±r
-        /// </summary>
+        //SignUrl ile oluþturulmuþ imzalý URL’yi çözer ve içindeki parametreleri okur.
         public Dictionary<string, string> ParseSignedUrl(string url, out bool isValid)
         {
             isValid = false;
@@ -44,12 +37,10 @@ namespace TekrarlayanIsProgrami.Services
                 if (string.IsNullOrEmpty(token))
                     return result;
 
-                // Token'Ä± Ã§Ã¶z
                 var decrypted = Decrypt(token);
                 if (string.IsNullOrEmpty(decrypted))
                     return result;
 
-                // JSON'dan parametreleri al
                 result = JsonSerializer.Deserialize<Dictionary<string, string>>(decrypted) ?? new Dictionary<string, string>();
                 isValid = true;
 
@@ -61,9 +52,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
-        /// <summary>
-        /// URL imzasÄ±nÄ± doÄŸrular (token Ã§Ã¶zÃ¼lebiliyorsa geÃ§erli)
-        /// </summary>
+        //bir URL’nin geçerli bir imzalý token içerip içermediðini kontrol eder.
         public bool VerifyUrl(string url)
         {
             try
@@ -78,7 +67,6 @@ namespace TekrarlayanIsProgrami.Services
                 if (string.IsNullOrEmpty(token))
                     return false;
 
-                // Token'Ä± Ã§Ã¶z, baÅŸarÄ±lÄ±ysa geÃ§erli
                 var decrypted = Decrypt(token);
                 return !string.IsNullOrEmpty(decrypted);
             }
@@ -88,11 +76,12 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
+        //düz metni AES ile þifreleyip URL-safe Base64 formatýnda döndürür.
         private string Encrypt(string plainText)
         {
             using var aes = Aes.Create();
-            aes.Key = Encoding.UTF8.GetBytes(_secretKey.Substring(0, 32)); // 32 byte key
-            aes.IV = new byte[16]; // IV iÃ§in secret key'den tÃ¼ret
+            aes.Key = Encoding.UTF8.GetBytes(_secretKey.Substring(0, 32));
+            aes.IV = new byte[16]; 
             Array.Copy(Encoding.UTF8.GetBytes(_secretKey.Substring(16, 16)), 0, aes.IV, 0, 16);
 
             using var encryptor = aes.CreateEncryptor();
@@ -107,6 +96,7 @@ namespace TekrarlayanIsProgrami.Services
             return Convert.ToBase64String(encrypted).Replace("+", "-").Replace("/", "_").TrimEnd('=');
         }
 
+        //Encrypt metodu ile þifrelenmiþ veriyi çözerek orijinal düz metni geri döndürür.
         private string Decrypt(string cipherText)
         {
             try
@@ -114,8 +104,8 @@ namespace TekrarlayanIsProgrami.Services
                 var cipherBytes = Convert.FromBase64String(cipherText.Replace("-", "+").Replace("_", "/"));
 
                 using var aes = Aes.Create();
-                aes.Key = Encoding.UTF8.GetBytes(_secretKey.Substring(0, 32)); // 32 byte key
-                aes.IV = new byte[16]; // IV iÃ§in secret key'den tÃ¼ret
+                aes.Key = Encoding.UTF8.GetBytes(_secretKey.Substring(0, 32));
+                aes.IV = new byte[16]; 
                 Array.Copy(Encoding.UTF8.GetBytes(_secretKey.Substring(16, 16)), 0, aes.IV, 0, 16);
 
                 using var decryptor = aes.CreateDecryptor();

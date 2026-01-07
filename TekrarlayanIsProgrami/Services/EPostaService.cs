@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.Hosting;
+using System.Net;
 using System.Net.Mail;
 
 namespace TekrarlayanIsProgrami.Services
@@ -6,7 +7,7 @@ namespace TekrarlayanIsProgrami.Services
     public class EPostaService
     {
         private readonly string _fromEposta = "kamirb1820@gmail.com";
-        private readonly string _password = "mrxy gsgo iphm rcfx";    /*vmzd gjbd edmk nfzt*/
+        private readonly string _password = "mrxy gsgo iphm rcfx";   
         private readonly UrlSigningService _urlSigningService;
 
         public EPostaService(UrlSigningService urlSigningService)
@@ -14,6 +15,7 @@ namespace TekrarlayanIsProgrami.Services
             _urlSigningService = urlSigningService;
         }
 
+        //e-posta göndermek için SMTP istemcisi oluşturur.
         private SmtpClient CreateClient()
         {
             return new SmtpClient("smtp.gmail.com")
@@ -24,6 +26,7 @@ namespace TekrarlayanIsProgrami.Services
             };
         }
 
+        //e-posta gönderme işlemini gerçekleştirir.
         private async Task SendEmailAsync(string to, string subject, string body, bool isHtml = true)
         {
             using var smtp = CreateClient();
@@ -34,6 +37,7 @@ namespace TekrarlayanIsProgrami.Services
             await smtp.SendMailAsync(msg);
         }
 
+        //kullanıcıya şifre sıfırlama e-postası göndermek için kullanılır.
         public async Task SendResetEpostaAsync(string toEposta, string token, string kullaniciAdi)
         {
             var linkParams = new Dictionary<string, string> { { "token", token } };
@@ -48,6 +52,7 @@ namespace TekrarlayanIsProgrami.Services
             await SendEmailAsync(toEposta, "Şifre Sıfırlama Linkiniz", body);
         }
 
+        //kullanıcıya yeni görev bildirimi e-postası göndermek için kullanılır.
         public async Task SendYeniGorevBildirimiAsync(string toEposta, string kullaniciAdi, string gorevBaslik, string dashboardUrl)
         {
             string body =
@@ -58,6 +63,8 @@ namespace TekrarlayanIsProgrami.Services
 
             await SendEmailAsync(toEposta, "Yeni Göreviniz Var", body);
         }
+
+        //kullanıcıya hesap onay daveti e-postası göndermek için kullanılır.
         public async Task SendInviteMailAsync(string email, string evetLink, string hayirLink)
         {
             var subject = "Hesap Onay Daveti";
@@ -73,6 +80,7 @@ namespace TekrarlayanIsProgrami.Services
             await SendEmailAsync(email, subject, body, true);
         }
 
+        //kullanıcıya geçici şifre e-postası göndermek için kullanılır.
         public async Task SendPasswordMailAsync(string email, string tempPassword)
         {
             string body =
@@ -82,6 +90,5 @@ namespace TekrarlayanIsProgrami.Services
 
             await SendEmailAsync(email, "Geçici Şifreniz", body);
         }
-
     }
 }

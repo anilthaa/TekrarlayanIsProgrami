@@ -1,10 +1,9 @@
 @page "/admin/kullanici-loglari"
 @layout MainLayout
 @attribute [Authorize]
-<RadzenDialog></RadzenDialog>
 
 <RadzenCard class="container mt-4" Style="z-index:2000 !important;">
-    <h2 class="text-center mb-4">Kullanıcı Hareketleri</h2>
+    <h3 class="text-center mb-4" style="font-family:Calibri; font-weight:bold; ">Kullanıcı Hareketleri</h3>
 
     @if (isLoading)
     {
@@ -24,11 +23,10 @@
         <RadzenDataGrid @ref="logGrid" Data="@logList" TItem="ItemKullaniciLog"
                         AllowPaging="true" PageSize="20" AllowSorting="true" AllowFiltering="true"
                         FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                        class="text-center align-middle">
+                        class="text-center align-middle compact-grid">
             <Columns>
-                <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="ID" Title="ID" Width="80px" />
                 
-                <RadzenDataGridColumn TItem="ItemKullaniciLog" Title="Kullanıcı" Width="200px">
+                <RadzenDataGridColumn TItem="ItemKullaniciLog" Title="Kullanıcı" Width="200px" >
                     <Template Context="log">
                         @GetKullaniciAdi(log.Kullanici_ID)
                     </Template>
@@ -55,13 +53,13 @@
                         }
                     </Template>
                 </RadzenDataGridColumn>
-                
+
                 <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="IslemTarihi" Title="İşlem Tarihi" Width="180px">
                     <Template Context="log">
                         @log.IslemTarihi.ToString("dd.MM.yyyy HH:mm:ss")
                     </Template>
                 </RadzenDataGridColumn>
-                
+
                 <RadzenDataGridColumn TItem="ItemKullaniciLog" Property="Aciklama" Title="Açıklama" />
             </Columns>
         </RadzenDataGrid>
@@ -74,37 +72,34 @@
     private bool isLoading = true;
     private Dictionary<int, string> kullaniciAdlari = new();
 
+    //sayfa ilk yüklendiğinde log (kayıt) verilerini getirmek için kullanılır.
     protected override async Task OnInitializedAsync()
     {
         await YukleLoglarAsync();
     }
 
+    //kullanıcı loglarını yükleyip ekranda gösterilmeye hazır hale getirmek için kullanılır.
     private async Task YukleLoglarAsync()
     {
         try
         {
             isLoading = true;
             
-            // Tüm logları getir
             var loglar = await DataService.GetKullaniciLoglari();
             logList = loglar.ToList();
             
-            // Debug: Console'a log sayısını yazdır
             Console.WriteLine($"Toplam log sayısı: {logList.Count}");
             Console.WriteLine($"Giriş logları: {logList.Count(l => l.IslemTipi?.Equals("Giris", StringComparison.OrdinalIgnoreCase) == true)}");
             Console.WriteLine($"Çıkış logları: {logList.Count(l => l.IslemTipi?.Equals("Cikis", StringComparison.OrdinalIgnoreCase) == true)}");
             
-            // Tüm IslemTipi değerlerini listele
             var uniqueIslemTipleri = logList.Select(l => l.IslemTipi).Distinct().ToList();
             Console.WriteLine($"Tüm IslemTipi değerleri: {string.Join(", ", uniqueIslemTipleri)}");
             
-            // İlk 5 logun detaylarını yazdır
             foreach (var log in logList.Take(5))
             {
                 Console.WriteLine($"Log ID: {log.ID}, Kullanıcı ID: {log.Kullanici_ID}, IslemTipi: '{log.IslemTipi}', Tarih: {log.IslemTarihi}");
             }
             
-            // Kullanıcı adlarını yükle
             var kullanicilar = await _kullaniciRepo.GetAllAsync();
             kullaniciAdlari = kullanicilar.ToDictionary(k => k.ID, k => $"{k.Adi} {k.Soyadi}");
             
@@ -120,6 +115,7 @@
         }
     }
 
+    //ullanıcı  ID yi ekranda gösterilecek okunabilir bir ada çevirmek için kullanılır.
     private string GetKullaniciAdi(int kullaniciId)
     {
         if (kullaniciAdlari.TryGetValue(kullaniciId, out var ad))
@@ -127,6 +123,7 @@
             return ad;
         }
         return $"Kullanıcı ID: {kullaniciId}";
+    }
     }
 }
 

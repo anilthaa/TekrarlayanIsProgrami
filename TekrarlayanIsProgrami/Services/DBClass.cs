@@ -13,7 +13,6 @@ namespace TekrarlayanIsProgrami.Services
 
         static DBClass()
         {
-            // Factory sadece bir kez kaydedilir
             if (!_factoryRegistered)
             {
                 DbProviderFactories.RegisterFactory("Npgsql", NpgsqlFactory.Instance);
@@ -30,15 +29,15 @@ namespace TekrarlayanIsProgrami.Services
             _connectionString= connectionString;
         }
 
+        //veritabanı bağlantısı oluşturmak için kullanılır.
         private DbConnection CreDB()
         {
-            
             var db = dbProviderFactory.CreateConnection();
             db.ConnectionString = _connectionString;
             return db;
         }
 
-
+        //veritabanında veri değiştiren bir SQL sorgusu çalıştırmak için kullanılır (INSERT, UPDATE, DELETE).
         public async Task<int>  SQLExecute(string SQLSorgu, object? Params = null)
         {
             using var db = CreDB();
@@ -59,11 +58,11 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
+        //eritabanında tek bir değer döndüren SQL sorgusu çalıştırmak için kullanılır
         public async Task<T>  SQLExecuteScalar<T>(string SQLSorgu, object? Params = null)
         {
             using var db = CreDB();
             
-
             try
             {
                 await db.OpenAsync();
@@ -71,8 +70,6 @@ namespace TekrarlayanIsProgrami.Services
 
                 if (result == null)
                     return default!;
-                
-
                 
                 if (typeof(T) == typeof(int))
                 {
@@ -85,13 +82,11 @@ namespace TekrarlayanIsProgrami.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SQLExecuteScalar hatası: {ex.Message}");
-                Console.WriteLine($"SQL Sorgusu: {SQLSorgu}");
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+
                 }
-                throw; // Exception'ı tekrar fırlat ki üst katmanda yakalanabilsin
+                throw; 
             }
             finally
             {
@@ -101,6 +96,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
+        //veritabanında bir sorgu çalıştırıp sonuçlardan ilk satırı almak için kullanılır.
         public async Task<T> SQLQueryFirstOrDefaultAsync<T>(string SQLSorgu, object? Params = null)
         {
             using var Db = CreDB();
@@ -123,6 +119,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
+        //veritabanında bir SQL sorgusu çalıştırıp birden fazla satırı liste olarak almak için kullanılır.
         public async Task<IEnumerable<T>> SQLQueryAsync<T>(string SQLSorgu, object? Params = null)
         {
             using var Db = CreDB();

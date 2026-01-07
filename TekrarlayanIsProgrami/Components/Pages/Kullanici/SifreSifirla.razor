@@ -29,20 +29,28 @@
 
 @code {
     [Inject] private UrlSigningService urlSigningService { get; set; } = null!;
-
     [Parameter]
     [SupplyParameterFromQuery]
     public string token{ get; set; }
     private SifreSifirlaModel model = new();
     private string bilgiMesaji;
     public User kullanici = new User();
+    private string InputType { get; set; } = "password";
+    private string Icon { get; set; } = "visibility_off";
+    private string InputType2 { get; set; } = "password";
+    private string Icon2 { get; set; } = "visibility_off";
+    public class SifreSifirlaModel
+    {
+        public string YeniSifre { get; set; }
+        public string YeniSifreTekrar { get; set; }
+    }
 
+    //sayfa yüklendiğinde şifre sıfırlama token’ını doğrular ve hazırlar.
     protected override async Task OnInitializedAsync()
     {
         var uri = new Uri(NavigationManager.Uri);
         var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
 
-        // URL token'ını doğrula ve parametreleri çıkar
         if (query.ContainsKey("token"))
         {
             var isValid = urlSigningService.VerifyUrl(NavigationManager.Uri);
@@ -53,7 +61,6 @@
                 return;
             }
             
-            // Token'dan parametreleri çıkar
             var urlParameters = urlSigningService.ParseSignedUrl(NavigationManager.Uri, out bool valid);
             if (!valid || !urlParameters.ContainsKey("token"))
             {
@@ -66,12 +73,9 @@
         }
         else if (query.TryGetValue("token", out var tokenValue))
         {
-            // Eski format (imzasız) için geriye dönük uyumluluk
             token = System.Net.WebUtility.UrlDecode(tokenValue.ToString());
         }
         
-        Console.WriteLine($"UI Token: {token}");
-
         if (string.IsNullOrEmpty(token))
         {
             notificationService.Notify(NotificationSeverity.Warning, "Token eksik veya geçersiz.");
@@ -86,6 +90,7 @@
         }
     }
 
+    //şifre sıfırlama işlemini tamamlar.Yeni şifreyi kaydeder.
     private async Task OnSubmit()
     {
         if (string.IsNullOrEmpty(token))
@@ -96,7 +101,6 @@
 
         if(kullanici.Sifre==model.YeniSifre)
         {
-            Console.WriteLine("Şifreniz eskisiyle aynı");
             return;
         }
 
@@ -119,20 +123,13 @@
         }
     }
 
-    public class SifreSifirlaModel
-    {
-        public string YeniSifre { get; set; }
-        public string YeniSifreTekrar { get; set; }
-    }
-    private string InputType { get; set; } = "password";
-    private string Icon { get; set; } = "visibility_off"; // göz açık
-
+    //Textbox ta şifrenin göz ikonu için kullanılır.
     void TogglePassword()
     {
         if (InputType == "password")
         {
             InputType = "text";
-            Icon = "visibility"; // göz kapalı
+            Icon = "visibility"; 
         }
         else
         {
@@ -140,15 +137,14 @@
             Icon = "visibility_off";
         }
     }
-    private string InputType2 { get; set; } = "password";
-    private string Icon2 { get; set; } = "visibility_off"; // göz açık
 
+    //Textbox ta şifrenin göz ikonu için kullanılır.
     void TogglePasswordAgain()
     {
         if (InputType2 == "password")
         {
             InputType2 = "text";
-            Icon2 = "visibility"; // göz açık
+            Icon2 = "visibility"; 
         }
         else
         {

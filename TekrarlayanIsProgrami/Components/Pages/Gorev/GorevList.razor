@@ -7,13 +7,13 @@
 @if (kullaniciTip.Adi == "Admin")
 {
 	<RadzenCard Style="margin:0; margin-left:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
-		<h3 style="text-align:center;">Görev Listesi</h3>
+		<h3 style="text-align:center; font-family:Calibri;font-weight:bold; ">Görev Listesi</h3>
 
-		<RadzenButton Text="Yeni Görev" Icon="add" Style=" background:mediumpurple; color:white" Click="@YeniGorev"></RadzenButton>
+		<RadzenButton Text="Yeni Görev" Icon="add" Style=" background:#ba76d3; color:white;border-radius:10px;" Click="@YeniGorev"></RadzenButton>
 
 		@if (GorevListt == null || !GorevListt.Any())
 		{
-			<p>Veri yükleniyor... veya görev bulunamadı.</p>
+			<p style="text-align:center;">Veri yükleniyor... veya görev bulunamadı.</p>
 		}
 		else
 		{
@@ -58,10 +58,25 @@
 			}
 			else
 			{
-				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListe" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick" Style="width:100%; overflow-x:auto;" ColumnWidth="120px">
+				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListe" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" RowDoubleClick="@OnRowDoubleClick" Style="width:100%; overflow-x:auto;" ColumnWidth="120px" RowSelect="OnRowSelect" SelectionMode="DataGridSelectionMode.Single" SelectedItems="@SeciliGorevler" RowStyle="@GorevRowStyle">
 					<Columns>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="100px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="0px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn Title="No" Width="100px">
+							<Template Context="g">
+								@(AktifListe.ToList().IndexOf(g) + 1 )
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px">
+							<Template Context="g">
+								<div style="@($"padding:5px; background-color:{(g.ID == gorevId ? "#d1e7dd" : "transparent")};")">
+									@g.Baslik
+									@if ((DateTime.Now - g.BaslangicTarihi)?.TotalHours < 24) 
+									{
+										<span style="color:#ff9800; font-size:11px;">⭐</span>
+									}
+								</div>
+							</Template>
+						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Title="Atanan Kişi" Width="250px">
 							<Template Context="g">
 								@if (!g.Kilitli)
@@ -130,9 +145,10 @@
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı"
 											  Width="150px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
 							<Template Context="gorev">
-								<RadzenCheckBox Value="gorev.Tamamlandi"
-												TValue="bool"
-												Disabled="@(gorev.Kullanici_ID != currentUserId)">
+								<RadzenCheckBox TValue="bool"
+												@bind-Value="gorev.Tamamlandi"
+												Disabled="@(gorev.Kullanici_ID != currentUserId)"
+												Change="@(async args => await ToggleTamamlandi(gorev))">
 								</RadzenCheckBox>
 							</Template>
 						</RadzenDataGridColumn>
@@ -162,7 +178,6 @@ else if (kullaniciTip.Adi == "Standart")
 	<RadzenCard Style="margin:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
 		<h3 style="text-align:center;">Görev Listesi</h3>
 
-		@* Standart kullanıcı yeni görev ekleyemez, buton kaldırıldı *@
 
 		@if (GorevListt == null || !GorevListt.Any())
 		{
@@ -209,10 +224,26 @@ else if (kullaniciTip.Adi == "Standart")
 			}
 			else
 			{
-				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListee" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" Style="width:100%; overflow-x:auto;" ColumnWidth="120px">
+				<RadzenDataGrid TItem="ItemGorev" Data="@AktifListee" @ref="GrdGorev" AllowPaging="true" AllowSorting="true" AllowFiltering="true" Style="width:100%; overflow-x:auto;" ColumnWidth="120px" RowSelect="OnRowSelect" SelectionMode="DataGridSelectionMode.Single" SelectedItems="@SeciliGorevler" RowStyle="@GorevRowStyle">
 					<Columns>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="150px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="0px"></RadzenDataGridColumn>
+						<RadzenDataGridColumn Title="No" Width="100px">
+							<Template Context="g">
+								@(AktifListee.ToList().IndexOf(g) + 1)
+							</Template>
+						</RadzenDataGridColumn>
+						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px">
+							<Template Context="g">
+								<div style="@($"padding:5px; background-color:{(g.ID == gorevId ? "#d1e7dd" : "transparent")};")">
+									@g.Baslik
+									@if ((DateTime.Now - g.BaslangicTarihi)?.TotalHours < 24)  
+									{
+										<span style="color:#ff9800; font-size:11px;">⭐</span>
+									}
+								</div>
+							</Template>
+
+						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Title="Atayan Kişi" Width="150px">
 							<Template Context="g">
 								@GetAtayanKullaniciAdi(g.CreUser)
@@ -263,13 +294,13 @@ else if (kullaniciTip.Adi == "Standart")
 
 @code {
 	private string[] TabNames = new string[]
-   {
+			{
 		"Tüm Aktif Görevler",
 		"Yaklaşan Görevler",
 		"Tamamlanmış Görevler",
 		"Süresi Dolanlar",
 		"Pasif Görevler"
-   };
+			};
 	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
 	private bool IsLoading = true;
 	private List<ItemGorev> GorevListt = new();
@@ -279,9 +310,29 @@ else if (kullaniciTip.Adi == "Standart")
 	private ItemGorev gorevler = new ItemGorev();
 	private List<User> TumKullanicilar = new();
 	private int? currentUserId = null;
-
 	[SupplyParameterFromQuery(Name = "tab")]
 	public int QueryTabIndex { get; set; } = 0;
+
+	int? gorevId;
+	int? hedefTab = null;
+	List<ItemGorev> SeciliGorevler = new();
+	bool gorevSecildi = false;
+
+	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7);
+	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
+	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
+	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> BanaOzelGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId && g.Kilitli) && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> TumGorevler => GorevListt.Where(g => g.DelUser == 0).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+
+	private IEnumerable<ItemGorev> SAktifGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> SYaklasanGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && !g.Kilitli && g.Aktif && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && g.DelUser == 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7);
+	private IEnumerable<ItemGorev> STamamlananGorevler => GorevListt.Where(g => g.Tamamlandi && g.DelUser == 0 && (!g.Kilitli || g.Kullanici_ID == currentUserId));
+	private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
+	private IEnumerable<ItemGorev> SPasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId) && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> STumGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0);
 
 	protected override void OnParametersSet()
 	{
@@ -297,21 +348,33 @@ else if (kullaniciTip.Adi == "Standart")
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		// Görev listesine gidildiğinde bildirimi görüldü olarak işaretle
-		if (firstRender && currentUserId.HasValue)
+		if (!firstRender) return;
+
+		if (hedefTab.HasValue)
 		{
-			// Tab 6 (Bana Özel Görevler) ise özel görev bildirimini, diğer durumlarda genel görev bildirimini işaretle
-			if (SelectedTabIndex == 6)
+			if (kullaniciTip.Adi == "Admin")
 			{
-				await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}", "true");
+				SelectedTabIndex = hedefTab.Value;
 			}
 			else
 			{
-				await Js.InvokeVoidAsync("localStorage.setItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}", "true");
+				SelectedTabIndex2 = hedefTab.Value;
+			}
+		}
+		if (gorevId.HasValue && !gorevSecildi && AktifListe.Any())
+		{
+			var gorev = GorevListt.FirstOrDefault(g => g.ID == gorevId.Value);
+			if (gorev != null)
+			{
+				SeciliGorevler.Clear();
+				SeciliGorevler.Add(gorev);
+				gorevSecildi = true;
+				StateHasChanged();
 			}
 		}
 	}
 
+	//Admin tipinde olan kullanıcıya ait görev listesi.
 	private IEnumerable<ItemGorev> AktifListe
 	{
 		get
@@ -319,60 +382,47 @@ else if (kullaniciTip.Adi == "Standart")
 			return SelectedTabIndex switch
 			{
 				0 => aktifGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
-				1 => yaklasanGorevler,
-				2 => tamamlananGorevler,
-				3 => gecmisGorevler,
-				4 => pasifGorevler,
-				5 =>TumGorevler,
-				6 =>BanaOzelGorevler,
-				_ => aktifGorevler,
+				1 => yaklasanGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
+				2 => tamamlananGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
+				3 => gecmisGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
+				4 => pasifGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
+				5 => TumGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
+				6 => BanaOzelGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
+				_ => aktifGorevler.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()),
 			};
 		}
 	}
 
-	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).OrderBy(g => g.BitisTarihi);
-	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi);
-	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
-	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> BanaOzelGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId && g.Kilitli) && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> TumGorevler =>
-	 GorevListt.Where(g => g.DelUser == 0);
-
-	private IEnumerable<ItemGorev> SAktifGorevler =>GorevListt.Where(g =>(g.Kullanici_ID == currentUserId || !g.Kilitli)&& g.Aktif&& !g.Tamamlandi&& (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)); 
-	private IEnumerable<ItemGorev> SYaklasanGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && !g.Kilitli && g.Aktif && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && g.DelUser == 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7);
-	private IEnumerable<ItemGorev> STamamlananGorevler =>
-	GorevListt.Where(g =>
-		g.Tamamlandi &&
-		g.DelUser == 0 &&
-		(!g.Kilitli || g.Kullanici_ID == currentUserId)
-	);
-	private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
-	private IEnumerable<ItemGorev> SPasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId) && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> STumGorevler =>
-		 GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0);
-
-
-
 	protected override async Task OnInitializedAsync()
-
 	{
+		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+		var query = QueryHelpers.ParseQuery(uri.Query);
+
+		if (query.TryGetValue("tab", out var tabValue) &&
+			int.TryParse(tabValue, out var tab))
+		{
+			hedefTab = tab;
+			SelectedTabIndex = tab;
+			SelectedTabIndex2 = tab;
+		}
+
+		if (query.TryGetValue("gorevId", out var gorevValue) &&
+	int.TryParse(gorevValue, out var id))
+		{
+			gorevId = id;
+		}
+
 		var user = await girisSaglayici.GetCurrentUserAsync();
 		currentUserId = user?.ID;
-		TumKullanicilar = await _kullaniciRepo.GetAllAsync(); // Tüm kullanıcıları al
-		await YukleGorevler();
-		await YukleKullaniciId();
-		kullaniciTip = await _kullaniciTipRepository.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
-		if (kullaniciTip == null)
-		{
-			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Kullanıcı tipi bulunamadı.");
-			IsLoading = false;
-			return;
-		}
-		await YukleKullanicilar();
 
+		await YukleGorevler();
+
+		kullaniciTip = await _kullaniciTipRepository
+			.GetKullaniciTipByKullaniciIDAsync(currentUserId.Value);
+
+		await YukleKullanicilar();
 	}
+
 	private async Task YukleKullaniciId()
 	{
 		try
@@ -403,6 +453,7 @@ else if (kullaniciTip.Adi == "Standart")
 		catch (Exception ex)
 		{
 			notificationService.Notify(NotificationSeverity.Error, "Hata", ex.Message);
+			return;
 		}
 	}
 
@@ -558,7 +609,6 @@ else if (kullaniciTip.Adi == "Standart")
 		new DialogOptions { Width = "600px", Height = "auto", ShowClose = false });
 	}
 
-
 	private async Task Duzenle(ItemGorev gorev)
 	{
 		if (currentUserId.HasValue)
@@ -609,10 +659,12 @@ else if (kullaniciTip.Adi == "Standart")
 			}
 		}
 	}
+
 	private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<ItemGorev> args)
 	{
 		await Duzenle(args.Data);
 	}
+
 	private async Task ToggleDurum(ItemGorev item)
 	{
 		try
@@ -765,7 +817,7 @@ else if (kullaniciTip.Adi == "Standart")
 		}
 	}
 
-	// SonrakiCalismaTarihi hesaplama (GorevTnm.razor'dan kopyalandı)
+	// SonrakiCalismaTarihi hesaplama
 	private void HesaplaSonrakiCalismaTarihi(ItemGorev gorev)
 	{
 		if (gorev.BaslangicTarihi == null) return;
@@ -870,6 +922,7 @@ else if (kullaniciTip.Adi == "Standart")
 			_ => DayOfWeek.Monday
 		};
 	}
+
 	private string GetOnemRengi(string onem)
 	{
 		return onem?.ToLower() switch
@@ -880,6 +933,7 @@ else if (kullaniciTip.Adi == "Standart")
 			_ => "#95a5a6" // varsayılan gri ton
 		};
 	}
+
 	/*bunlar standart tipte olan kullanıcı*/
 	private IEnumerable<ItemGorev> AktifListee
 	{
@@ -913,5 +967,17 @@ else if (kullaniciTip.Adi == "Standart")
 			: (MarkupString)"-";
 
 	}
-}
 
+	private void OnRowSelect(ItemGorev gorev)
+	{
+		SeciliGorevler.Clear();
+		SeciliGorevler.Add(gorev);
+	}
+
+	private string GorevRowStyle(ItemGorev g, int rowIndex)
+	{
+		if (SeciliGorevler.Any() && g.ID == SeciliGorevler.First().ID)
+			return "background-color:#d1e7dd; !important";
+		return string.Empty;
+	}
+}

@@ -1,9 +1,9 @@
 @implements IDisposable
-@inject NavigationManager NavigationManager
-@inject PermissionService PermissionService
-@inject AuthenticationStateProvider AuthenticationStateProvider
-
 @code {
+    private bool _initialized;
+    private bool _isRedirecting;
+
+    //uygulamadaki herkese açýk rotalarý tanýmlar.
     private readonly HashSet<string> _publicRoutes = new(StringComparer.OrdinalIgnoreCase)
     {
         "",
@@ -12,19 +12,17 @@
         "kayitol",
         "sifremiunuttum",
         "sifresifirla",
-        // "accessdenied",
         "dashboard",
-        "gorevler" // Hem admin hem standart kullanÄ±cÄ± iÃ§in eriÅŸilebilir
+        "gorevler" 
     };
 
-    private bool _initialized;
-    private bool _isRedirecting;
-
+    //sayfa baþlatýldýðýnda URL deðiþikliklerini dinlemeye baþlar.
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += HandleLocationChanged;
     }
 
+    //sayfa ilk kez render edildikten sonra çalýþýr.
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -34,6 +32,7 @@
         }
     }
 
+    //sayfa URL si deðiþtiðinde tetiklenen event handlerdýr.
     private async void HandleLocationChanged(object? sender, LocationChangedEventArgs args)
     {
         if (!_initialized)
@@ -44,6 +43,7 @@
         await ValidateAsync(args.Location);
     }
 
+    //URL yi doðrulayýp yetki kontrolü yapar.
     private async Task ValidateAsync(string absoluteUri)
     {
         var relativeRoute = NormalizeRoute(absoluteUri);
@@ -53,32 +53,24 @@
             return;
         }
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await girisSaglayici.GetAuthenticationStateAsync();
 
         if (authState.User?.Identity?.IsAuthenticated != true)
         {
             return;
         }
 
-        // /gorevler sayfasÄ± hem admin hem standart kullanÄ±cÄ± iÃ§in eriÅŸilebilir
         var normalizedRoute = relativeRoute.Trim().TrimStart('/').ToLowerInvariant();
         if (normalizedRoute == "gorevler")
         {
-            return; // EriÅŸime izin ver
+            return; 
         }
 
-        // Route'u parametrelerden temizle (Ã¶rn: /admin/kullanici-yetkileri/182 -> /admin/kullanici-yetkileri)
         var routeForPermissionCheck = RemoveRouteParameters(relativeRoute);
         var hasAccess = await PermissionService.CanReadAsync(routeForPermissionCheck);
-
-        // if (!hasAccess && !_isRedirecting)
-        // {
-        //     _isRedirecting = true;
-        //     NavigationManager.NavigateTo("/AccessDenied", true);
-        //     _isRedirecting = false;
-        // }
     }
 
+    //mutlak URL yi normalize edilmiþ bir göreli route a dönüþtürür.
     private string NormalizeRoute(string absoluteUri)
     {
         var relative = NavigationManager.ToBaseRelativePath(absoluteUri);
@@ -102,6 +94,7 @@
         return relative;
     }
 
+    //bir rotanýn herkese açýk olup olmadýðýný kontrol eder.
     private bool IsPublicRoute(string route)
     {
         if (string.IsNullOrWhiteSpace(route) || route == "/")
@@ -113,6 +106,7 @@
         return _publicRoutes.Contains(normalized);
     }
 
+    //bir rotadan son segmentteki sayýsal parametreyi kaldýrýr.
     private string RemoveRouteParameters(string route)
     {
         if (string.IsNullOrWhiteSpace(route))
@@ -120,15 +114,12 @@
             return route;
         }
 
-        // Route'u parametrelerden temizle
-        // Ã–rnek: /admin/kullanici-yetkileri/182 -> /admin/kullanici-yetkileri
         var parts = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0)
         {
             return route;
         }
 
-        // Son segment sayÄ±sal ise (parametre), kaldÄ±r
         if (parts.Length > 1 && int.TryParse(parts[^1], out _))
         {
             var routeWithoutParam = "/" + string.Join("/", parts.Take(parts.Length - 1));
@@ -138,6 +129,7 @@
         return route;
     }
 
+    //temizlik (cleanup) iþlemi yapar.
     public void Dispose()
     {
         NavigationManager.LocationChanged -= HandleLocationChanged;
