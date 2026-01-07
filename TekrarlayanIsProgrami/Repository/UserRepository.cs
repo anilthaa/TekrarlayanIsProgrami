@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
 using TekrarlayanIsProgrami.Models;
-using Dapper;
 using TekrarlayanIsProgrami.Services;
 
 namespace TekrarlayanIsProgrami.Repository
@@ -18,6 +19,7 @@ namespace TekrarlayanIsProgrami.Repository
             return new NpgsqlConnection(_connectionString);
         }
 
+        //aktif tüm kullanıcıları veritabanından getirir.
         public async Task<List<User>> GetAllAsync()
         {
             using var conn = GetConnection();
@@ -25,18 +27,16 @@ namespace TekrarlayanIsProgrami.Repository
             var result = await conn.QueryAsync<User>(sql);
             return result.ToList();
         }
+
+        //verilen ID’ye sahip kullanıcıyı veritabanından getirir.
         public async Task<User?> GetByIDAsync(int ID)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""ID"" = @ID";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { ID = ID });
         }
-        public async Task<User?> GetByEmailAsync(string EPosta,string Sifre)
-        {
-            using var baglanti = new NpgsqlConnection(_connectionString);
-            var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
-            return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta,Sifre });
-        }
+
+        //verilen şifre sıfırlama token’ına sahip kullanıcıyı veritabanından getirir.
         public async Task<User?> GetByTokenAsync(string token)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
@@ -45,11 +45,11 @@ namespace TekrarlayanIsProgrami.Repository
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { token });
         }
 
+        //var olan bir kullanıcıyı veritabanında günceller.
         public async Task<bool> UpdateAsync(User user)
         {
             using var conn = new NpgsqlConnection(_connectionString);
             
-            // Şifre boş veya null ise şifreyi güncelleme (mevcut şifreyi koru)
             string sql;
             if (string.IsNullOrWhiteSpace(user.Sifre))
             {
@@ -104,6 +104,8 @@ namespace TekrarlayanIsProgrami.Repository
                 return result > 0;
             }
         }
+
+        //şifre sıfırlama token’ına bağlı olarak kullanıcının şifresini günceller.
         public async Task<bool> SifreGuncelle(string token, string yeniSifre)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
@@ -126,6 +128,7 @@ namespace TekrarlayanIsProgrami.Repository
             return true;
         }
 
+        //bir kullanıcıyı silinmiş olarak işaretler (fiziksel olarak silmez, soft delete yapar).
         public async Task DeleteAsync(int id, int delUser)
         {
             using var conn = GetConnection();
@@ -133,17 +136,10 @@ namespace TekrarlayanIsProgrami.Repository
             await conn.ExecuteAsync(sql, new { ID = id, DelUser = delUser });
         }
 
-        public async Task<User?> GirisYapAsync(string EPosta, string Sifre)
-        {
-            using var conn = GetConnection();
-            var sql = @"Select * From ""Kullanici"" Where ""EPosta""=@EPosta and ""Sifre""=@Sifre and ""Aktif""=true and ""DelDate"" is null";
-            return await conn.QueryFirstOrDefaultAsync<User>(sql, new { EPosta = EPosta, Sifre = Sifre });
-        }
-
+        //yeni kullanıcı kaydı işlemini yapar ve kaydedilen kullanıcıyı döndürür.
         public async Task<User> KayitOlAsync(User user)  
         {
             using var conn = GetConnection();
-            // Şifreyi hashle
             user.Sifre = PasswordHelper.HashPassword(user.Sifre);
             int Tip_ID;
 
@@ -162,10 +158,10 @@ namespace TekrarlayanIsProgrami.Repository
  (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
  VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, Now(), @ResetToken)
  RETURNING ""ID""", user);
-            //sonuç olarak true gelmiş.
             return user;
         }
 
+        //verilen e-posta adresinin veritabanında kayıtlı olup olmadığını kontrol eder.
         public async Task<bool> EpostaVarMiAsync(string EPosta)
         {
             using var conn = new NpgsqlConnection(_connectionString);
@@ -174,14 +170,7 @@ namespace TekrarlayanIsProgrami.Repository
             return sql != null;
         }
 
-        public async Task SaveResetTokenAsync(int Id, string token)
-        {
-            using var conn = new NpgsqlConnection(_connectionString);
-            var tokenToStore = token != null && token.Length > 100 ? token.Substring(0, 100) : token;
-            var sql = @"UPDATE ""Kullanici"" SET ""ResetToken"" = @token WHERE ""ID"" = @id";
-            await conn.ExecuteAsync(sql, new { token = tokenToStore, id = Id });
-        }
-
+        //verilen e-posta adresine sahip kullanıcıyı getirir.
         public async Task<User?> SifreEmailAsync(string EPosta)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
@@ -189,6 +178,7 @@ namespace TekrarlayanIsProgrami.Repository
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta });
         }
 
+        //kullanıcının şifre sıfırlama token’ını ve süresini veritabanına kaydeder.
         public async Task SifreSifirlamaTokenKaydet(int id, string token, DateTime expiry)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
@@ -198,12 +188,16 @@ namespace TekrarlayanIsProgrami.Repository
                 WHERE ""ID"" = @id";
             await baglanti.ExecuteAsync(sql, new { id, token, expiry });
         }
+
+        //giriş yapmak isteyen kullanıcıyı doğrulamak için veritabanından getirir.
         public async Task<User?> GetByGirisAsync(string EPosta)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);
             var sql = @"SELECT * FROM ""Kullanici"" WHERE ""EPosta"" = @EPosta and ""Aktif""=true and ""DelDate"" is null";
             return await baglanti.QueryFirstOrDefaultAsync<User>(sql, new { EPosta});
         }
+
+        //var olan bir kullanıcının şifresini günceller.
         public async Task<bool> UpdateSifreAsync(int userId, string hashedPassword)
         {
             using var conn = GetConnection();
@@ -218,19 +212,19 @@ namespace TekrarlayanIsProgrami.Repository
 
             return affected > 0;
         }
-        //Hayır derse;
-        public async Task<bool> DisableUserAsync(int userId)
+
+        //kullanıcının profil bilgilerini günceller.
+        public async Task UpdateUserProfile(User user)
         {
             using var conn = GetConnection();
-
             var sql = @"
-        UPDATE ""Kullanici""
-        SET ""Aktif"" = false,
-            ""UpdDate"" = NOW()
-        WHERE ""ID"" = @ID";
-
-            var res = await conn.ExecuteAsync(sql, new { ID = userId });
-            return res > 0;
+                        UPDATE ""Kullanici""
+                        SET
+                               ""Adi"" = @Adi,
+                               ""Soyadi"" = @Soyadi,
+                               ""UpdDate"" = NOW()
+                       WHERE ""ID"" = @ID";
+            await conn.ExecuteAsync(sql, user);
         }
     }
 }

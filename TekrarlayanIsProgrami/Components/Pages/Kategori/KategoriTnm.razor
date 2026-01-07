@@ -43,17 +43,14 @@ else
 
 @code {
 	[Parameter] public ItemKategori ItemData { get; set; } = new();
-
 	private string ErrorMessage = string.Empty;
 	private bool IsEdit;
 	private bool isProcessing = false;
 	private bool degisiklikYapildiMi = false;
-	private ItemKategori Kategoriler = new();
 	private string originalKategori;
 
 	protected override void OnInitialized()
 	{
-		// IsEdit durumu form ilk açıldığında sabitleniyor (sonradan değişmez)
 		IsEdit = ItemData.ID != 0;
 		originalKategori = ItemData.Adi;
 	}
@@ -61,26 +58,24 @@ else
 	private async Task OnSubmit(ItemKategori item)
 	{
 		if (isProcessing)
-			return; // ikinci tıklamayı engelle
+			return; 
 
 		isProcessing = true;
 		ErrorMessage = string.Empty;
 
 		try
 		{
-			// Kullanıcı bilgileri (örnek olarak statik)
 			item.DelUser = 0;
 			item.CreUser = IsEdit ? 0 : 1;
 			item.UpdUser = IsEdit ? 1 : 0;
 
-			// Veritabanı işlemi
 			var wsCvp = await Task.Run(() => DataService.SetKategori(item));
 			Console.WriteLine($"SonucKodu: {wsCvp.SonucKodu}, Data: {wsCvp.Data}");
 
 			if (wsCvp.SonucKodu == 0 && wsCvp.Data > 0)
 			{
 				if (!IsEdit)
-					item.ID = wsCvp.Data; // yeni eklenen kaydın ID'si
+					item.ID = wsCvp.Data; 
 
 				notificationService.Notify(
 					NotificationSeverity.Success,
@@ -106,7 +101,7 @@ else
 		}
 		finally
 		{
-			isProcessing = true; // her durumda form yeniden aktif olur
+			isProcessing = true;
 		}
 	}
 
@@ -128,7 +123,6 @@ else
 				if (onay != true)
 					return;
 				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
-				// Değişiklikleri geri al
 				ItemData.Adi = originalKategori;
 			}
 			else
@@ -145,5 +139,4 @@ else
 		}
 		DialogService.Close();
 	}
-
 }

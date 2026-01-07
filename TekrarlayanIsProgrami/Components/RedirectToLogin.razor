@@ -1,7 +1,7 @@
 ﻿@code {
+    //sayfa başlatıldığında otomatik olarak /GirisYap sayfasına yönlendirir.
     protected override void OnInitialized()
     {
-        // returnUrl kullanmadan direkt GirisYap'a yönlendir
         NavigationManager.NavigateTo("/GirisYap", false);
     }
 }

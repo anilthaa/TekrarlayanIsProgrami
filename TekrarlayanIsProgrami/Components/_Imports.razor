@@ -29,15 +29,14 @@
 @using Devart.Data.PostgreSql
 @using BCrypt.Net
 @using TekrarlayanIsProgrami.Components.Pages.Admin
+@using System.Net.NetworkInformation
 @inject NotificationService notificationService
 @inject UserRepository _kullaniciRepo
 @inject NavigationManager NavigationManager
 @inject CustomAuthenticationStateProvider girisSaglayici
 @inject DialogService DialogService
-@inject SifreService SifreService
 @inject DataService DataService
 @inject PermissionService PermissionService
 @inject IJSRuntime Js
-@inject AuthService AuthService 
 @inject EPostaService EpostaService
 @inject KullaniciTipRepository _kullaniciTipRepository

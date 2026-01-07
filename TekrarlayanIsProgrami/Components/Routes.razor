@@ -15,21 +15,8 @@
         </NotFound>
     </Router>
 </CascadingAuthenticationState>
-@*bu yazılıydı.*@
-@*  <CascadingAuthenticationState>
-       <RadzenComponents></RadzenComponents>
-      <Router AppAssembly="@typeof(Program).Assembly">
-        <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@GetLayoutType()" />
-              <FocusOnNavigate RouteData="@routeData" Selector="h1" /> 
-        </Found>
-        <NotFound>
-            <p>Sayfa bulunamadı.</p>
-            </NotFound>
-        
-    </Router>
-</CascadingAuthenticationState> *@
 @code {
+    //Layout tipini getittrimek için kullanılır.
     private Type GetLayoutType()
     {
         var uri = NavigationManager.Uri.ToLower();

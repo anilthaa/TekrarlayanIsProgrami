@@ -80,13 +80,9 @@ else
 			</RadzenTemplateForm>
 
 		</RadzenCard>
-
-
 	}
 }
 @code {
-	[Parameter]
-	public int id { get; set; }
 	private User kullanicilar = new();
 	private User originalKullanici;
 	private List<User> kullaniciListe = new List<User>();
@@ -95,7 +91,11 @@ else
 	private List<ItemKullaniciTip> kullaniciTipleri = new();
 	private bool isLoading = true;
 	private bool isSaving;
+	private int secilenTipId = 0;
+	private User newUser = new User();
+	private string geriUrl = "/kullanicilar";
 
+	//kullanıcı ekleme / düzenleme sayfası açılırken gerekli tüm başlangıç verilerini hazırlamak için çalışır.
 	protected override async Task OnInitializedAsync()
 	{
 		try
@@ -126,9 +126,9 @@ else
 		}
 	}
 
+	//kullanıcı düzenleme formunda yapılan değişiklikleri veritabanına kaydetmek için kullanılır.
 	private async Task Kaydet()
 	{
-		Console.WriteLine("Kaydet metodu çağrıldı.");
 		if (isSaving)
 		{
 			return;
@@ -143,7 +143,6 @@ else
 		var currentUser = await girisSaglayici.GetCurrentUserAsync();
 		kullanicilar.UpdUser = currentUser?.ID ?? 0;
 
-		// Şifreyi null yap ki UpdateAsync mevcut şifreyi korusun
 		kullanicilar.Sifre = null;
 
 		bool sonuc = await _kullaniciRepo.UpdateAsync(kullanicilar);
@@ -159,6 +158,7 @@ else
 		}
 	}
 
+	//bir kullanıcı formundaki iptal işlemini yönetiyor.
 	private async Task Iptal()
 	{
 		if (kullanicilar.ID == 0)
@@ -188,8 +188,8 @@ else
 		}
 
 	}
-	private string geriUrl = "/kullanicilar";
 
+	//Düzenleme işleminde eğer değişiklik yapılmışsa iptalde iptal onayı vermek için kullanılır.
 	private bool HasChanges(User current, User original)
 	{
 		return current.Adi != original.Adi
@@ -197,11 +197,8 @@ else
 			|| current.EPosta != original.EPosta
 			|| current.KullaniciTip_ID != original.KullaniciTip_ID;
 	}
-	//Ekleme Alanı Kodları.
-	private int secilenTipId = 0;
-	private User newUser = new User();
 
-
+	//yeni kullanıcı kaydı yada düzenleme işlemini yapar.
 	private async Task OnSubmit()
 	{
 		if (!EpostaGecerliMi(newUser.EPosta))
@@ -213,7 +210,7 @@ else
 		var currentUser = await girisSaglayici.GetCurrentUserAsync();
 
 		newUser.CreUser = currentUser.ID;
-		if (newUser.CreUser == 0) //true geliyor
+		if (newUser.CreUser == 0) 
 		{
 			newUser.CreUser = 0;
 		}
@@ -238,6 +235,8 @@ else
 
 		DialogService.Close(true);
 	}
+
+	// kullanıcı kayıtı sırasında kullanıcı @ yazmayıp yada @ ten sonra random şeyler yazarsa hata verir.
 	private bool EpostaGecerliMi(string eposta)
 	{
 		if (string.IsNullOrWhiteSpace(eposta))
@@ -247,6 +246,7 @@ else
 		return Regex.IsMatch(eposta, desen, RegexOptions.IgnoreCase);
 	}
 
+	//Kulanıcı listesini günceller.
 	private async Task ListeyiYenileAsync()
 	{
 		kullaniciListe = await _kullaniciRepo.GetAllAsync();

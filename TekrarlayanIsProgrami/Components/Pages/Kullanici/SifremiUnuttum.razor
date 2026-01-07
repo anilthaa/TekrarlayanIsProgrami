@@ -4,19 +4,23 @@
     <h3 style="text-align:center;">Şifremi Unuttum</h3>
     <p class="text-muted" style="text-align:center;">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
     <div class="col-sm-12 col-lg-12 container">
-        <RadzenFormField Text="E-posta" Style="width:100%">
+        <RadzenFormField Text="E-posta" Style="width:90%;margin-left:25px;">
 						<RadzenTextBox Name="txteposta" @bind-Value="model.Eposta" style="width:100%;" />
 					</RadzenFormField>
 					<RadzenRequiredValidator Component="txteposta" Text="Ad zorunludur."></RadzenRequiredValidator>
   </div>
-    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" style="margin-top:5px; margin-left:85px;" Click="@OnSubmit" />
+    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" class="girisButton" style="margin-top:10px; width:40%; margin-left:148px;" Click="@OnSubmit" />
 </RadzenCard>
 
 @code {
     private SifreUnuttumModel model = new();
-    private string bilgiMesaji;
+    public class SifreUnuttumModel
+    {
+        public string Eposta { get; set; }
+        public string Sifre { get; set; }
+    }
 
-
+    //şifre sıfırlama işlemini yönetir.
     private async Task OnSubmit()
     {
         var kullanici = await _kullaniciRepo.SifreEmailAsync(model.Eposta);
@@ -35,9 +39,5 @@
         notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
     }
   
-    public class SifreUnuttumModel
-    {
-        public string Eposta { get; set; }
-        public string Sifre{ get; set; }
-    }
+   
 }

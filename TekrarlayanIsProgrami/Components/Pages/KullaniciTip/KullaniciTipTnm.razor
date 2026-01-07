@@ -12,7 +12,7 @@
 			</RadzenFormField>
 			<ValidationMessage For="@(()=>ItemData.Adi)"></ValidationMessage>
 
-			<div style="display:flex; align-items:center; margin-bottom:15px;">
+			<div style="display:flex; align-items:center; margin-top:15px;">
 				<RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
 				<span class="rz-ml-2">Aktif</span>
 			</div>
@@ -56,10 +56,10 @@ else
 	[Parameter] public int CurrentUserId { get; set; } = 1;
 	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
 	private ItemKullaniciTip originalTip;
-
 	private bool isSaving;
 	private string? hataMesaji;
 
+	//sayfa yüklendiğinde kullanıcı tipi verilerini başlatır.
 	protected override async Task OnInitializedAsync()
 	{
 		kullaniciTip = ItemData;
@@ -72,6 +72,8 @@ else
 			UpdDate=ItemData.UpdDate
 		};
 	}
+
+	//Tip ekleme yada düzenleme işlemi için kullanılır.
 	private async Task OnSubmit()
 	{
 		try
@@ -113,16 +115,15 @@ else
 		}
 	}
 
+	//Tip ekleme yada düzenleme işleminde iptal etme işlemi için kullanılır.değişiklik varsa iptal onayı verir.
 	private async Task Iptal()
 	{
-		// Ekleme modunda isen direk kapat
 		if (ItemData.ID == 0)
 		{
 			DialogService.Close(null);
 			return;
 		}
 
-		// Düzenleme modunda değişiklik kontrolü
 		if (HasChanges(kullaniciTip, originalTip))
 		{
 			var confirmed = await DialogService.Confirm(
@@ -139,10 +140,11 @@ else
 			return;
 		}
 
-		// Düzenleme modunda ama değişiklik yoksa direk kapat
 		notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme işlemi iptal edildi.");
 		DialogService.Close(null);
 	}
+
+	//İptal onay mesajını alabilmek için bu metot değişiklik yağılığ yapılmadığını kontrol eder.
 	private bool HasChanges(ItemKullaniciTip current, ItemKullaniciTip original)
 	{
 		return current.Adi != original.Adi

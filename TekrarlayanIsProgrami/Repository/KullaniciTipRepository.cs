@@ -15,6 +15,8 @@ namespace TekrarlayanIsProgrami.Repository
         {
             return new NpgsqlConnection(_connectionString);
         }
+
+        //verilen kullanıcı ID’sine ait kullanıcı tipini veritabanından getirir.
         public async Task<ItemKullaniciTip?> GetKullaniciTipByKullaniciIDAsync(int kullaniciID)
         {
             using var baglanti = new NpgsqlConnection(_connectionString);

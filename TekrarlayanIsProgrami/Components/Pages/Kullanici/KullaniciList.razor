@@ -1,15 +1,14 @@
 ﻿@page "/kullanicilar"
 @layout MainLayout
 @attribute [Authorize]
-<RadzenDialog></RadzenDialog>
 
 <RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
-    <h3 class="text-center mb-4">Kullanıcılar Listesi</h3>
+    <h3 class="text-center mb-4" style="font-family:Calibri;font-weight:bold;">Kullanıcılar Listesi</h3>
 
     @if (_canWrite)
     {
         <div class="d-flex gap-2 mb-3">
-            <RadzenButton Text="Yeni Kullanıcı Ekle" Icon="add" Style=" background:mediumpurple; color:white;border-radius:10px;" Click="@OpenRegisterDialog"> </RadzenButton>
+            <RadzenButton Text="Yeni Kullanıcı Ekle" Icon="add" Style=" background:#ba76d3; color:white;border-radius:10px;" Click="@OpenRegisterDialog"> </RadzenButton>
         </div>
     }
 
@@ -19,7 +18,12 @@
                     class="align-middle">
 
         <Columns>
-            <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="auto"/>
+            <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="0px" />
+            <RadzenDataGridColumn Title="No" Width="100px">
+                <Template Context="g">
+                    @(kullanicilar.ToList().IndexOf(g) + 1)
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="auto" />
             <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px"/>
             <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-posta" Width="250px;"/>
@@ -55,8 +59,8 @@
             {
                 <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="240px">
                     <Template Context="user">
-                        <RadzenButton Icon="mail" Style="margin-right:5px;" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@(user.Aktif)" Click="@(() => IzinMailiGonder(user.ID))" />                        
-                        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(()=>OpenEditDialog(user.ID))" Style="margin-right:5px;" />
+                        <RadzenButton Icon="mail" Style="margin-right:5px;" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@(user.Aktif)" Click="@(() => IzinMailiGonder(user.ID))" />
+                        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(() => OpenEditDialog(user.ID))" Style="margin-right:5px;" @onclick:stopPropagation="true" />
                         <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="lock" Size="ButtonSize.Small" Style="margin-right:5px;"
                                       Click="@(() => NavigateToYetki(user.ID))" />
                         <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
@@ -69,21 +73,24 @@
     </RadzenDataGrid>
 </RadzenCard>
 @code {
-    private List<User>? kullanicilar=new();
+    private List<User>? kullanicilar = new();
     private List<ItemKullaniciTip> kullaniciTipleri = new();
     private RadzenDataGrid<User> kullaniciGrid;
     private User user = new User();
     private bool _canWrite = false;
+    [Parameter]
+    public int KullaniciId { get; set; }
 
+    //sayfa ilk açıldığında kullanıcı yönetimi ekranını hazırlayan başlangıç işlemlerini yapar.
     protected override async Task OnInitializedAsync()
     {
-        // Yazma yetkisi kontrolü (yetki >= 2)
         _canWrite = await PermissionService.CanWriteAsync("kullanicilar");
 
-        kullanicilar = await _kullaniciRepo.GetAllAsync();
+        kullanicilar = (await _kullaniciRepo.GetAllAsync()).OrderBy(k => k.ID).ToList();
         kullaniciTipleri = (await DataService.GetKullaniciTipleri()).ToList();
     }
-    //Popuplar.
+
+    //Kayıt olma popupunu açmak için kullanılır.
     private async Task OpenRegisterDialog()
     {
         var result = await DialogService.OpenAsync<KullaniciTnm>(" ", null, new DialogOptions { Width = "550px", Height = "auto" });
@@ -94,10 +101,8 @@
             StateHasChanged(); 
         }
     }
-    [Parameter]
-    public int KullaniciId { get; set; }
-    bool isDialogOpen{ get; set; }
 
+    //Düzenleme işleminin popupu açılması için kullanılır.
     private async Task OpenEditDialog(int id)
     {
         var result = await DialogService.OpenAsync<KullaniciTnm>(
@@ -122,13 +127,14 @@
             StateHasChanged();
         }
     }
-    //
 
+    //Satır seçidiğinde yapılmasını istediğimiz şey yapılır.
     void OnRowSelect(User selectedKullanici)
     {
         Console.WriteLine($"Seçilen kullanıcı: {selectedKullanici.Adi} {selectedKullanici.Soyadi}");
     }
-    //Silme İşlemi.
+
+    //Silme işleminin onayı için kulanılır.
     private async Task ConfirmDelete(User user)
     {
         bool? result = await DialogService.Confirm(
@@ -147,20 +153,22 @@
         }
     }
 
+    //Silme işlemi için kullanılr.
     private async Task Sil(int id)
     {
         var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
         if (kullanici == null) return;
 
-        int currentUserId = await GetCurrentUserId(); // Oturumdaki kullanıcı ID'si
-        await _kullaniciRepo.DeleteAsync(kullanici.ID, currentUserId); // Soft delete
+        int currentUserId = await GetCurrentUserId(); 
+        await _kullaniciRepo.DeleteAsync(kullanici.ID, currentUserId);
 
-        kullanicilar = await _kullaniciRepo.GetAllAsync(); // Silinmemişleri getir
+        kullanicilar = await _kullaniciRepo.GetAllAsync(); 
         await kullaniciGrid.Reload();
 
         notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kullanıcı silindi.");
     }
 
+    //oturum açmış olan kullanıcının ID sini kimlik doğrulama bilgileri üzerinden almak için kullanılır.
     private async Task<int> GetCurrentUserId()
     {
         var authState = await girisSaglayici.GetAuthenticationStateAsync();
@@ -170,9 +178,10 @@
         {
             return int.Parse(user.FindFirst("UserId")?.Value ?? "0");
         }
-        return 0; // Giriş yapılmamışsa varsayılan
+        return 0; 
     }
 
+    //bir kullanıcının aktif / pasif durumunu tek tıklamayla değiştirmek için kullanılır.
     private async Task ToggleDurum(User user)
     {
         user.Aktif = !user.Aktif;
@@ -180,10 +189,8 @@
         var sonuc = await _kullaniciRepo.UpdateAsync(user);
         if (sonuc)
         {
-            // Sadece bu kullanıcıyı yeniden al
             var updatedUser = await _kullaniciRepo.GetByIDAsync(user.ID);
 
-            // Listede güncel halini yerine yerleştir
             var index = kullanicilar.FindIndex(k => k.ID == user.ID);
             if (index >= 0)
             {
@@ -198,6 +205,7 @@
         }
     }
 
+    //kullanıcının tip ID yi okunabilir bir kullanıcı tipi adına çevirmek için kullanılır.
     private string GetKullaniciTipAdi(int tipId)
     {
         if (tipId == 0 || kullaniciTipleri == null || !kullaniciTipleri.Any())
@@ -209,6 +217,7 @@
         return tip?.Adi ?? "—";
     }
 
+    //Yetkiler popup unu açmak için kullanılır.
     private async Task  NavigateToYetki(int Id)
     {
        await DialogService.OpenAsync<KullaniciYetkileri>(
@@ -218,6 +227,7 @@
         );
     }
 
+    //Mesaj gönderme buttonu için izin maili göndermek için kullanılır.
     private async Task IzinMailiGonder(int userId)
     {
         var u = kullanicilar.FirstOrDefault(x => x.ID == userId);

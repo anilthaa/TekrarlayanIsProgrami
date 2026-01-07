@@ -14,6 +14,7 @@
     [SupplyParameterFromQuery]
     public int ok { get; set; }
 
+    //sayfa ilk açıldığında kullanıcı onay / red işlemini yapan başlangıç sürecidir.
     protected override async Task OnInitializedAsync()
     {
         if (uid == 0)
