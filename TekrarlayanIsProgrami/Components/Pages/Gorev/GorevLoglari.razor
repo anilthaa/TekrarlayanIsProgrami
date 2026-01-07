@@ -1,0 +1,183 @@
+@page "/admin/gorev-loglari"
+@layout MainLayout
+@attribute [Authorize]
+
+<RadzenCard class="container mt-4" Style="z-index:2000 !important;">
+    <h3 class="text-center mb-4" style="font-family:Calibri; font-weight:bold;">Görev Hareketleri</h3>
+
+    @if (isLoading)
+    {
+        <div class="text-center" style="display:flex; flex-direction:column; justify-content:center; align-items:center; padding:50px; text-align:center;">
+            <RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:220px;" />
+            <p class="mt-2">Loglar yükleniyor...</p>
+        </div>
+    }
+    else if (logList == null || !logList.Any())
+    {
+        <div class="text-center" style="padding:50px;">
+            <p style="color:#7f8c8d; font-style:italic;">Henüz log kaydı bulunmamaktadır.</p>
+        </div>
+    }
+    else
+    {
+        <RadzenDataGrid @ref="logGrid" Data="@logList" TItem="ItemGorevLoglari"
+                        AllowPaging="true" PageSize="20" AllowSorting="true" AllowFiltering="true"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        class="text-center align-middle compact-grid">
+            <Columns>
+                
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Title="Görev ID" Width="110px" Property="Gorev_ID">
+                    <Template Context="log">
+                        <RadzenButton Text="@log.Gorev_ID.ToString()" 
+                                     ButtonStyle="ButtonStyle.Info" 
+                                     Size="ButtonSize.Small"
+                                     Click="@(() => GoToGorev(log.Gorev_ID))" />
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Title="Görev Başlığı" Width="200px">
+                    <Template Context="log">
+                        @GetGorevBaslik(log.Gorev_ID)
+                    </Template>
+                </RadzenDataGridColumn>
+                
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Property="IslemTipi" Title="İşlem Tipi" Width="150px">
+                    <Template Context="log">
+                        @{
+                            var islemTipi = log.IslemTipi?.Trim() ?? "";
+                        }
+                        @if (islemTipi.Equals("Oluşturuldu", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <RadzenBadge Text="Oluşturuldu" 
+                                         Style="background-color:#2ecc71;color:white;padding:5px 10px;border-radius:6px;" />
+                        }
+                        else if (islemTipi.Equals("Güncellendi", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <RadzenBadge Text="Güncellendi" 
+                                         Style="background-color:#3498db;color:white;padding:5px 10px;border-radius:6px;" />
+                        }
+                        else if (islemTipi.Equals("Silindi", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <RadzenBadge Text="Silindi" 
+                                         Style="background-color:#e74c3c;color:white;padding:5px 10px;border-radius:6px;" />
+                        }
+                        else
+                        {
+                            <span>@log.IslemTipi</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Property="AlanAdi" Title="Alan Adı" Width="150px" />
+
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Property="EskiDeger" Title="Eski Değer" Width="200px">
+                    <Template Context="log">
+                        @if (string.IsNullOrEmpty(log.EskiDeger))
+                        {
+                            <span style="color:#95a5a6; font-style:italic;">—</span>
+                        }
+                        else
+                        {
+                            <span>@log.EskiDeger</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Property="YeniDeger" Title="Yeni Değer" Width="200px">
+                    <Template Context="log">
+                        @if (string.IsNullOrEmpty(log.YeniDeger))
+                        {
+                            <span style="color:#95a5a6; font-style:italic;">—</span>
+                        }
+                        else
+                        {
+                            <span>@log.YeniDeger</span>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Title="İşlem Yapan" Width="180px">
+                    <Template Context="log">
+                        @GetKullaniciAdi(log.IslemKullanici_ID)
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn TItem="ItemGorevLoglari" Property="IslemTarih" Title="İşlem Tarihi" Width="180px">
+                    <Template Context="log">
+                        @log.IslemTarih.ToString("dd.MM.yyyy HH:mm:ss")
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+</RadzenCard>
+
+@code {
+    private List<ItemGorevLoglari> logList = new();
+    private RadzenDataGrid<ItemGorevLoglari>? logGrid;
+    private bool isLoading = true;
+    private Dictionary<int, string> kullaniciAdlari = new();
+    private Dictionary<int, string> gorevBasliklari = new();
+
+    //sayfa ilk yüklendiğinde log (kayıt) verilerini getirmek için kullanılır.
+    protected override async Task OnInitializedAsync()
+    {
+        await YukleLoglarAsync();
+    }
+
+    //görev loglarını yükleyip ekranda gösterilmeye hazır hale getirmek için kullanılır.
+    private async Task YukleLoglarAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            var loglar = await DataService.GetGorevLoglari();
+            logList = loglar.ToList();
+            
+            // Kullanıcı adlarını yükle
+            var kullanicilar = await _kullaniciRepo.GetAllAsync();
+            kullaniciAdlari = kullanicilar.ToDictionary(k => k.ID, k => $"{k.Adi} {k.Soyadi}");
+            
+            // Görev başlıklarını yükle
+            var gorevler = await DataService.GetGorevler();
+            gorevBasliklari = gorevler.ToDictionary(g => g.ID, g => g.Baslik ?? "");
+            
+            isLoading = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", $"Loglar yüklenirken bir hata oluştu: {ex.Message}");
+            Console.WriteLine($"Log yükleme hatası: {ex.Message}");
+            isLoading = false;
+        }
+    }
+
+    //Kullanıcı ID'yi ekranda gösterilecek okunabilir bir ada çevirmek için kullanılır.
+    private string GetKullaniciAdi(int kullaniciId)
+    {
+        if (kullaniciAdlari.TryGetValue(kullaniciId, out var ad))
+        {
+            return ad;
+        }
+        return $"Kullanıcı ID: {kullaniciId}";
+    }
+
+    //Görev ID'yi görev başlığına çevirmek için kullanılır.
+    private string GetGorevBaslik(int gorevId)
+    {
+        if (gorevBasliklari.TryGetValue(gorevId, out var baslik))
+        {
+            return baslik;
+        }
+        return $"Görev ID: {gorevId}";
+    }
+
+    //Görev detayına gitmek için kullanılır.
+    private void GoToGorev(int gorevId)
+    {
+        NavigationManager.NavigateTo($"/gorevler?gorevId={gorevId}");
+    }
+}
+
