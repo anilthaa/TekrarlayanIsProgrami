@@ -45,6 +45,14 @@ namespace TekrarlayanIsProgrami.Services
             _dataService = dataService;
             _authenticationStateProvider = authenticationStateProvider;
         }
+        public string GetPermissionDescription(int yetki)
+            => _permissionOptions.FirstOrDefault(x => x.Value == yetki)?.Description ?? string.Empty;
+
+        public async Task<bool> CanReadAsync(string? routeOrName)
+            => await HasPermissionAsync(routeOrName, minimumYetki: 1);
+
+        public async Task<bool> CanWriteAsync(string? routeOrName)
+            => await HasPermissionAsync(routeOrName, minimumYetki: 2);
 
         //kullanıcının menüde görebileceği formları/alacak menüyü döndüren bir yöntemdir. Adım adım açıklaması:
         public async Task<IReadOnlyList<ItemForm>> GetMenuAsync(bool forceRefresh = false)
@@ -109,15 +117,6 @@ namespace TekrarlayanIsProgrami.Services
                 _cacheLock.Release();
             }
         }
-
-        public string GetPermissionDescription(int yetki)
-            => _permissionOptions.FirstOrDefault(x => x.Value == yetki)?.Description ?? string.Empty;
-
-        public async Task<bool> CanReadAsync(string? routeOrName)
-            => await HasPermissionAsync(routeOrName, minimumYetki: 1);
-
-        public async Task<bool> CanWriteAsync(string? routeOrName)
-            => await HasPermissionAsync(routeOrName, minimumYetki: 2);
 
         //bir kullanıcının belirli bir sayfa veya form için minimum yetkiye sahip olup olmadığını kontrol eder.
         public async Task<bool> HasPermissionAsync(string? routeOrName, int minimumYetki)

@@ -1,7 +1,6 @@
 ﻿@page "/GirisYap"
 @page "/"
 @layout EmptyLayout
-<RadzenDialog></RadzenDialog>
 
 
 <div class="login-container @(isRegisterActive ? "slide-active" : "")">
@@ -120,21 +119,15 @@
 	{
 		isSaving = true;
 		StateHasChanged();
-		Console.WriteLine("OnLogin başladı");
 		var result = await girisSaglayici.GirisYapAsync(model.E_Posta, model.Sifre);
-		Console.WriteLine($"GirisYapAsync sonucu - Basarili: {result.Basarili}, User: {(result.User != null ? result.User.ID.ToString() : "null")}");
-
 		if (result.Basarili) 
 		{
 			if (result.User != null)
 			{
-				Console.WriteLine($"User bilgisi var - ID: {result.User.ID}, Ad: {result.User.Adi}");
 				await girisSaglayici.MarkUserAsAuthenticated(result.User);
-				Console.WriteLine("MarkUserAsAuthenticated tamamlandı");
 
 				try
 				{
-					Console.WriteLine("Log kaydı başlatılıyor...");
 					var log = new ItemKullaniciLog
 					{
 						Kullanici_ID = result.User.ID,
@@ -144,11 +137,8 @@
 						CreUser = result.User.ID
 					};
 
-					Console.WriteLine($"Log objesi oluşturuldu - Kullanıcı ID: {log.Kullanici_ID}, İşlem Tipi: {log.IslemTipi}");
 
 					var logResult = await DataService.SetKullaniciLog(log);
-
-					Console.WriteLine($"Log kaydı sonucu - ID: {logResult.Data}");
 
 					if (logResult.Data > 0)
 					{
@@ -161,18 +151,10 @@
 				}
 				catch (Exception ex)
 				{
-					Console.WriteLine($"Log kaydı hatası: {ex.Message}");
-					Console.WriteLine($"Stack trace: {ex.StackTrace}");
-					if (ex.InnerException != null)
-					{
-						Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-					}
+					
 				}
 			}
-			else
-			{
-				Console.WriteLine("UYARI: result.User null!");
-			}
+			
 			var storedToken = await Js.InvokeAsync<string>("localStorage.getItem", "jwtToken");
 			if (string.IsNullOrEmpty(storedToken) && !string.IsNullOrEmpty(result.Token))
 			{
