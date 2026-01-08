@@ -47,11 +47,13 @@
     private bool _isMenuLoading = true;
     private string? _menuError;
 
+    //bileşen veya sayfa başlatıldığında çalışır:
     protected override async Task OnInitializedAsync()
     {
         await LoadMenuAsync();
     }
 
+    //kullanıcının menü öğelerini yükler:
     private async Task LoadMenuAsync()
     {
         _menuError = null;
@@ -71,6 +73,7 @@
         }
     }
 
+    //bir menü öğesinin yönlendirme URL’sini  oluşturur.
     private string GetHref(ItemForm form)
     {
         var route = form.SayfaURL;
@@ -96,6 +99,7 @@
     private string GetIcon(ItemForm form)
         => string.IsNullOrWhiteSpace(form.Icon) ? "bi bi-list-nested-nav-menu" : form.Icon!;
 
+    //kullanıcı çıkış işlemini yapar.
     private async Task Cikis()
     {
         await girisSaglayici.CikisYapAsync();

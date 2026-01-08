@@ -538,7 +538,6 @@
                 return;
             }
 
-            // Bitiş tarihi kontrolü
             if (!Gorev.BitisTarihi.HasValue)
             {
                 notificationService.Notify(NotificationSeverity.Error, "Hata", "Bitiş tarihi zorunludur!");
@@ -753,7 +752,7 @@
                         Gorev.ID = sonuc.Data;
                     }
 
-                    // await KaydetGorevLoglari(yeniKayıt);
+                     await KaydetGorevLoglari(yeniKayıt);
 
                     if (yeniKayıt)
                     {
@@ -1057,164 +1056,158 @@
     }
 
     //bir görevin log kaydını tutar:
-    // private async Task KaydetGorevLoglari(bool yeniKayıt)
-    // {
-    //     try
-    //     {
-    //         int currentUserId = await girisSaglayici.GetUserIdAsync();
-    //         if (currentUserId == 0)
-    //         {
-    //             Console.WriteLine("Görev log kaydetme hatası: Kullanıcı ID bulunamadı");
-    //             return;
-    //         }
+    private async Task KaydetGorevLoglari(bool yeniKayıt)
+    {
+        try
+        {
+            int currentUserId = await girisSaglayici.GetUserIdAsync();
+            if (currentUserId == 0)
+            {
+                return;
+            }
 
-    //         if (Gorev.ID == 0)
-    //         {
-    //             Console.WriteLine("Görev log kaydetme hatası: Görev ID 0");
-    //             return;
-    //         }
+            if (Gorev.ID == 0)
+            {
+                return;
+            }
 
-    //         if (yeniKayıt)
-    //         {
-    //             // Yeni görev oluşturuldu
-    //             var log = new ItemGorevLoglari
-    //             {
-    //                 Gorev_ID = Gorev.ID,
-    //                 IslemTipi = "Oluşturuldu",
-    //                 AlanAdi = "Tümü",
-    //                 EskiDeger = "",
-    //                 YeniDeger = $"Görev oluşturuldu: {Gorev.Baslik}",
-    //                 IslemKullanici_ID = currentUserId,
-    //                 IslemTarih = DateTime.Now
-    //             };
-    //             var logSonuc = await DataService.SetGorevLog(log);
-    //             if (logSonuc.SonucKodu != 0)
-    //             {
-    //                 Console.WriteLine($"Görev log kaydetme hatası: {logSonuc.SonucAciklama}");
-    //             }
-    //         }
-    //         else
-    //         {
-    //             // Görev güncellendi - değişen alanları logla
-    //             if (originalGorev.Baslik != Gorev.Baslik)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "Baslik",
-    //                     EskiDeger = originalGorev.Baslik ?? "",
-    //                     YeniDeger = Gorev.Baslik ?? "",
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
+            if (yeniKayıt)
+            {
+                // Yeni görev oluşturuldu
+                var log = new ItemGorevLoglari
+                {
+                    Gorev_ID = Gorev.ID,
+                    IslemTipi = "Oluşturuldu",
+                    AlanAdi = "Tümü",
+                    EskiDeger = "",
+                    YeniDeger = $"Görev oluşturuldu: {Gorev.Baslik}",
+                    IslemKullanici_ID = currentUserId,
+                    IslemTarih = DateTime.Now
+                };
+                var logSonuc = await DataService.SetGorevLog(log);
+                if (logSonuc.SonucKodu != 0)
+                {
+                    Console.WriteLine($"Görev log kaydetme hatası: {logSonuc.SonucAciklama}");
+                }
+            }
+            else
+            {
+                if (originalGorev.Baslik != Gorev.Baslik)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "Baslik",
+                        EskiDeger = originalGorev.Baslik ?? "",
+                        YeniDeger = Gorev.Baslik ?? "",
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
 
-    //             if (originalGorev.Kategori_ID != Gorev.Kategori_ID)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "Kategori_ID",
-    //                     EskiDeger = originalGorev.Kategori_ID.ToString(),
-    //                     YeniDeger = Gorev.Kategori_ID.ToString(),
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
+                if (originalGorev.Kategori_ID != Gorev.Kategori_ID)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "Kategori_ID",
+                        EskiDeger = originalGorev.Kategori_ID.ToString(),
+                        YeniDeger = Gorev.Kategori_ID.ToString(),
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
 
-    //             if (originalGorev.OnemDerecesi != Gorev.OnemDerecesi)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "OnemDerecesi",
-    //                     EskiDeger = originalGorev.OnemDerecesi ?? "",
-    //                     YeniDeger = Gorev.OnemDerecesi ?? "",
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
+                if (originalGorev.OnemDerecesi != Gorev.OnemDerecesi)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "OnemDerecesi",
+                        EskiDeger = originalGorev.OnemDerecesi ?? "",
+                        YeniDeger = Gorev.OnemDerecesi ?? "",
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
 
-    //             if (originalGorev.BaslangicTarihi != Gorev.BaslangicTarihi)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "BaslangicTarihi",
-    //                     EskiDeger = originalGorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-    //                     YeniDeger = Gorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
+                if (originalGorev.BaslangicTarihi != Gorev.BaslangicTarihi)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "BaslangicTarihi",
+                        EskiDeger = originalGorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+                        YeniDeger = Gorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
 
-    //             if (originalGorev.BitisTarihi != Gorev.BitisTarihi)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "BitisTarihi",
-    //                     EskiDeger = originalGorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-    //                     YeniDeger = Gorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
+                if (originalGorev.BitisTarihi != Gorev.BitisTarihi)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "BitisTarihi",
+                        EskiDeger = originalGorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+                        YeniDeger = Gorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
 
-    //             if (originalGorev.TekrarlamaTipi != Gorev.TekrarlamaTipi)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "TekrarlamaTipi",
-    //                     EskiDeger = originalGorev.TekrarlamaTipi ?? "",
-    //                     YeniDeger = Gorev.TekrarlamaTipi ?? "",
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
+                if (originalGorev.TekrarlamaTipi != Gorev.TekrarlamaTipi)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "TekrarlamaTipi",
+                        EskiDeger = originalGorev.TekrarlamaTipi ?? "",
+                        YeniDeger = Gorev.TekrarlamaTipi ?? "",
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
 
-    //             if (originalGorev.Kilitli != Gorev.Kilitli)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "Kilitli",
-    //                     EskiDeger = originalGorev.Kilitli.ToString(),
-    //                     YeniDeger = Gorev.Kilitli.ToString(),
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
+                if (originalGorev.Kilitli != Gorev.Kilitli)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "Kilitli",
+                        EskiDeger = originalGorev.Kilitli.ToString(),
+                        YeniDeger = Gorev.Kilitli.ToString(),
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
 
-    //             if (originalGorev.Kullanici_ID != Gorev.Kullanici_ID)
-    //             {
-    //                 await DataService.SetGorevLog(new ItemGorevLoglari
-    //                 {
-    //                     Gorev_ID = Gorev.ID,
-    //                     IslemTipi = "Güncellendi",
-    //                     AlanAdi = "Kullanici_ID",
-    //                     EskiDeger = originalGorev.Kullanici_ID.ToString(),
-    //                     YeniDeger = Gorev.Kullanici_ID.ToString(),
-    //                     IslemKullanici_ID = currentUserId,
-    //                     IslemTarih = DateTime.Now
-    //                 });
-    //             }
-    //         }
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine($"Görev log kaydetme hatası: {ex.Message}");
-    //         Console.WriteLine($"Stack trace: {ex.StackTrace}");
-    //         // Hata kullanıcıya gösterilmiyor çünkü görev zaten kaydedildi
-    //         // Sadece log kaydı başarısız oldu
-    //     }
-    // }
+                if (originalGorev.Kullanici_ID != Gorev.Kullanici_ID)
+                {
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "Kullanici_ID",
+                        EskiDeger = originalGorev.Kullanici_ID.ToString(),
+                        YeniDeger = Gorev.Kullanici_ID.ToString(),
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            
+        }
+    }
 }
