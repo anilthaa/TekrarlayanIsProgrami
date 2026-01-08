@@ -28,7 +28,6 @@
                         }
                         else
                         {
-                            @* Ortak Sayfalar (Görevler gibi) - dropdown dışında *@
                             @foreach (var menuItem in _commonMenuItems)
                             {
                                 <NavLink href="@GetHref(menuItem)" class="nav-link" style="font-weight:500;">
@@ -126,17 +125,14 @@
     private IReadOnlyList<ItemForm> _menuItems = Array.Empty<ItemForm>();
     private bool _isMenuLoading = true;
 
-    // Dropdown state'leri
     private bool _adminMenuOpen = true;
     private bool _userMenuOpen = true;
 
-    // Ortak sayfalar (hem admin hem kullanıcı için - dropdown dışında)
     private static readonly HashSet<string> _commonRoutes = new(StringComparer.OrdinalIgnoreCase)
     {
         "/gorevler"
     };
 
-    // Admin sayfaları
     private static readonly HashSet<string> _adminRoutes = new(StringComparer.OrdinalIgnoreCase)
     {
         "/kullanicilar",
@@ -146,7 +142,6 @@
         "/gorev-loglari"
     };
 
-    // Görevler sayfası için sabit menü öğesi (PermissionService'den bağımsız)
     private ItemForm _gorevlerMenuItem => new ItemForm
     {
         ID = 0,
@@ -157,13 +152,11 @@
         Sira = 0
     };
 
-    // Menü öğelerini kategorilere ayır
     private IEnumerable<ItemForm> _commonMenuItems
     {
         get
         {
             var fromService = _menuItems.Where(m => IsCommonPage(GetHref(m))).ToList();
-            // Eğer PermissionService'den /gorevler gelmiyorsa, manuel ekle
             if (!fromService.Any(m => GetHref(m).Equals("/gorevler", StringComparison.OrdinalIgnoreCase)))
             {
                 return new[] { _gorevlerMenuItem }.Concat(fromService);
@@ -174,6 +167,7 @@
     private IEnumerable<ItemForm> _adminMenuItems => _menuItems.Where(m => IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
     private IEnumerable<ItemForm> _userMenuItems => _menuItems.Where(m => !IsAdminPage(GetHref(m)) && !IsCommonPage(GetHref(m)));
 
+    //verilen route sayfa yolu değerinin “ortak/standart sayfalardan” biri olup olmadığını kontrol eder:
     private bool IsCommonPage(string route)
     {
         if (string.IsNullOrWhiteSpace(route)) return false;
@@ -181,6 +175,7 @@
         return _commonRoutes.Contains(normalizedRoute);
     }
 
+    //verilen route sayfa yolu değerinin admin sayfalarından biri olup olmadığını kontrol eder:
     private bool IsAdminPage(string route)
     {
         if (string.IsNullOrWhiteSpace(route)) return false;
@@ -188,17 +183,17 @@
         return _adminRoutes.Contains(normalizedRoute) || normalizedRoute.StartsWith("/admin");
     }
 
+    //sayfa veya bileşen başlatıldığında çalışır ve şunları yapar:
     protected override async Task OnInitializedAsync()
     {
-        // Authentication state değişikliklerini dinle
         girisSaglayici.AuthenticationStateChanged += OnAuthenticationStateChanged;
 
         await LoadUserDataAsync();
     }
 
+    //kullanıcı giriş/çıkış yaptığında tetiklenen olay metodudur:
     private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
     {
-        // Authentication state değiştiğinde menüleri ve kullanıcı bilgilerini yeniden yükle
         await InvokeAsync(async () =>
         {
             await PermissionService.RefreshAsync();
@@ -207,6 +202,7 @@
         });
     }
 
+    //kullanıcıya ait verileri yükler:
     private async Task LoadUserDataAsync()
     {
         IsLoading = true;
@@ -221,10 +217,10 @@
         }
         IsLoading = false;
 
-        // Menü öğelerini yükle
         await LoadMenuAsync();
     }
 
+    //kullanıcının menü öğelerini yükler:
     private async Task LoadMenuAsync()
     {
         _isMenuLoading = true;
@@ -242,6 +238,7 @@
         }
     }
 
+    //bir menü öğesinin URL/route değerini oluşturur:
     private string GetHref(ItemForm form)
     {
         var route = form.SayfaURL;
@@ -264,6 +261,7 @@
         return route;
     }
 
+    //sayfa ilk kez render edildikten sonra çalışır ve şunları yapar:
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -283,6 +281,7 @@
         }
     }
 
+    //kullanıcı çıkış işlemini yapar:
     private async void CikisYap()
     {
         try
@@ -303,13 +302,15 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Çıkış log kaydı hatası: {ex.Message}");
+            
         }
 
         await ((CustomAuthenticationStateProvider)girisSaglayici).MarkUserAsLoggedOut();
         await PermissionService.RefreshAsync();
         NavigationManager.NavigateTo("/GirisYap", true);
     }
+
+    //ullanıcı profil bilgileri popup’ını açar:
     async Task ProfilPopupAc()
     {
         await DialogService.OpenAsync<KullaniciProfil>(
@@ -325,6 +326,7 @@
           });
     }
 
+    //bileşen veya sayfa kapatılırken çalışır:
     public void Dispose()
     {
         girisSaglayici.AuthenticationStateChanged -= OnAuthenticationStateChanged;
