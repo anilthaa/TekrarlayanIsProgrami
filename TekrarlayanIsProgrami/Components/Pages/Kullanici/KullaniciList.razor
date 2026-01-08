@@ -159,6 +159,23 @@
         var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
         if (kullanici == null) return;
 
+        // Kullanıcıya atanmış aktif görevleri kontrol et
+        var tumGorevler = await DataService.GetGorevler();
+        var kullaniciyaAitAktifGorevler = tumGorevler
+            .Where(g => g.Kullanici_ID == id && g.Aktif && g.DelUser == 0)
+            .ToList();
+
+        if (kullaniciyaAitAktifGorevler.Any())
+        {
+            var gorevSayisi = kullaniciyaAitAktifGorevler.Count;
+            var mesaj = gorevSayisi == 1 
+                ? "Bu kullanıcıya atanmış 1 aktif görev bulunmaktadır. Lütfen önce bu görevi silin veya pasif hale getirin."
+                : $"Bu kullanıcıya atanmış {gorevSayisi} aktif görev bulunmaktadır. Lütfen önce bu görevleri silin veya pasif hale getirin.";
+            
+            notificationService.Notify(NotificationSeverity.Warning, "Uyarı", mesaj);
+            return;
+        }
+
         int currentUserId = await GetCurrentUserId(); 
         await _kullaniciRepo.DeleteAsync(kullanici.ID, currentUserId);
 
