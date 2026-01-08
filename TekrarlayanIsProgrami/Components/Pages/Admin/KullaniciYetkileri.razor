@@ -1,12 +1,9 @@
-
 @layout EmptyLayout
 @attribute [Authorize]
-@* @page "/admin/kullanici-yetkileri/{KullaniciId:int}" *@
 
 <RadzenCard class="container mt-4">
-    <h3 style="text-align:center;">Kullanıcı Sayfa Yetkileri</h3>
-
-    @if (!_canAccess)
+@*      <h3 style="text-align:center;">Kullanıcı Sayfa Yetkileri</h3>
+ *@    @if (!_canAccess)
     {
         <RadzenCard Style="max-width:400px; margin:100px auto; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; border-left:5px solid #e74c3c;">
             <RadzenIcon Icon="lock" Style="font-size:64px; color:#e74c3c; margin-bottom:20px;" />
@@ -44,7 +41,7 @@
             {
                 <RadzenButton Text="Değişiklikleri Kaydet"
                               Icon="save"
-                              ButtonStyle="ButtonStyle.Primary"
+                              ButtonStyle="ButtonStyle.Success"
                               Disabled="@(!HasChanges || isSaving)"
                               Click="@KaydetAsync" />
             }
@@ -54,7 +51,7 @@
             }
         </div>
 
-            <RadzenDataGrid TItem="ItemForm" Data="@formYetkileri" AllowPaging="false" AllowSorting="true" Class="mt-3">
+            <RadzenDataGrid TItem="ItemForm" Data="@formYetkileri" AllowPaging="false" AllowSorting="true" Class="mt-3 ">
                 <Columns>
                     <RadzenDataGridColumn TItem="ItemForm" Property="Adi" Title="Form Adı" />
                     <RadzenDataGridColumn TItem="ItemForm" Property="IsMenu" Title="Menüde" Width="120px">
@@ -80,7 +77,7 @@
                                                 Data="@PermissionService.PermissionOptions"
                                                 TextProperty="Label"
                                                 ValueProperty="Value"
-                                                Style="width:260px;"
+                                                Style="width:260px; "
                                                 Value="@GetYetki(item.ID)"
                                                 Disabled="true" />
                             }
@@ -108,9 +105,9 @@
     private bool _canAccess = false;
     private bool _canWrite = false;
 
+    //sayfa parametreleri değiştiğinde çalışır ve sayfa erişim kontrolü yapar.
     protected override async Task OnParametersSetAsync()
     {
-        // Yetki kontrolü
         _canAccess = await PermissionService.CanReadAsync("/admin/kullanici-yetkileri");
         _canWrite = await PermissionService.CanWriteAsync("/admin/kullanici-yetkileri");
 
@@ -124,6 +121,7 @@
         await YukleAsync();
     }
 
+    //belirli bir kullanıcının form yetkilerini ve ilgili verileri yükler.
     private async Task YukleAsync()
     {
         try
@@ -163,9 +161,13 @@
             return mevcut != orijinal;
         });
 
+    //verilen form ID’sine karşılık kullanıcının mevcut yetkisini döndürür.
+    private int GetYetki(int formId)
+   => mevcutYetkiler.TryGetValue(formId, out var yetki) ? yetki : 0;
+
+    //kullanıcının form yetkilerini kaydeder ve günceller.
     private async Task KaydetAsync()
     {
-        // Yazma yetkisi kontrolü
         if (!_canWrite)
         {
             notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu işlem için yazma yetkiniz bulunmamaktadır.");
@@ -229,9 +231,7 @@
 
     }
 
-    private int GetYetki(int formId)
-        => mevcutYetkiler.TryGetValue(formId, out var yetki) ? yetki : 0;
-
+    //kullanıcının bir form için yetkisini değiştirdiğinde çağrılır.
     private void OnYetkiChanged(int formId, int yeniYetki)
     {
         mevcutYetkiler[formId] = yeniYetki;
