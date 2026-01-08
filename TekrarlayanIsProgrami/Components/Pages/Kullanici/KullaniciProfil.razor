@@ -19,14 +19,16 @@
     else
     {
         <RadzenTemplateForm Data="@user" TItem="User" Submit="@KaydetProfil">
-
+            <DataAnnotationsValidator />
             <RadzenFormField Text="Ad" Style="width:48%; margin-left:3px;">
                 <RadzenTextBox @bind-Value="user.Adi" />
             </RadzenFormField>
+            <ValidationMessage For="@(() => user.Adi)"></ValidationMessage>
 
             <RadzenFormField Text="Soyad" Style="width:48%">
                 <RadzenTextBox @bind-Value="user.Soyadi" />
             </RadzenFormField>
+            <ValidationMessage For="@(()=>user.Soyadi)"></ValidationMessage>
 
             <div class="btn-group">
                 <RadzenButton Text="Kaydet"
@@ -58,8 +60,8 @@
         <hr />
         <h4>Şifre Değiştir</h4>
 
-        <EditForm Model="@this" OnValidSubmit="@SifreDegistir">
-
+        <EditForm Model="@user" OnValidSubmit="@SifreDegistir">
+            <DataAnnotationsValidator />
             <RadzenFormField Text="Mevcut Şifre" Style="width:48%; margin-left:3px;">
                 <RadzenPassword @bind-Value="eskiSifre" />
             </RadzenFormField>
@@ -70,6 +72,7 @@
                     <RadzenIcon Icon="@Icon" Style="color:gray;"></RadzenIcon>
                 </button>
             </RadzenFormField>
+            <ValidationMessage For="@(()=>user.Sifre)"></ValidationMessage>
 
             <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:48%; margin-left:115px">
                 <RadzenTextBox @bind-Value="yeniSifreTekrar" type="@InputType2" />
@@ -77,6 +80,7 @@
                     <RadzenIcon Icon="@Icon2" Style="color:gray;"></RadzenIcon>
                 </button>
             </RadzenFormField>
+            <ValidationMessage For="@(() => user.SifreTekrar)"></ValidationMessage>
 
             <div class="btn-group">
                 <RadzenButton Text="Kaydet"
