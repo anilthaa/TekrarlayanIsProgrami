@@ -65,11 +65,17 @@
             </RadzenFormField>
 
             <RadzenFormField Text="Yeni Şifre" Style="width:48%">
-                <RadzenPassword @bind-Value="yeniSifre" />
+                <RadzenTextBox @bind-Value="yeniSifre" type="@InputType" />
+                <button type="button" @onclick="@TogglePassword" style="position:absolute; right:2px; top:8px; transform:translate(-50%); border:none; background:transparent;">
+                    <RadzenIcon Icon="@Icon" Style="color:gray;"></RadzenIcon>
+                </button>
             </RadzenFormField>
 
             <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:48%; margin-left:115px">
-                <RadzenPassword @bind-Value="yeniSifreTekrar" />
+                <RadzenTextBox @bind-Value="yeniSifreTekrar" type="@InputType2" />
+                <button type="button" @onclick="@TogglePassword2" style="position:absolute; right:2px; top:8px; transform:translate(-50%); border:none; background:transparent;">
+                    <RadzenIcon Icon="@Icon2" Style="color:gray;"></RadzenIcon>
+                </button>
             </RadzenFormField>
 
             <div class="btn-group">
@@ -99,6 +105,10 @@
     string? eskiSifre;
     string? yeniSifre;
     string? yeniSifreTekrar;
+    private string InputType { get; set; } = "password";
+    private string Icon { get; set; } = "visibility_off";
+    private string InputType2 { get; set; } = "password";
+    private string Icon2 { get; set; } = "visibility_off";
 
     //sayfa ilk açıldığında oturumdaki kullanıcının profil bilgilerini yüklemek ve düzenleme için yedeklemek amacıyla çalışır.
     protected override async Task OnInitializedAsync()
@@ -192,4 +202,34 @@
         Soyadi = u.Soyadi,
         EPosta = u.EPosta
     };
+
+    //Göz ikonu için kullanılır.
+    void TogglePassword()
+    {
+        if (InputType == "password")
+        {
+            InputType = "text";
+            Icon = "visibility";
+        }
+        else
+        {
+            InputType = "password";
+            Icon = "visibility_off";
+        }
+    }
+
+    //Göz ikonu için kullanılır.
+    void TogglePassword2()
+    {
+        if (InputType2 == "password")
+        {
+            InputType2 = "text";
+            Icon2 = "visibility";
+        }
+        else
+        {
+            InputType2 = "password";
+            Icon2 = "visibility_off";
+        }
+    }
 }
