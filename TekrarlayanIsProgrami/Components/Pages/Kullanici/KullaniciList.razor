@@ -12,7 +12,7 @@
         </div>
     }
 
-    <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name"  TItem="User" RowSelect="@OnRowSelect"
+    <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name" TItem="User" RowSelect="@OnRowSelect" RowDoubleClick="@OnRowDoubleClick"
                     AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="true"
                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                     class="align-middle">
@@ -254,5 +254,9 @@
         var linkHayir = $"https://localhost:7014/onay?uid={userId}&ok=0";
 
         await EpostaService.SendInviteMailAsync(u.EPosta, linkEvet, linkHayir);
+    }
+    private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<User> args)
+    {
+        await OpenEditDialog(args.Data.ID);
     }
 }
