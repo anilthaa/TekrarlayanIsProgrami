@@ -35,7 +35,7 @@
 @if (kullaniciTip != null && kullaniciTip.Adi == "Admin")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
-		<h2 style="font-family:'Century Schoolbook';font-weight: bold; "> Admin Kontrol Paneli</h2>
+		<h2 style="font-family:serif;font-weight: bold; "> Admin Kontrol Paneli</h2>
 		@if (IsLoading)
 		{
 			<p style="text-align:center;">Veriler yükleniyor...</p>
@@ -261,7 +261,7 @@
 			<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #16a085; margin-top:20px;">
 				<h5 style="color:#16a085; font-weight:600; margin-bottom:10px;">Bana Atanan Görevler</h5>
 				<p style="color:#555; font-size:14px; margin-bottom:10px;">
-					Size Özel Görevlerin listesi @(currentUserId.HasValue ? $"(Kullanıcı ID: {currentUserId.Value})" : "(Kullanıcı ID yüklenemedi)")
+					Size Özel Görevlerin listesi
 				</p>
 				@if (adminGorevleri != null && adminGorevleri.Any())
 				{
@@ -410,7 +410,7 @@ else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
 {
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
 
-		<h2 style="font-family:'Century Schoolbook';font-weight: bold; ">Gösterge Paneli</h2>
+		<h2 style="font-family:serif;font-weight: bold; ">Gösterge Paneli</h2>
 		<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
 
 			<RadzenCard class="radzen-hover-effect" Style="width:230px;cursor:pointer; border-left:5px solid #3498db;" @onclick="@(() => NavigateToGorevler2(6))">

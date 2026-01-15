@@ -8,7 +8,7 @@ namespace TekrarlayanIsProgrami.Services
     {
         private readonly string _secretKey = "BuUrlImzaCokGizliBirAnahtar123456789!@#";
 
-        //verilen URL’yi parametrelerle birlikte imzalý hale getirir.
+        //verilen URL'yi parametrelerle birlikte imzalÄ± hale getirir.
         public string SignUrl(string baseUrl, Dictionary<string, string> parameters)
         {
             var json = JsonSerializer.Serialize(parameters);
@@ -19,7 +19,7 @@ namespace TekrarlayanIsProgrami.Services
             return $"{baseUrl}{separator}token={Uri.EscapeDataString(encrypted)}";
         }
 
-        //SignUrl ile oluþturulmuþ imzalý URL’yi çözer ve içindeki parametreleri okur.
+        //SignUrl ile oluÅŸturulmuÅŸ imzalÄ± URL'yi Ã§Ã¶zer ve iÃ§indeki parametreleri okur.
         public Dictionary<string, string> ParseSignedUrl(string url, out bool isValid)
         {
             isValid = false;
@@ -33,7 +33,7 @@ namespace TekrarlayanIsProgrami.Services
                 if (!query.ContainsKey("token"))
                     return result;
 
-                var token = query["token"].ToString();
+                var token = Uri.UnescapeDataString(query["token"].ToString());
                 if (string.IsNullOrEmpty(token))
                     return result;
 
@@ -52,7 +52,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
-        //bir URL’nin geçerli bir imzalý token içerip içermediðini kontrol eder.
+        //bir URL'nin geÃ§erli bir imzalÄ± token iÃ§erip iÃ§ermediÄŸini kontrol eder.
         public bool VerifyUrl(string url)
         {
             try
@@ -63,7 +63,7 @@ namespace TekrarlayanIsProgrami.Services
                 if (!query.ContainsKey("token"))
                     return false;
 
-                var token = query["token"].ToString();
+                var token = Uri.UnescapeDataString(query["token"].ToString());
                 if (string.IsNullOrEmpty(token))
                     return false;
 
@@ -76,7 +76,7 @@ namespace TekrarlayanIsProgrami.Services
             }
         }
 
-        //düz metni AES ile þifreleyip URL-safe Base64 formatýnda döndürür.
+        //dÃ¼z metni AES ile Åžifreleyip URL-safe Base64 formatÄ±nda dÃ¶ndÃ¼rÃ¼r.
         private string Encrypt(string plainText)
         {
             using var aes = Aes.Create();
@@ -96,12 +96,20 @@ namespace TekrarlayanIsProgrami.Services
             return Convert.ToBase64String(encrypted).Replace("+", "-").Replace("/", "_").TrimEnd('=');
         }
 
-        //Encrypt metodu ile þifrelenmiþ veriyi çözerek orijinal düz metni geri döndürür.
+        //Encrypt metodu ile ÅžifrelenmiÅŸ veriyi Ã§Ã¶zerek orijinal dÃ¼z metni geri dÃ¶ndÃ¼rÃ¼r.
         private string Decrypt(string cipherText)
         {
             try
             {
-                var cipherBytes = Convert.FromBase64String(cipherText.Replace("-", "+").Replace("_", "/"));
+                // Base64 padding ekle (TrimEnd ile kald?r?lan = karakterlerini geri ekle)
+                var base64 = cipherText.Replace("-", "+").Replace("_", "/");
+                switch (base64.Length % 4)
+                {
+                    case 2: base64 += "=="; break;
+                    case 3: base64 += "="; break;
+                }
+
+                var cipherBytes = Convert.FromBase64String(base64);
 
                 using var aes = Aes.Create();
                 aes.Key = Encoding.UTF8.GetBytes(_secretKey.Substring(0, 32));
