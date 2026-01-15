@@ -2,7 +2,6 @@
 @page "/"
 @layout EmptyLayout
 
-
 <div class="login-container @(isRegisterActive ? "slide-active" : "")">
 	<div class="form login-form">
 		<EditForm Model="@loginModel" OnValidSubmit="() => OnLogin(loginModel)">
@@ -17,7 +16,7 @@
 				<RadzenIcon Icon="@Icon2" Style="color:gray;"></RadzenIcon>
 			</button>
 			</RadzenFormField>
-			<a href="javascript:void(0);" @onclick="OpenSifremiUnuttumDialog" class="link-sifreUnuttum">Şifremi Unuttum?</a>
+			<a href="javascript:void(0);" @onclick="OpenSifremiUnuttumDialog" @onclick:preventDefault="true" class="link-sifreUnuttum">Şifremi Unuttum?</a>
 			@if (!isSaving)
 			{
 				<RadzenButton ButtonType="ButtonType.Submit" Style="width:100%; margin-top:20px;" Text="Giriş Yap" class="girisButton" Icon="login"></RadzenButton>
@@ -258,7 +257,17 @@
 	//Şifremi unuttum kısmının açılması için kullanılıyor.
 	private async Task OpenSifremiUnuttumDialog()
 	{
-		await DialogService.OpenAsync<SifremiUnuttum>(" ",new Dictionary<string, object>());
+		try
+		{
+			await DialogService.OpenAsync<SifremiUnuttum>("Şifremi Unuttum", 
+				new Dictionary<string, object>(), 
+				new DialogOptions { Width = "450px", Height = "auto" });
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"Dialog açılırken hata: {ex.Message}");
+			notificationService.Notify(NotificationSeverity.Error, "Hata", "Dialog açılırken bir hata oluştu.");
+		}
 	}
 
 	//TextBoxlarda göz ikonu için kullanılıyor.

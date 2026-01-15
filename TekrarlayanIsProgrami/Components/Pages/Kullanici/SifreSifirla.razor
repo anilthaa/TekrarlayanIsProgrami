@@ -1,4 +1,4 @@
-﻿@page "/sifre-sifirla"
+@page "/sifre-sifirla"
 @page "/sifre-sifirla/{token}"
 @layout EmptyLayout
 @attribute [AllowAnonymous]
@@ -48,44 +48,35 @@
     //sayfa yüklendiğinde şifre sıfırlama token’ını doğrular ve hazırlar.
     protected override async Task OnInitializedAsync()
     {
-        var uri = new Uri(NavigationManager.Uri);
-        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
-
-        if (query.ContainsKey("token"))
+        try
         {
-            var isValid = urlSigningService.VerifyUrl(NavigationManager.Uri);
-            if (!isValid)
+            var urlParameters = urlSigningService.ParseSignedUrl(NavigationManager.Uri, out bool valid);
+            if (!valid || !urlParameters.ContainsKey("token"))
             {
                 notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz veya değiştirilmiş link!");
                 token = null;
                 return;
             }
             
-            var urlParameters = urlSigningService.ParseSignedUrl(NavigationManager.Uri, out bool valid);
-            if (!valid || !urlParameters.ContainsKey("token"))
+            token = urlParameters["token"];
+            
+            if (string.IsNullOrEmpty(token))
             {
-                notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz link!");
+                notificationService.Notify(NotificationSeverity.Warning, "Token eksik veya geçersiz.");
                 token = null;
                 return;
             }
             
-            token = urlParameters["token"];
+            var kullanicii = await _kullaniciRepo.GetByTokenAsync(token);
+            if (kullanicii == null || kullanicii.ResetTokenExpiry <= DateTime.UtcNow)
+            {
+                notificationService.Notify(NotificationSeverity.Info, "Süreniz Dolmuştur!");
+                token = null;
+            }
         }
-        else if (query.TryGetValue("token", out var tokenValue))
+        catch
         {
-            token = System.Net.WebUtility.UrlDecode(tokenValue.ToString());
-        }
-        
-        if (string.IsNullOrEmpty(token))
-        {
-            notificationService.Notify(NotificationSeverity.Warning, "Token eksik veya geçersiz.");
-            token = null;
-            return;
-        }
-        var kullanicii = await _kullaniciRepo.GetByTokenAsync(token);
-        if (kullanicii == null || kullanicii.ResetTokenExpiry <= DateTime.UtcNow)
-        {
-            notificationService.Notify(NotificationSeverity.Info, "Süreniz Dolmuştur!");
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Link doğrulanırken bir hata oluştu.");
             token = null;
         }
     }
