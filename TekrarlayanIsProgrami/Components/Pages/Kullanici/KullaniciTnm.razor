@@ -14,18 +14,22 @@ else
 			<h3 class="text-center mb-4">Kullanıcı Düzenle</h3>
 			<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@Kaydet" Style="align-items:center; border:none;">
 			  <RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
+					<DataAnnotationsValidator />
 
 				<RadzenFormField Text="Ad" Style="width:85%; margin-left:41px; margin-top:4px;">
 					<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Adi" />
 				</RadzenFormField>
+				<ValidationMessage For="@(()=>kullanicilar.Adi)"></ValidationMessage>
 
 				<RadzenFormField Text="Soyad" Style="width:85%; margin-left:41px; margin-top:4px;">
 					<RadzenTextBox class="form-control" @bind-Value="kullanicilar.Soyadi" />
 				</RadzenFormField>
+				<ValidationMessage For="@(() => kullanicilar.Soyadi)"></ValidationMessage>
 
 				<RadzenFormField Text="E-posta" Style="width:85%; margin-left:41px; margin-top:4px;">
 					<RadzenTextBox class="form-control" @bind-Value="kullanicilar.EPosta" />
 				</RadzenFormField>
+				<ValidationMessage For="@(() => kullanicilar.EPosta)"></ValidationMessage>
 
 				<RadzenFormField Text="Kullanıcı Tipi" Style="width:85%; margin-left:41px; margin-top:4px;">
 					<RadzenDropDown Data="@kullaniciTipleri" TextProperty="Adi" ValueProperty="ID" Style="width:100%;"
@@ -33,7 +37,7 @@ else
 				</RadzenFormField>
 
 				<div class="btn-group">
-					<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"
+					<RadzenButton Text="Güncelle" Icon="save" ButtonType="ButtonType.Submit"
 								  Style="width:30%; margin:auto;" class="radzen-buttonKaydet" Disabled="@isSaving" />
 					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
 								  Style="width:30%; margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />

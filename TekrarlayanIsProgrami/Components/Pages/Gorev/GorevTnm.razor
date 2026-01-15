@@ -532,7 +532,7 @@
 
             if (!Gorev.BaslangicTarihi.HasValue)
             {
-                notificationService.Notify(NotificationSeverity.Error, "Hata", "Başlangıç tarihi zorunludur!");
+                notificationService.Notify(NotificationSeverity.Error, "Hata", "Bu Alan Zorunludur!");
                 isSaving = false;
                 StateHasChanged();
                 return;
@@ -540,7 +540,7 @@
 
             if (!Gorev.BitisTarihi.HasValue)
             {
-                notificationService.Notify(NotificationSeverity.Error, "Hata", "Bitiş tarihi zorunludur!");
+                notificationService.Notify(NotificationSeverity.Error, "Hata", "Bu Alan Zorunludur!");
                 isSaving = false;
                 StateHasChanged();
                 return;

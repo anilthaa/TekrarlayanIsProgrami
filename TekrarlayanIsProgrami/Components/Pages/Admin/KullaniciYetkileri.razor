@@ -2,8 +2,7 @@
 @attribute [Authorize]
 
 <RadzenCard class="container mt-4">
-@*      <h3 style="text-align:center;">Kullanıcı Sayfa Yetkileri</h3>
- *@    @if (!_canAccess)
+    @if (!_canAccess)
     {
         <RadzenCard Style="max-width:400px; margin:100px auto; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; border-left:5px solid #e74c3c;">
             <RadzenIcon Icon="lock" Style="font-size:64px; color:#e74c3c; margin-bottom:20px;" />

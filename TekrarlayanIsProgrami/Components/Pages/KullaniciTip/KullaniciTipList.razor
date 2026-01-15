@@ -174,6 +174,30 @@
 		//Tip silme işlemi için kullanılır.
 		private async Task Sil(ItemKullaniciTip item)
 		{
+		var tumKullanicilar = await _kullaniciRepo.GetAllAsync();
+
+		var tipeAitAktifKullanicilar = tumKullanicilar
+			.Where(u => u.KullaniciTip_ID == item.ID
+						&& u.Aktif
+						&& (u.DelUser == null || u.DelUser == 0))
+			.ToList();
+
+		if (tipeAitAktifKullanicilar.Any())
+		{
+			var kullaniciSayisi = tipeAitAktifKullanicilar.Count;
+
+			var mesaj = kullaniciSayisi == 1
+				? "Bu kullanıcı tipine ait 1 aktif kullanıcı bulunmaktadır. Lütfen önce bu kullanıcıyı pasif hale getirin."
+				: $"Bu kullanıcı tipine ait {kullaniciSayisi} aktif kullanıcı bulunmaktadır. Lütfen önce bu kullanıcıları pasif hale getirin.";
+
+			notificationService.Notify(
+				NotificationSeverity.Warning,
+				"Uyarı",
+				mesaj
+			);
+
+			return;
+		}
 			bool? onay = await DialogService.Confirm($"'{item.Adi}' tipini silmek istediğinize emin misiniz?", "Onay",
 			new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır", Icon = "warning" });
 

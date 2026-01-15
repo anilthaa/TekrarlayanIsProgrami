@@ -42,7 +42,7 @@
 	private List<ItemGorev> GorevlerGoster => Gorevler.Where(g => g.Aktif).ToList();
 	private List<ItemGorev> SeciliGorevler => gorevId.HasValue ? GorevlerGoster.Where(g => g.ID == gorevId.Value).ToList() : new List<ItemGorev>();
 
-	//Popup ilk yüklendiğinde yüklenecek olan vilgiler için kullanılır.
+	//Popup ilk yüklendiğinde yüklenecek olan bilgiler için kullanılır.
 	protected override async Task OnInitializedAsync()
 	{
 		var currentUser = await girisSaglayici.GetCurrentUserAsync();
