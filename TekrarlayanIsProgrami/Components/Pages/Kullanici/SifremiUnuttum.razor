@@ -1,5 +1,4 @@
-﻿@layout MainLayout
-@attribute [AllowAnonymous]
+﻿@attribute [AllowAnonymous]
 <RadzenCard Class="mx-auto mt-5" Style="max-width:400px;">
     <h3 style="text-align:center;">Şifremi Unuttum</h3>
     <p class="text-muted" style="text-align:center;">Şifre sıfırlama bağlantısı kayıtlı e-posta adresinize gönderilecektir.</p>
@@ -7,37 +6,46 @@
         <RadzenFormField Text="E-posta" Style="width:90%;margin-left:25px;">
 						<RadzenTextBox Name="txteposta" @bind-Value="model.Eposta" style="width:100%;" />
 					</RadzenFormField>
-					<RadzenRequiredValidator Component="txteposta" Text="Ad zorunludur."></RadzenRequiredValidator>
+					<RadzenRequiredValidator Component="txteposta" Text="E-posta zorunludur."></RadzenRequiredValidator>
   </div>
-    <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" class="girisButton" style="margin-top:10px; width:40%; margin-left:148px;" Click="@OnSubmit" />
+    <div style="text-align:center; margin-top:15px;">
+        <RadzenButton Text="Bağlantı Gönder" ButtonStyle="ButtonStyle.Primary" Click="@OnSubmit" />
+    </div>
 </RadzenCard>
 
 @code {
     private SifreUnuttumModel model = new();
     public class SifreUnuttumModel
     {
-        public string Eposta { get; set; }
-        public string Sifre { get; set; }
+        public string Eposta { get; set; } = string.Empty;
+        public string Sifre { get; set; } = string.Empty;
     }
 
     //şifre sıfırlama işlemini yönetir.
     private async Task OnSubmit()
     {
+        if (string.IsNullOrWhiteSpace(model.Eposta))
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Lütfen e-posta adresinizi girin.");
+            return;
+        }
+
         var kullanici = await _kullaniciRepo.SifreEmailAsync(model.Eposta);
         if (kullanici == null)
         {
-            notificationService.Notify(NotificationSeverity.Error, "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Bu e-posta adresine kayıtlı kullanıcı bulunamadı.");
             return;
         }
 
         var token = Guid.NewGuid().ToString();
         var expiry = DateTime.UtcNow.AddMinutes(3);
-        await _kullaniciRepo.SifreSifirlamaTokenKaydet(kullanici.ID, token,expiry);
+        await _kullaniciRepo.SifreSifirlamaTokenKaydet(kullanici.ID, token, expiry);
 
         await EpostaService.SendResetEpostaAsync(kullanici.EPosta, token, kullanici.Adi);
 
         notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
+        
+        // Dialog'u kapat
+        DialogService.Close();
     }
-  
-   
 }

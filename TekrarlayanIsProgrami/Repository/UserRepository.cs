@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
@@ -119,11 +119,16 @@ namespace TekrarlayanIsProgrami.Repository
             if (kullanici == null)
                 return false;
 
+            // Şifreyi hash'le
+            var hashedPassword = PasswordHelper.HashPassword(yeniSifre);
+
             var sql = @"UPDATE ""Kullanici"" 
-                SET ""Sifre"" = @sifre
+                SET ""Sifre"" = @sifre,
+                    ""ResetToken"" = NULL,
+                    ""ResetTokenExpiry"" = NULL
                 WHERE ""ID"" = @id";
 
-            await baglanti.ExecuteAsync(sql, new { sifre = yeniSifre, id = kullanici.ID });
+            await baglanti.ExecuteAsync(sql, new { sifre = hashedPassword, id = kullanici.ID });
 
             return true;
         }
