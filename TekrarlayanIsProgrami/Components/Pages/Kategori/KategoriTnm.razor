@@ -13,7 +13,7 @@
 				<ValidationMessage For="@(()=>ItemData.Adi)"></ValidationMessage>
 
 				<div class="btn-group">
-					<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin:auto;"class="radzen-buttonKaydet" ButtonType="ButtonType.Submit"></RadzenButton>
+					<RadzenButton Text="Güncelle" Icon="save" Style="width:30%; margin:auto;"class="radzen-buttonKaydet" ButtonType="ButtonType.Submit"></RadzenButton>
 					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%;margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button"></RadzenButton>
 				</div>
 			</ChildContent>
@@ -72,7 +72,6 @@ else
 			item.UpdUser = IsEdit ? 1 : 0;
 
 			var wsCvp = await Task.Run(() => DataService.SetKategori(item));
-			Console.WriteLine($"SonucKodu: {wsCvp.SonucKodu}, Data: {wsCvp.Data}");
 
 			if (wsCvp.SonucKodu == 0 && wsCvp.Data > 0)
 			{
@@ -118,28 +117,31 @@ else
 					"Yaptığınız değişiklikler kaybolacak. Devam etmek istiyor musunuz?",
 					"İptal Onayı",
 					new ConfirmOptions
-						{
-							OkButtonText = "Evet",
-							CancelButtonText = "Hayır"
-						});
+					{
+						OkButtonText = "Evet",
+						CancelButtonText = "Hayır"
+					});
 
 				if (onay != true)
 					return;
-				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
-				ItemData.Adi = originalKategori;
 			}
-			else
-			{
-				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
-				NavigationManager.NavigateTo("/kategori");
-			}
+
+			notificationService.Notify(
+				NotificationSeverity.Info,
+				"Bilgi",
+				"Düzenleme işleminiz iptal edildi."
+			);
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme İşleminiz İptal Edildi.");
-			NavigationManager.NavigateTo("/kategori");
-
+			notificationService.Notify(
+				NotificationSeverity.Info,
+				"Bilgi",
+				"Ekleme işleminiz iptal edildi."
+			);
 		}
+
 		DialogService.Close();
+		NavigationManager.NavigateTo("/kategori");
 	}
 }

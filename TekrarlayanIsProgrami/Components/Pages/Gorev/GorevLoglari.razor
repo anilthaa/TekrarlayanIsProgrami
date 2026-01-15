@@ -31,7 +31,7 @@
                         <RadzenButton Text="@log.Gorev_ID.ToString()" 
                                      ButtonStyle="ButtonStyle.Info" 
                                      Size="ButtonSize.Small"
-                                     Click="@(() => GoToGorev(log.Gorev_ID))" />
+                                      Click="@(() => { GorevSecildi(log.Gorev_ID); })" />
                     </Template>
                 </RadzenDataGridColumn>
 
@@ -116,12 +116,24 @@
     private List<ItemGorevLoglari> logList = new();
     private RadzenDataGrid<ItemGorevLoglari>? logGrid;
     private bool isLoading = true;
+    private int? currentUserId = null;
+    private bool isAdmin = false;
+    private List<ItemGorev> gorevList = new();
     private Dictionary<int, string> kullaniciAdlari = new();
     private Dictionary<int, string> gorevBasliklari = new();
 
     //sayfa ilk yüklendiğinde log (kayıt) verilerini getirmek için kullanılır.
     protected override async Task OnInitializedAsync()
     {
+        var currentUser = await girisSaglayici.GetCurrentUserAsync();
+
+        if (currentUser != null)
+        {
+            var dbUser = await _kullaniciRepo.GetByIDAsync(currentUser.ID);
+
+            currentUserId = dbUser.ID;
+            isAdmin = dbUser.KullaniciTip_ID == 1;
+        }
         await YukleLoglarAsync();
     }
 
@@ -135,14 +147,12 @@
             var loglar = await DataService.GetGorevLoglari();
             logList = loglar.ToList();
             
-            // Kullanıcı adlarını yükle
             var kullanicilar = await _kullaniciRepo.GetAllAsync();
             kullaniciAdlari = kullanicilar.ToDictionary(k => k.ID, k => $"{k.Adi} {k.Soyadi}");
             
-            // Görev başlıklarını yükle
             var gorevler = await DataService.GetGorevler();
+            gorevList = gorevler.ToList();
             gorevBasliklari = gorevler.ToDictionary(g => g.ID, g => g.Baslik ?? "");
-            
             isLoading = false;
             StateHasChanged();
         }
@@ -174,10 +184,68 @@
         return $"Görev ID: {gorevId}";
     }
 
-    //Görev detayına gitmek için kullanılır.
-    private void GoToGorev(int gorevId)
+    //log ekranında bir göreve tıklandığında ne olacağını belirler
+    private void GorevSecildi(int gorevId)
     {
-        NavigationManager.NavigateTo($"/gorevler?gorevId={gorevId}");
+        var gorev = gorevList.FirstOrDefault(x => x.ID == gorevId);
+        if (gorev == null)
+            return;
+
+        int tab = GoToGorev(gorev);
+
+        if (tab == -1)
+        {
+            notificationService.Notify(
+                NotificationSeverity.Warning,
+                "Yetki Yok",
+                "Bu görevi görüntüleme yetkiniz yok."
+            );
+            return;
+        }
+
+        NavigationManager.NavigateTo($"/gorevler?tab={tab}&gorevId={gorevId}");
+    }
+
+    //Görev detayına gitmek için kullanılır.
+    int GoToGorev(ItemGorev g)
+    { 
+        if (!g.Aktif)
+        {
+            if (isAdmin)
+                return 4;
+
+            if (g.Kullanici_ID == currentUserId)
+                return 4;
+
+            return -1;   
+        }
+
+        if (isAdmin)
+        {
+            if (g.BitisTarihi < DateTime.Now && !g.Tamamlandi)
+                return 3;
+
+            if (g.Tamamlandi)
+                return 2;
+
+            if (g.Kilitli)
+                return 5;
+
+            return 0;
+        }
+
+        if (g.Kilitli && g.Kullanici_ID != currentUserId)
+            return -1;
+
+        if (g.BitisTarihi < DateTime.Now && !g.Tamamlandi)
+            return 3;
+
+        if (g.Tamamlandi)
+            return 2;
+
+        if (g.Kilitli && g.Kullanici_ID == currentUserId)
+            return 5;
+
+        return 0;
     }
 }
-

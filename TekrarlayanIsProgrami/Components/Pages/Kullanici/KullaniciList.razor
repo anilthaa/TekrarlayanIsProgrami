@@ -255,6 +255,8 @@
 
         await EpostaService.SendInviteMailAsync(u.EPosta, linkEvet, linkHayir);
     }
+
+    //Göreve çift tıklanıldığında düzenleme popup unu açar.
     private async Task OnRowDoubleClick(DataGridRowMouseEventArgs<User> args)
     {
         await OpenEditDialog(args.Data.ID);
