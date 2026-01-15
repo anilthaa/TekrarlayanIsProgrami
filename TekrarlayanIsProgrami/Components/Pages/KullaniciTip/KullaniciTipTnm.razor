@@ -1,7 +1,7 @@
 @inherits ComponentBase
 @if (ItemData.ID != 0)
 {
-	<div>
+	<RadzenCard Style="padding:20px;">
 	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
 		<ChildContent>
 			<DataAnnotationsValidator></DataAnnotationsValidator>
@@ -18,16 +18,16 @@
 			</div>
 
 			<div class="btn-group">
-				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-buttonKaydet" Disabled="@isSaving" />
+				<RadzenButton Text="Güncelle" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-buttonKaydet" Disabled="@isSaving" />
 				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
 			</div>
 		</ChildContent>
 	</RadzenTemplateForm>
-	</div>
+	</RadzenCard>
 }
 else
 {
-	<div>
+	<RadzenCard Style="padding:20px;">
 	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
 		<ChildContent>
 			<DataAnnotationsValidator></DataAnnotationsValidator>
@@ -49,7 +49,7 @@ else
 			</div>
 		</ChildContent>
 	</RadzenTemplateForm>
-	</div>
+	</RadzenCard>
 }
 @code {
 	[Parameter] public ItemKullaniciTip ItemData { get; set; } = new();

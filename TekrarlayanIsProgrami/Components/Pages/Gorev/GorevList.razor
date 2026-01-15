@@ -8,9 +8,10 @@
 {
 	<RadzenCard Style="margin:0; margin-left:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
 		<h3 style="text-align:center; font-family:Calibri;font-weight:bold; ">Görev Listesi</h3>
-
-		<RadzenButton Text="Yeni Görev" Icon="add" Style=" background:#ba76d3; color:white;border-radius:10px;" Click="@YeniGorev"></RadzenButton>
-
+		@if (_canWrite)
+		{
+			<RadzenButton Text="Yeni Görev" Icon="add" Style=" background:#ba76d3; color:white;border-radius:10px;" Click="@YeniGorev"></RadzenButton>
+		}
 		@if (GorevListt == null || !GorevListt.Any())
 		{
 			<p style="text-align:center;">Veri yükleniyor... veya görev bulunamadı.</p>
@@ -160,12 +161,15 @@
 								</span>
 							</Template>
 						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Title="İşlemler" Width="150px">
-							<Template Context="gorev">
-								<RadzenButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Click="@(() => Duzenle(gorev))" Style="margin-right:5px;"></RadzenButton>
-								<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(() => Sil(gorev))"></RadzenButton>
-							</Template>
-						</RadzenDataGridColumn>
+						@if (_canWrite)
+						{
+							<RadzenDataGridColumn TItem="ItemGorev" Title="İşlemler" Width="150px">
+								<Template Context="gorev">
+									<RadzenButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Click="@(() => Duzenle(gorev))" Style="margin-right:5px;"></RadzenButton>
+									<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(() => Sil(gorev))"></RadzenButton>
+								</Template>
+							</RadzenDataGridColumn>
+						}
 					</Columns>
 				</RadzenDataGrid>
 			}
@@ -177,7 +181,10 @@ else if (kullaniciTip.Adi == "Standart")
 
 	<RadzenCard Style="margin:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
 		<h3 style="text-align:center;">Görev Listesi</h3>
-
+		@if (_canWrite)
+		{
+			<RadzenButton Text="Yeni Görev" Icon="add" Style=" background:#ba76d3; color:white;border-radius:10px;" Click="@YeniGorev"></RadzenButton>
+		}
 
 		@if (GorevListt == null || !GorevListt.Any())
 		{
@@ -284,6 +291,15 @@ else if (kullaniciTip.Adi == "Standart")
 								</span>
 							</Template>
 						</RadzenDataGridColumn>
+						@if (_canWrite)
+						{
+							<RadzenDataGridColumn TItem="ItemGorev" Title="İşlemler" Width="150px">
+								<Template Context="gorev">
+									<RadzenButton Icon="edit" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Click="@(() => Duzenle(gorev))" Style="margin-right:5px;"></RadzenButton>
+									<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(() => Sil(gorev))"></RadzenButton>
+								</Template>
+							</RadzenDataGridColumn>
+						}
 					</Columns>
 				</RadzenDataGrid>
 			}
@@ -317,6 +333,8 @@ else if (kullaniciTip.Adi == "Standart")
 	int? hedefTab = null;
 	List<ItemGorev> SeciliGorevler = new();
 	bool gorevSecildi = false;
+	private bool _canWrite = false;
+
 
 	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7);
@@ -398,6 +416,8 @@ else if (kullaniciTip.Adi == "Standart")
 	//görevler sayfası ilk açıldığında URL parametrelerini okuyup gerekli verileri yükleyen başlangıç sürecidir.
 	protected override async Task OnInitializedAsync()
 	{
+		_canWrite = await PermissionService.CanWriteAsync("/gorevler");
+
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 		var query = QueryHelpers.ParseQuery(uri.Query);
 

@@ -74,7 +74,7 @@
             </RadzenFormField>
             <ValidationMessage For="@(()=>user.Sifre)"></ValidationMessage>
 
-            <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:48%; margin-left:115px">
+            <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:48%; margin-left:115px;margin-top:10px;">
                 <RadzenTextBox @bind-Value="yeniSifreTekrar" type="@InputType2" />
                 <button type="button" @onclick="@TogglePassword2" style="position:absolute; right:2px; top:8px; transform:translate(-50%); border:none; background:transparent;">
                     <RadzenIcon Icon="@Icon2" Style="color:gray;"></RadzenIcon>
