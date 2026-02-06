@@ -132,7 +132,7 @@
             var dbUser = await _kullaniciRepo.GetByIDAsync(currentUser.ID);
 
             currentUserId = dbUser.ID;
-            isAdmin = dbUser.KullaniciTip_ID == 1;
+            isAdmin = await PermissionService.CanWriteAsync("/gorevler");
         }
         await YukleLoglarAsync();
     }

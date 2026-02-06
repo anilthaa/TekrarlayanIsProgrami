@@ -41,8 +41,11 @@
 				</RadzenDataGridColumn>
 				@if (_canWrite)
 				{
-					<RadzenDataGridColumn TItem="ItemKullaniciTip" Title="İşlemler" Width="150px">
+					<RadzenDataGridColumn TItem="ItemKullaniciTip" Title="İşlemler" Width="220px">
 						<Template Context="item">
+							<RadzenButton Icon="security" Size="ButtonSize.Small" Style="margin-right:6px"
+										  ButtonStyle="ButtonStyle.Info" Title="Tip sayfa yetkileri"
+										  Click="@(() => TipYetkileri(item))" />
 							<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:6px"
 										  ButtonStyle="ButtonStyle.Success" Click="@(() => Duzenle(item))" />
 							<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
@@ -133,6 +136,16 @@
 				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kullanıcı tipi oluşturuldu.");
 				StateHasChanged();
 			}
+		}
+
+		//Tipe göre sayfa yetkilerini (Form_ID + Yetki) atamak için popup (dialog) açar.
+		private async Task TipYetkileri(ItemKullaniciTip item)
+		{
+			await DialogService.OpenAsync<KullaniciTipYetkileri>(
+				"Kullanıcı Tip Sayfa Yetkileri",
+				new Dictionary<string, object> { { "KullaniciTipId", item.ID } },
+				new DialogOptions { Width = "800px", Height = "auto" }
+			);
 		}
 
 		//Mevcut olan tipinin düzenleme işllemini yapmak için kullanılır.
