@@ -32,6 +32,12 @@
         <RadzenCard Style="margin-bottom:16px;">
             <strong>@hedefKullanici.Adi @hedefKullanici.Soyadi</strong>
             <div class="text-muted">@hedefKullanici.EPosta</div>
+            @if (!string.IsNullOrWhiteSpace(kullaniciTipAdi))
+            {
+                <div class="text-muted small" style="margin-top:4px;">
+                    Kullanıcı Tipi: <strong>@kullaniciTipAdi</strong>
+                </div>
+            }
         </RadzenCard>
 
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -49,44 +55,62 @@
                 <RadzenBadge Text="Sadece Görüntüleme Modu" BadgeStyle="BadgeStyle.Info" />
             }
         </div>
+        <div class="mt-3" style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;">
+            @foreach (var item in formYetkileri)
+            {
+                <div class="card" style="padding:10px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="font-weight:600; margin-bottom:4px;">@item.Adi</div>
+                    <div class="text-muted small" style="margin-bottom:6px;">
+                        Men&uuml;de: @(item.IsMenu ? "Evet" : "Hayır")
+                    </div>
+                    
+                    <div style="margin-bottom:6px;">
+                        <div class="text-muted small" style="margin-bottom:2px;">Kullanıcı Yetkisi:</div>
+                        @if (_canWrite)
+                        {
+                            <RadzenDropDown TValue="int"
+                                            Data="@PermissionService.PermissionOptions"
+                                            TextProperty="Label"
+                                            ValueProperty="Value"
+                                            Style="width:100%;"
+                                            Value="@GetKullaniciYetki(item.ID)"
+                                            Change="@(args => OnYetkiChanged(item.ID, args is int value ? value : 0))" />
+                        }
+                        else
+                        {
+                            <RadzenDropDown TValue="int"
+                                            Data="@PermissionService.PermissionOptions"
+                                            TextProperty="Label"
+                                            ValueProperty="Value"
+                                            Style="width:100%;"
+                                            Value="@GetKullaniciYetki(item.ID)"
+                                            Disabled="true" />
+                        }
+                    </div>
 
-            <RadzenDataGrid TItem="ItemForm" Data="@formYetkileri" AllowPaging="false" AllowSorting="true" Class="mt-3 ">
-                <Columns>
-                    <RadzenDataGridColumn TItem="ItemForm" Property="Adi" Title="Form Adı" />
-                    <RadzenDataGridColumn TItem="ItemForm" Property="IsMenu" Title="Menüde" Width="120px">
-                        <Template Context="item">
-                            @(item.IsMenu ? "Evet" : "Hayır")
-                        </Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ItemForm" Title="Yetki" Width="320px">
-                        <Template Context="item">
-                            @if (_canWrite)
-                            {
-                                <RadzenDropDown TValue="int"
-                                                Data="@PermissionService.PermissionOptions"
-                                                TextProperty="Label"
-                                                ValueProperty="Value"
-                                                Style="width:260px;"
-                                                Value="@GetYetki(item.ID)"
-                                                Change="@(args => OnYetkiChanged(item.ID, args is int value ? value : 0))" />
-                            }
-                            else
-                            {
-                                <RadzenDropDown TValue="int"
-                                                Data="@PermissionService.PermissionOptions"
-                                                TextProperty="Label"
-                                                ValueProperty="Value"
-                                                Style="width:260px; "
-                                                Value="@GetYetki(item.ID)"
-                                                Disabled="true" />
-                            }
-                            <div class="text-muted small">
-                                @PermissionService.GetPermissionDescription(GetYetki(item.ID))
-                            </div>
-                        </Template>
-                    </RadzenDataGridColumn>
-                </Columns>
-            </RadzenDataGrid>
+                    @if (GetTipYetki(item.ID) > 0)
+                    {
+                        <div style="margin-bottom:6px;">
+                            <div class="text-muted small" style="margin-bottom:2px;">Tip Yetkisi (@kullaniciTipAdi):</div>
+                            <RadzenDropDown TValue="int"
+                                            Data="@PermissionService.PermissionOptions"
+                                            TextProperty="Label"
+                                            ValueProperty="Value"
+                                            Style="width:100%; background-color:#f0f0f0;"
+                                            Value="@GetTipYetki(item.ID)"
+                                            Disabled="true" />
+                        </div>
+                    }
+
+                    <div style="margin-top:6px; padding-top:6px; border-top:1px solid #e0e0e0;">
+                        <div class="text-muted small" style="margin-bottom:2px;">Etkili Yetki:</div>
+                        <div style="font-weight:600; color:#1976d2;">
+                            @PermissionService.GetPermissionDescription(GetEtkiliYetki(item.ID))
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </RadzenCard>
 
@@ -94,8 +118,10 @@
     [Parameter] public int KullaniciId { get; set; }
 
     private User? hedefKullanici;
+    private string? kullaniciTipAdi;
     private List<ItemForm> formYetkileri = new();
-    private Dictionary<int, int> mevcutYetkiler = new();
+    private Dictionary<int, int> mevcutYetkiler = new(); // Kullanıcıya özel yetkiler
+    private Dictionary<int, int> tipYetkileri = new(); // Tip bazlı yetkiler
     private Dictionary<int, int> orijinalYetkiler = new();
     private Dictionary<int, int> detayKayitlari = new();
     private bool isLoading = true;
@@ -129,9 +155,23 @@
             hataMesaji = null;
 
             hedefKullanici = await _kullaniciRepo.GetByIDAsync(KullaniciId);
+            
+            // Kullanıcının tipini al
+            if (hedefKullanici != null && hedefKullanici.KullaniciTip_ID > 0)
+            {
+                var tipler = await DataService.GetKullaniciTipleri();
+                var tip = tipler.FirstOrDefault(t => t.ID == hedefKullanici.KullaniciTip_ID);
+                kullaniciTipAdi = tip?.Adi;
+                
+                // Tip bazlı yetkileri yükle
+                var tipDetaylar = await DataService.GetKullaniciTipFormYetkileriAsync(hedefKullanici.KullaniciTip_ID);
+                tipYetkileri = tipDetaylar.ToDictionary(d => d.Form_ID, d => d.Yetki);
+            }
+
             var formlar = await DataService.GetFormsAsync();
             formYetkileri = formlar.OrderBy(f => f.Sira).ThenBy(f => f.Adi).ToList();
 
+            // Kullanıcıya özel yetkileri yükle
             var detaylar = await DataService.GetKullaniciFormYetkileriAsync(KullaniciId);
             detayKayitlari = detaylar.ToDictionary(d => d.Form_ID, d => d.ID);
             var detayYetkileri = detaylar.ToDictionary(d => d.Form_ID, d => d.Yetki);
@@ -155,14 +195,22 @@
     private bool HasChanges =>
         formYetkileri.Any(form =>
         {
-            var mevcut = GetYetki(form.ID);
+            var mevcut = GetKullaniciYetki(form.ID);
             var orijinal = orijinalYetkiler.TryGetValue(form.ID, out var value) ? value : 0;
             return mevcut != orijinal;
         });
 
     //verilen form ID’sine karşılık kullanıcının mevcut yetkisini döndürür.
-    private int GetYetki(int formId)
-   => mevcutYetkiler.TryGetValue(formId, out var yetki) ? yetki : 0;
+    private int GetKullaniciYetki(int formId)
+        => mevcutYetkiler.TryGetValue(formId, out var yetki) ? yetki : 0;
+
+    //verilen form ID'sine karşılık tip bazlı yetkiyi döndürür.
+    private int GetTipYetki(int formId)
+        => tipYetkileri.TryGetValue(formId, out var yetki) ? yetki : 0;
+
+    //verilen form ID'sine karşılık etkili yetkiyi döndürür (max(kullanıcı, tip)).
+    private int GetEtkiliYetki(int formId)
+        => Math.Max(GetKullaniciYetki(formId), GetTipYetki(formId));
 
     //kullanıcının form yetkilerini kaydeder ve günceller.
     private async Task KaydetAsync()
@@ -188,7 +236,7 @@
 
             foreach (var form in formYetkileri)
             {
-                var mevcutYetki = GetYetki(form.ID);
+                var mevcutYetki = GetKullaniciYetki(form.ID);
                 var orijinalYetki = orijinalYetkiler.TryGetValue(form.ID, out var value) ? value : 0;
 
                 if (mevcutYetki == orijinalYetki)

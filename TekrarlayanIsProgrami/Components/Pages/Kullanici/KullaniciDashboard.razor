@@ -1,4 +1,4 @@
-﻿@page "/dashboard"
+@page "/dashboard"
 @layout MainLayout
 
 @if (showYeniGorevBildirimi && !IsLoading)
@@ -836,6 +836,8 @@ else
 			return;
 		}
 
+		// Görevler sayfası ortak sayfa olduğu için (admin hariç tüm tipler görebilir)
+		// dashboard'da da görev verileri gösterilir. Yetki kontrolü yapılmaz.
 		await YukleGorevler();
 
 		if (kullaniciTip.Adi == "Standart")

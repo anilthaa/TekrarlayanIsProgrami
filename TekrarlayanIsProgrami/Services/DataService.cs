@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.AspNetCore.Components.Authorization;
 using Npgsql;
 using TekrarlayanIsProgrami.Models;
@@ -69,7 +69,7 @@ namespace TekrarlayanIsProgrami.Services
                 {
                     item.CreDate = DateTime.Now;
                 }
-                
+
                 item.ID = await SQLExecuteScalar<int>(@"INSERT INTO ""Gorev"" (""Kullanici_ID"", ""Baslik"", ""Kategori_ID"", ""OnemDerecesi"",
                 ""BaslangicTarihi"",""BitisTarihi"",""TekrarlamaTipi"", ""Aktif"", ""Kilitli"", ""TekrarAraligi"", ""HaftaninGunu"",
                 ""AyinGunu"", ""SonrakiCalismaTarihi"", ""Tamamlandi"",""CreUser"", ""CreDate"") 
@@ -80,7 +80,7 @@ namespace TekrarlayanIsProgrami.Services
             else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
             {
                 item.UpdDate = DateTime.Now;
-                
+
                 await SQLExecute(@"UPDATE ""Gorev"" SET
                       ""Kullanici_ID""=@Kullanici_ID, ""Baslik""=@Baslik, ""Kategori_ID""=@Kategori_ID, 
                       ""OnemDerecesi""=@OnemDerecesi, ""BaslangicTarihi""=@BaslangicTarihi, ""BitisTarihi""=@BitisTarihi,
@@ -91,7 +91,7 @@ namespace TekrarlayanIsProgrami.Services
             else if (!item.ID.Equals(0) && !item.DelUser.Equals(0))
             {
                 item.DelDate = DateTime.Now;
-                
+
                 await SQLExecute(@"UPDATE ""Gorev"" 
                      SET ""DelUser"" = @DelUser, ""DelDate"" = @DelDate 
                      WHERE ""ID"" = @ID", item);
@@ -139,18 +139,74 @@ namespace TekrarlayanIsProgrami.Services
         }
 
         //form (sayfa/menu) bilgilerini veritabanından getirir.
-        public async Task<ItemForm[]> GetFormsAsync(bool sadeceMenuler = false)
+        public async Task<List<ItemForm>> GetFormsAsync(bool sadeceMenuler = false)
         {
-           
-            var sql = $@"
-                select ""ID"",""Adi"",Coalesce(""IsMenu"", False) As ""IsMenu"", Coalesce(""Sira"", 0) As ""Sira"",""SayfaURL"",""Icon"" 
-                from ""Form""
-                where (""DelUser"" is null or ""DelUser"" = 0)
-                {(sadeceMenuler ? @"and ""IsMenu"" = true" : string.Empty)}
-                order by coalesce(""Sira"", 0), ""ID"";
-            ";
+            // Formları çek
+            var sqlForms = $@"
+    SELECT 
+        ""ID"",
+        ""Adi"",
+        COALESCE(""IsMenu"", FALSE) AS ""IsMenu"", 
+        COALESCE(""Sira"", 0) AS ""Sira"",
+        ""SayfaURL"",
+        ""Icon"",
+        ""UstMenu_ID""
+    FROM ""Form""
+    WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
+    {(sadeceMenuler ? @"AND ""IsMenu"" = TRUE" : string.Empty)}
+    ORDER BY COALESCE(""Sira"", 0), ""ID"";
+    ";
 
-            return (await SQLQueryAsync<ItemForm>(sql)).ToArray();
+            var formlar = await SQLQueryAsync<ItemForm>(sqlForms);
+
+            var sqlFormRol = @"
+    SELECT ""Menu_ID"", ""Rol_ID""
+    FROM ""FormRol""
+    WHERE ""Rol_ID"" IS NOT NULL;
+    ";
+
+            var formRoller = await SQLQueryAsync<ItemFormRol>(sqlFormRol);
+
+            // Her form için YetkiliRol_ID listesini doldur
+            foreach (var f in formlar)
+            {
+                f.YetkiliRol_ID = formRoller
+                    .Where(fr => fr.Menu_ID == f.ID)
+                    .Select(fr => fr.Rol_ID)
+                    .ToList();
+            }
+
+            return formlar.ToList();
+        }
+
+        public async Task<List<ItemForm>> GetMenusByRoleAsync(User user)
+        {
+            // Rol yoksa -> HİÇBİR ŞEY GÖSTERME
+            if (user.KullaniciTip_ID <= 0)
+                return new List<ItemForm>();
+
+            var sql = @"
+SELECT DISTINCT
+    f.""ID"",
+    f.""Adi"",
+    COALESCE(f.""IsMenu"", FALSE) AS ""IsMenu"",
+    COALESCE(f.""Sira"", 0) AS ""Sira"",
+    f.""SayfaURL"",
+    f.""Icon"",
+    f.""UstMenu_ID""
+FROM ""Form"" f
+INNER JOIN ""FormRol"" fr ON fr.""Menu_ID"" = f.""ID""
+WHERE (f.""DelUser"" IS NULL OR f.""DelUser"" = 0)
+  AND fr.""Rol_ID"" = @RolId
+ORDER BY COALESCE(f.""Sira"", 0), f.""ID"";
+";
+
+            var result = await SQLQueryAsync<ItemForm>(
+                sql,
+                new { RolId = user.KullaniciTip_ID }
+            );
+
+            return result.ToList();
         }
 
         //belirli bir kullanıcının form bazlı yetkilerini veritabanından getirir.
@@ -199,11 +255,52 @@ namespace TekrarlayanIsProgrami.Services
             return new() { Data = item.ID };
         }
 
+        // Belirli bir kullanıcı tipinin form bazlı yetkilerini getirir (tip bazlı sayfa erişimi).
+        public async Task<ItemKullaniciTipDetay[]> GetKullaniciTipFormYetkileriAsync(int kullaniciTipId)
+        {
+            var sql = @"
+                SELECT ""ID"", ""KullaniciTip_ID"", ""Form_ID"", ""Yetki"", ""CreUser"", ""CreDate"", ""UpdUser"", ""UpdDate"", ""DelUser"", ""DelDate""
+                FROM ""KullaniciTipDetay""
+                WHERE ""KullaniciTip_ID"" = @KullaniciTipId AND (""DelUser"" IS NULL OR ""DelUser"" = 0);
+            ";
+            return (await SQLQueryAsync<ItemKullaniciTipDetay>(sql, new { KullaniciTipId = kullaniciTipId })).ToArray();
+        }
+
+        // Kullanıcı tipi form yetkisini ekler, günceller veya soft-delete eder.
+        public async Task<DataResult<int>> SetKullaniciTipFormYetkiAsync(ItemKullaniciTipDetay item)
+        {
+            if (item.ID == 0 && item.DelUser == 0)
+            {
+                item.ID = await SQLExecuteScalar<int>(
+                    @"INSERT INTO ""KullaniciTipDetay"" (""KullaniciTip_ID"", ""Form_ID"", ""Yetki"", ""CreUser"", ""CreDate"")
+                      VALUES (@KullaniciTip_ID, @Form_ID, @Yetki, @CreUser, now())
+                      RETURNING ""ID""",
+                    item);
+            }
+            else if (item.ID != 0 && item.DelUser == 0)
+            {
+                await SQLExecute(
+                    @"UPDATE ""KullaniciTipDetay""
+                      SET ""Yetki"" = @Yetki, ""UpdUser"" = @UpdUser, ""UpdDate"" = now()
+                      WHERE ""ID"" = @ID",
+                    item);
+            }
+            else if (item.ID != 0 && item.DelUser != 0)
+            {
+                await SQLExecute(
+                    @"UPDATE ""KullaniciTipDetay""
+                      SET ""DelUser"" = @DelUser, ""DelDate"" = now()
+                      WHERE ""ID"" = @ID",
+                    item);
+            }
+            return new() { Data = item.ID };
+        }
+
         //kullanıcı işlemlerini loglamak (kaydetmek) için kullanılır.
         public async Task<DataResult<int>> SetKullaniciLog(ItemKullaniciLog item)
         {
             try
-            {                
+            {
                 if (item.IslemTarihi == default(DateTime))
                 {
                     item.IslemTarihi = DateTime.Now;
@@ -212,12 +309,12 @@ namespace TekrarlayanIsProgrami.Services
                 {
                     item.CreDate = DateTime.Now;
                 }
-                
+
                 item.ID = await SQLExecuteScalar<int>(@"
                     INSERT INTO ""KullaniciLog"" (""Kullanici_ID"", ""IslemTipi"", ""IslemTarihi"", ""Aciklama"", ""CreUser"", ""CreDate"")
                     VALUES (@Kullanici_ID, @IslemTipi, @IslemTarihi, @Aciklama, @CreUser, @CreDate)
                     RETURNING ""ID""", item);
-                                
+
                 return new() { Data = item.ID };
             }
             catch
@@ -230,17 +327,17 @@ namespace TekrarlayanIsProgrami.Services
         public async Task<DataResult<int>> SetGorevLog(ItemGorevLoglari item)
         {
             try
-            {                
+            {
                 if (item.IslemTarih == default(DateTime))
                 {
                     item.IslemTarih = DateTime.Now;
                 }
-                
+
                 item.ID = await SQLExecuteScalar<int>(@"
                     INSERT INTO ""GorevLoglari"" (""Gorev_ID"", ""IslemTipi"", ""AlanAdi"", ""EskiDeger"", ""YeniDeger"", ""IslemKullanici_ID"", ""IslemTarih"")
                     VALUES (@Gorev_ID, @IslemTipi, @AlanAdi, @EskiDeger, @YeniDeger, @IslemKullanici_ID, @IslemTarih)
                     RETURNING ""ID""", item);
-                                
+
                 return new() { Data = item.ID };
             }
             catch (Exception ex)
@@ -265,7 +362,7 @@ namespace TekrarlayanIsProgrami.Services
 
             var result = await SQLQueryAsync<DateTime?>(sql, new { KullaniciId = kullaniciId });
             var sonGiris = result.FirstOrDefault();
-            
+
             var tumGirisler = await SQLQueryAsync<DateTime?>(@"
                 SELECT ""IslemTarihi""
                 FROM ""KullaniciLog""
@@ -274,11 +371,11 @@ namespace TekrarlayanIsProgrami.Services
                   AND (""DelUser"" IS NULL OR ""DelUser"" = 0)
                 ORDER BY ""IslemTarihi"" DESC
                 LIMIT 5;", new { KullaniciId = kullaniciId });
-            
+
             foreach (var giris in tumGirisler)
             {
 
-            }            
+            }
             return sonGiris;
         }
 
@@ -354,14 +451,14 @@ namespace TekrarlayanIsProgrami.Services
                        kl.""CreUser"", kl.""CreDate"", kl.""UpdUser"", kl.""UpdDate"", kl.""DelUser"", kl.""DelDate""   
                 FROM ""KullaniciLog"" kl
                 WHERE (kl.""DelUser"" IS NULL OR kl.""DelUser"" = 0)";
-            
+
             if (kullaniciId.HasValue)
             {
                 sql += @" AND kl.""Kullanici_ID"" = @KullaniciId";
             }
-            
+
             sql += @" ORDER BY kl.""IslemTarihi"" DESC";
-            
+
             if (kullaniciId.HasValue)
             {
                 return (await SQLQueryAsync<ItemKullaniciLog>(sql, new { KullaniciId = kullaniciId.Value })).ToArray();
@@ -380,14 +477,14 @@ namespace TekrarlayanIsProgrami.Services
                        gl.""YeniDeger"", gl.""IslemKullanici_ID"", gl.""IslemTarih""
                 FROM ""GorevLoglari"" gl
                 WHERE 1=1";
-            
+
             if (gorevId.HasValue)
             {
                 sql += @" AND gl.""Gorev_ID"" = @GorevId";
             }
-            
+
             sql += @" ORDER BY gl.""IslemTarih"" DESC";
-            
+
             if (gorevId.HasValue)
             {
                 return (await SQLQueryAsync<ItemGorevLoglari>(sql, new { GorevId = gorevId.Value })).ToArray();
