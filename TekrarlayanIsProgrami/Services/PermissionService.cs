@@ -70,7 +70,7 @@ namespace TekrarlayanIsProgrami.Services
         //_permissionOptions listesini dışarıya salt okunur (read-only) olarak expose eden bir propertydir.
         public IReadOnlyList<PermissionLevelOption> PermissionOptions => _permissionOptions;
 
-        //mevcut kullanıcı için form listesini ve yetkilerini getirip önbelleğe alır.
+        // Mevcut kullanıcı için form listesini ve yetkilerini getirir: kullanıcıya özel yetkiler ile tip bazlı yetkiler birleştirilir (her form için en yüksek yetki geçerli).
         private async Task<IReadOnlyList<ItemForm>> GetFormsForCurrentUserAsync(bool forceRefresh = false)
         {
             var userId = await GetCurrentUserIdAsync();
@@ -93,18 +93,30 @@ namespace TekrarlayanIsProgrami.Services
                     return _cachedForms;
                 }
 
+                var kullaniciTipId = await GetCurrentUserTipIdAsync();
                 var formsTask = _dataService.GetFormsAsync();
                 var detaylarTask = _dataService.GetKullaniciFormYetkileriAsync(userId.Value);
+                var tipDetaylarTask = kullaniciTipId > 0
+                    ? _dataService.GetKullaniciTipFormYetkileriAsync(kullaniciTipId)
+                    : Task.FromResult(Array.Empty<ItemKullaniciTipDetay>());
 
-                await Task.WhenAll(formsTask, detaylarTask);
+                await Task.WhenAll(formsTask, detaylarTask, tipDetaylarTask);
 
                 var forms = formsTask.Result;
                 var detaylar = detaylarTask.Result;
+                var tipDetaylar = tipDetaylarTask.Result;
 
                 var yetkiMap = forms.ToDictionary(f => f.ID, _ => 0);
                 foreach (var detay in detaylar)
                 {
-                    yetkiMap[detay.Form_ID] = detay.Yetki;
+                    yetkiMap[detay.Form_ID] = Math.Max(yetkiMap[detay.Form_ID], detay.Yetki);
+                }
+                foreach (var tipDetay in tipDetaylar)
+                {
+                    if (yetkiMap.ContainsKey(tipDetay.Form_ID))
+                    {
+                        yetkiMap[tipDetay.Form_ID] = Math.Max(yetkiMap[tipDetay.Form_ID], tipDetay.Yetki);
+                    }
                 }
 
                 _cachedForms = forms;
@@ -116,6 +128,13 @@ namespace TekrarlayanIsProgrami.Services
             {
                 _cacheLock.Release();
             }
+        }
+
+        private async Task<int> GetCurrentUserTipIdAsync()
+        {
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var claim = authState.User?.FindFirst("KullaniciTip_ID");
+            return claim != null && int.TryParse(claim.Value, out var tipId) ? tipId : 0;
         }
 
         //bir kullanıcının belirli bir sayfa veya form için minimum yetkiye sahip olup olmadığını kontrol eder.

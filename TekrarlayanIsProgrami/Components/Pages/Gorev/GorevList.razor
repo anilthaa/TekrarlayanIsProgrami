@@ -1,10 +1,10 @@
-﻿@page "/gorevler"
+@page "/gorevler"
 @layout MainLayout
 @attribute [Authorize]
 
 
 
-@if (kullaniciTip.Adi == "Admin")
+@if (_showFullGorevView)
 {
 	<RadzenCard Style="margin:0; margin-left:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
 		<h3 style="text-align:center; font-family:Calibri;font-weight:bold; ">Görev Listesi</h3>
@@ -176,9 +176,10 @@
 		}
 	</RadzenCard>
 }
-else if (kullaniciTip.Adi == "Standart")
+else
 {
-
+	// Standart görünüm: "/gorevler" formu için yetki verilmemiş kullanıcılar için
+	// Görevler sayfası ortak sayfa olduğu için herkes standart görünümü görebilir
 	<RadzenCard Style="margin:0; padding:20px; width:100%; max-width:none; box-sizing:border-box;">
 		<h3 style="text-align:center;">Görev Listesi</h3>
 		@if (_canWrite)
@@ -305,7 +306,6 @@ else if (kullaniciTip.Adi == "Standart")
 			}
 		}
 	</RadzenCard>
-
 }
 
 @code {
@@ -334,6 +334,8 @@ else if (kullaniciTip.Adi == "Standart")
 	List<ItemGorev> SeciliGorevler = new();
 	bool gorevSecildi = false;
 	private bool _canWrite = false;
+	private bool _canReadGorev = false;
+	private bool _showFullGorevView = false;
 
 
 	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
@@ -372,7 +374,7 @@ else if (kullaniciTip.Adi == "Standart")
 
 		if (hedefTab.HasValue)
 		{
-			if (kullaniciTip.Adi == "Admin")
+			if (_showFullGorevView)
 			{
 				SelectedTabIndex = hedefTab.Value;
 			}
@@ -416,7 +418,14 @@ else if (kullaniciTip.Adi == "Standart")
 	//görevler sayfası ilk açıldığında URL parametrelerini okuyup gerekli verileri yükleyen başlangıç sürecidir.
 	protected override async Task OnInitializedAsync()
 	{
+		// Eğer bu kullanıcının tipine "/gorevler" formu için yetki verilmişse (okuma veya yazma)
+		// admin görünümü (tüm sekmeler) açılır. Verilmemişse standart görünüm gösterilir.
+		_canReadGorev = await PermissionService.CanReadAsync("/gorevler");
 		_canWrite = await PermissionService.CanWriteAsync("/gorevler");
+		
+		// Eğer okuma yetkisi varsa (yani bu tip için "/gorevler" formuna yetki atanmışsa)
+		// admin görünümü göster, yoksa standart görünüm göster
+		_showFullGorevView = _canReadGorev;
 
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 		var query = QueryHelpers.ParseQuery(uri.Query);
