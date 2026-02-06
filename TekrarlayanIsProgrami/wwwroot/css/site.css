@@ -26,7 +26,7 @@ button[aria-label="Close"],
 
 /*Dashboard Navmenu Ayarları*/
 .dashboard-nav {
-    background-color: #4a148c;
+    background-color: #4a148c !important;
     color: white !important;
     width: 250px;
     height: 100vh;
@@ -48,7 +48,7 @@ button[aria-label="Close"],
 /*Dashboard daki NavLink ayarları*/
 .nav-link {
     background-color: transparent;
-    color: white;
+    color: white !important;
     text-decoration: none;
     padding: 0.5rem 1rem;
     display: block;
@@ -65,6 +65,7 @@ button[aria-label="Close"],
         color: #fff !important;
         font-weight: bold;
     }
+
  
 .container {
     display: flex;
@@ -497,3 +498,32 @@ fieldset .rz-form-field-label {
         background-position: 468px 0;
     }
 }
+.dropdown-container {
+    margin-left: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-sublink {
+    padding: 6px 10px;
+    color: #ddd;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+    .nav-sublink:hover {
+        background-color: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+
+.dropdown-header:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+.disabled-submenu {
+    cursor: default;
+    opacity: 0.7;
+}
+
+    .disabled-submenu:hover {
+        background-color: transparent;
+    }
