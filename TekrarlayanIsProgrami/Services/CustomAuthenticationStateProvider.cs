@@ -59,8 +59,8 @@ namespace TekrarlayanIsProgrami.Services
                     new Claim(ClaimTypes.NameIdentifier, _currentUser.ID.ToString()),
                     new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
                     new Claim(ClaimTypes.Email, _currentUser.EPosta),
-                    new Claim(ClaimTypes.Role, _currentUser.KullaniciTip_ID==1 ? "Admin" : "User"),
-                    new Claim("KullaniciTip_ID", _currentUser.KullaniciTip_ID.ToString())
+                    new Claim("KullaniciTip_ID", _currentUser.KullaniciTip_ID.ToString()),
+                    new Claim(ClaimTypes.Role, _currentUser.KullaniciTip_ID==1 ? "Admin" : "User")
                 }, "apiauth_type");
             }
             else
@@ -212,7 +212,7 @@ namespace TekrarlayanIsProgrami.Services
             {
                 var tipIdClaim = user.FindFirst("KullaniciTip_ID")?.Value;
                 var tipId = int.TryParse(tipIdClaim, out var tid) ? tid : 0;
-                return new User     
+                return new User
                 {
                     ID = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0,
                     Adi = user.FindFirst(ClaimTypes.Name)?.Value?.Split(' ').FirstOrDefault() ?? "",
