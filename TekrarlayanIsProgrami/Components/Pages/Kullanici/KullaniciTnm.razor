@@ -38,9 +38,9 @@ else
 
 				<div class="btn-group">
 					<RadzenButton Text="Güncelle" Icon="save" ButtonType="ButtonType.Submit"
-								  Style="width:30%; margin:auto;" class="radzen-buttonKaydet" Disabled="@isSaving" />
+									  Style="width:100%; margin-left:100px;" class="radzen-buttonKaydet" Disabled="@isSaving" />
 					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
-								  Style="width:30%; margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+									  Style="width:100%; margin-left:100px;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
 				</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
@@ -48,7 +48,7 @@ else
 	}
 	else
 	{
-		<RadzenCard class="max-width:600px; margin:auto; padding:20px;">
+		<div class="max-width:600px; margin:auto; padding:20px;">
 
 			<h3 class="card-title text-center mb-4">Kullanıcı Ekle</h3>
 			<RadzenTemplateForm Data="@newUser" TItem="User" Submit="@OnSubmit">
@@ -79,13 +79,13 @@ else
 						<ValidationMessage For="@(() => secilenTipId)" />
 					</RadzenFormField>
 					<div class="btn-group">
-						<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-buttonKaydet"></RadzenButton>
-						<RadzenButton Text="İptal" Icon="cancel" ButtonType="ButtonType.Button" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-buttonIptal"></RadzenButton>
+						<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:100%; margin-left:100px;" class="radzen-buttonKaydet"></RadzenButton>
+						<RadzenButton Text="İptal" Icon="cancel" ButtonType="ButtonType.Button" Click="@Iptal" Style="width:100%; margin-left:50px;" class="radzen-buttonIptal"></RadzenButton>
 					</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
 
-		</RadzenCard>
+		</div>
 	}
 }
 @code {
@@ -214,17 +214,20 @@ else
 		}
 
 		var currentUser = await girisSaglayici.GetCurrentUserAsync();
+		if (currentUser == null)
+			throw new Exception("Oturum bilgisi alınamadı.");
 
+		// Eklenen kullanıcının CreUser alanı ekleyen kullanıcının ID'si olacak
 		newUser.CreUser = currentUser.ID;
-		if (newUser.CreUser == 0) 
-		{
-			newUser.CreUser = 0;
-		}
+
+		// Seçilen kullanıcı tipi
 		newUser.KullaniciTip_ID = secilenTipId;
-		newUser.Aktif = newUser.KullaniciTip_ID == 1 ? false : true;
+
+		newUser.Aktif = false;
+
+		// Varsayılan şifre
 		newUser.Sifre = "00000000";
 		newUser.SifreTekrar = "00000000";
-
 
 		var result = await girisSaglayici.KayitOlAsync(newUser);
 

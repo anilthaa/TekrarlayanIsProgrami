@@ -141,73 +141,26 @@ namespace TekrarlayanIsProgrami.Services
         //form (sayfa/menu) bilgilerini veritabanından getirir.
         public async Task<List<ItemForm>> GetFormsAsync(bool sadeceMenuler = false)
         {
-            // Formları çek
-            var sqlForms = $@"
-    SELECT 
-        ""ID"",
-        ""Adi"",
-        COALESCE(""IsMenu"", FALSE) AS ""IsMenu"", 
-        COALESCE(""Sira"", 0) AS ""Sira"",
-        ""SayfaURL"",
-        ""Icon"",
-        ""UstMenu_ID""
-    FROM ""Form""
-    WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
-    {(sadeceMenuler ? @"AND ""IsMenu"" = TRUE" : string.Empty)}
-    ORDER BY COALESCE(""Sira"", 0), ""ID"";
-    ";
+            var sql = $@"
+SELECT 
+    ""ID"",
+    ""Adi"",
+    COALESCE(""IsMenu"", FALSE) AS ""IsMenu"",
+    COALESCE(""Sira"", 0) AS ""Sira"",
+    ""SayfaURL"",
+    ""Icon"",
+    ""UstMenu_ID""
+FROM ""Form""
+WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
+{(sadeceMenuler ? @"AND ""IsMenu"" = TRUE" : string.Empty)}
+ORDER BY COALESCE(""Sira"", 0), ""ID"";
+";
 
-            var formlar = await SQLQueryAsync<ItemForm>(sqlForms);
-
-            var sqlFormRol = @"
-    SELECT ""Menu_ID"", ""Rol_ID""
-    FROM ""FormRol""
-    WHERE ""Rol_ID"" IS NOT NULL;
-    ";
-
-            var formRoller = await SQLQueryAsync<ItemFormRol>(sqlFormRol);
-
-            // Her form için YetkiliRol_ID listesini doldur
-            foreach (var f in formlar)
-            {
-                f.YetkiliRol_ID = formRoller
-                    .Where(fr => fr.Menu_ID == f.ID)
-                    .Select(fr => fr.Rol_ID)
-                    .ToList();
-            }
+            var formlar = await SQLQueryAsync<ItemForm>(sql);
 
             return formlar.ToList();
         }
 
-        public async Task<List<ItemForm>> GetMenusByRoleAsync(User user)
-        {
-            // Rol yoksa -> HİÇBİR ŞEY GÖSTERME
-            if (user.KullaniciTip_ID <= 0)
-                return new List<ItemForm>();
-
-            var sql = @"
-SELECT DISTINCT
-    f.""ID"",
-    f.""Adi"",
-    COALESCE(f.""IsMenu"", FALSE) AS ""IsMenu"",
-    COALESCE(f.""Sira"", 0) AS ""Sira"",
-    f.""SayfaURL"",
-    f.""Icon"",
-    f.""UstMenu_ID""
-FROM ""Form"" f
-INNER JOIN ""FormRol"" fr ON fr.""Menu_ID"" = f.""ID""
-WHERE (f.""DelUser"" IS NULL OR f.""DelUser"" = 0)
-  AND fr.""Rol_ID"" = @RolId
-ORDER BY COALESCE(f.""Sira"", 0), f.""ID"";
-";
-
-            var result = await SQLQueryAsync<ItemForm>(
-                sql,
-                new { RolId = user.KullaniciTip_ID }
-            );
-
-            return result.ToList();
-        }
 
         //belirli bir kullanıcının form bazlı yetkilerini veritabanından getirir.
         public async Task<ItemKullaniciDetay[]> GetKullaniciFormYetkileriAsync(int kullaniciId)
@@ -494,6 +447,66 @@ ORDER BY COALESCE(f.""Sira"", 0), f.""ID"";
                 return (await SQLQueryAsync<ItemGorevLoglari>(sql)).ToArray();
             }
         }
+        public async Task<List<ItemForm>> GetMenusByUserAsync(User user)
+        {
+            if (user == null || user.ID <= 0)
+                return new List<ItemForm>();
+
+            var sql = @"
+
+WITH YetkiliFormlar AS (
+
+    -- Kullanıcıya özel yetkiler
+    SELECT f.*
+    FROM ""Form"" f
+    INNER JOIN ""KullaniciDetay"" kd
+        ON kd.""Form_ID"" = f.""ID""
+    WHERE (f.""DelUser"" IS NULL OR f.""DelUser"" = 0)
+      AND kd.""Kullanici_ID"" = @UserId
+
+    UNION
+
+    -- Kullanıcı tip yetkileri
+    SELECT f.*
+    FROM ""Form"" f
+    INNER JOIN ""KullaniciTipDetay"" ktd
+        ON ktd.""Form_ID"" = f.""ID""
+    WHERE (f.""DelUser"" IS NULL OR f.""DelUser"" = 0)
+      AND ktd.""KullaniciTip_ID"" = @TipId
+)
+
+SELECT DISTINCT
+       f.""ID"",
+       f.""Adi"",
+       COALESCE(f.""IsMenu"", false) AS ""IsMenu"",
+       COALESCE(f.""Sira"", 0) AS ""Sira"",
+       f.""SayfaURL"",
+       f.""Icon"",
+       f.""UstMenu_ID""
+FROM ""Form"" f
+WHERE f.""ID"" IN (
+        SELECT ""ID"" FROM YetkiliFormlar
+    )
+
+    -- Alt menüye yetki varsa ana menüyü de getir
+    OR f.""ID"" IN (
+        SELECT DISTINCT f2.""UstMenu_ID""
+        FROM YetkiliFormlar f2
+        WHERE f2.""UstMenu_ID"" IS NOT NULL
+    )
+
+ORDER BY ""Sira"", ""ID"";
+";
+
+            var result = await SQLQueryAsync<ItemForm>(sql, new
+            {
+                UserId = user.ID,
+                TipId = user.KullaniciTip_ID
+            });
+
+            return result.ToList();
+        }
+
 
     }
 }

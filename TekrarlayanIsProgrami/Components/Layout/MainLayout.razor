@@ -26,37 +26,30 @@
             else
             {
                 <RadzenCard class="dashboard-nav">
-
                     <a href="/dashboard" style="text-decoration:none; color:white;">
                         <h3>📊 Dashboard</h3>
                     </a>
 
-                    @foreach (var anaMenu in VisibleMenus.Where(x => (x.UstMenu_ID == 0 || x.UstMenu_ID == null) && x.IsMenu).OrderBy(x => x.Sira))
+                    @foreach (var anaMenu in VisibleMenus.Where(x => x.UstMenu_ID == 0 || x.UstMenu_ID == null &&x.IsMenu).OrderBy(x => x.Sira))
                     {
                         var altMenuler = VisibleMenus
-                        .Where(x => x.UstMenu_ID == anaMenu.ID && x.IsMenu)
+                        .Where(x => x.UstMenu_ID == anaMenu.ID)
                         .OrderBy(x => x.Sira)
                         .ToList();
 
-                        <div class="nav-link"
-                             style="cursor:pointer;"
+                        // Ana menüye ve alt menülere yetki kontrolü
+                        if (!UserHasAccessToMenu(anaMenu, altMenuler))
+                            continue;
+
+                        <div class="nav-link" style="cursor:pointer;"
                              @onclick="@(() =>
                              {
                                  ToggleMenu(anaMenu.ID);
-
                                  if (!string.IsNullOrWhiteSpace(anaMenu.SayfaURL))
-                                 {
                                      NavigationManager.NavigateTo(GetHref(anaMenu));
-                                 }
                              })">
-
-                            @if (!string.IsNullOrWhiteSpace(anaMenu.Icon))
-                            {
-                                <span class="@anaMenu.Icon" style="margin-right:6px;"></span>
-                            }
-
-                            @anaMenu.Adi
-                        </div>
+                              @anaMenu.Adi
+                          </div>
 
                         @if (altMenuler.Any() && AcikMenuler.Contains(anaMenu.ID))
                         {
@@ -72,16 +65,10 @@
                         }
                     }
 
-                    <div style="position: absolute;bottom: 20px;left: 0;width: 100%; display: flex; flex-direction: column; align-items: center;gap: 10px;padding: 0 10px;box-sizing: border-box; ">
-                        <RadzenButton Text="Profil"
-                                      Click="@ProfilPopupAc"
-                                      Style="width:100%; max-width:220px; background-color:transparent; color:white;" />
-
-                        <RadzenButton Text="Çıkış Yap"
-                                      Click="@CikisYap"
-                                      Style="width:100%; max-width:220px; background-color:transparent; color:white;" />
+                    <div style="position: absolute;bottom: 20px;left: 0;width: 100%; display: flex; flex-direction: column; align-items: center; gap:10px; padding:0 10px;">
+                        <RadzenButton Text="Profil" Click="@ProfilPopupAc" Style="width:100%; max-width:220px; background-color:transparent; color:white;" />
+                        <RadzenButton Text="Çıkış Yap" Click="@CikisYap" Style="width:100%; max-width:220px; background-color:transparent; color:white;" />
                     </div>
-
                 </RadzenCard>
             }
         </RadzenSidebar>
@@ -93,50 +80,53 @@
 </RadzenLayout>
 
 @code {
-
     private List<ItemForm> VisibleMenus = new();
-
     private bool IsLoading = true;
     private HashSet<int> AcikMenuler = new();
-
-    private int currentUserTipId = 0;
     private User? currentUser;
-
     protected override async Task OnInitializedAsync()
     {
-        currentUser = await girisSaglayici.GetCurrentUserAsync();
-        await LoadMenusAsync();
-    }
-
-    private async Task LoadMenusAsync()
-    {
         IsLoading = true;
+        currentUser = await girisSaglayici.GetCurrentUserAsync();
 
-        if (currentUser == null)
+        if (currentUser != null)
+        {
+            VisibleMenus = (await DataService.GetMenusByUserAsync(currentUser))
+                .GroupBy(m => m.ID)
+                .Select(g => g.First())
+                .OrderBy(m => m.Sira)
+                .ToList();
+        }
+        else
         {
             VisibleMenus = new List<ItemForm>();
-            IsLoading = false;
-            return;
         }
-        VisibleMenus = (await DataService.GetMenusByRoleAsync(currentUser));
-        foreach (var m in VisibleMenus)
-        {
-            
-        }
-
 
         IsLoading = false;
     }
 
-    private string GetHref(ItemForm form)
-    {
-        if (string.IsNullOrWhiteSpace(form.SayfaURL))
-            return "#";
 
-        return form.SayfaURL.StartsWith("/")
-            ? form.SayfaURL
-            : "/" + form.SayfaURL;
+    private bool UserHasAccessToMenu(ItemForm anaMenu, List<ItemForm> altMenuler)
+    {
+        if (currentUser == null)
+            return false;
+
+        // Admin kontrolü enum ile
+        if ((KullaniciRol)currentUser.KullaniciTip_ID == KullaniciRol.Admin)
+            return true;
+
+        // Ana menüye direkt yetkisi varsa
+        if (VisibleMenus.Any(m => m.ID == anaMenu.ID))
+            return true;
+
+        // Alt menülerden herhangi birine yetkisi varsa ana menü görünür
+        if (altMenuler.Any(alt => VisibleMenus.Any(v => v.ID == alt.ID)))
+            return true;
+
+        return false;
     }
+
+    private string GetHref(ItemForm form) => string.IsNullOrWhiteSpace(form.SayfaURL) ? "#" : (form.SayfaURL.StartsWith("/") ? form.SayfaURL : "/" + form.SayfaURL);
 
     private void ToggleMenu(int id)
     {
@@ -173,13 +163,6 @@
         await DialogService.OpenAsync<KullaniciProfil>(
             "Profil Bilgileri",
             null,
-            new DialogOptions
-            {
-                Width = "550px",
-                Height = "auto",
-                Resizable = false,
-                Draggable = true,
-                CloseDialogOnOverlayClick = true
-            });
+            new DialogOptions { Width = "550px", Height = "auto", Resizable = false, Draggable = true, CloseDialogOnOverlayClick = true });
     }
 }

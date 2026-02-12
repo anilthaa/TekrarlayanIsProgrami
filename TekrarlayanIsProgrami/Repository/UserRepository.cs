@@ -158,7 +158,6 @@ namespace TekrarlayanIsProgrami.Repository
                 Tip_ID = user.KullaniciTip_ID;
             }
             user.KullaniciTip_ID = Tip_ID;
-            user.Aktif = user.KullaniciTip_ID == 1 ? false : true;
             user.ID = await conn.ExecuteScalarAsync<int>(@"INSERT INTO ""Kullanici"" 
  (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
  VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, Now(), @ResetToken)

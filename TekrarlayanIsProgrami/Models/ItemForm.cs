@@ -8,9 +8,7 @@
         public string? SayfaURL { get; set; }
         public string? Icon { get; set; }
         public int? UstMenu_ID { get; set; }
-        public List<int> YetkiliRol_ID { get; set; } = new();
-        public List<int> YetkiliKullanicilar { get; set; } = new();
-        public List<ItemFormRol> FormRoller { get; set; } = new List<ItemFormRol>();
+        public List<int>? AllowedRoles { get; set; }
 
     }
 }
