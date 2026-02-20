@@ -71,9 +71,26 @@
             }
             @if (Gorev.TekrarlamaTipi == "Aylık")
             {
-                <RadzenFormField Text="Haftanın Günü">
-                    <RadzenDropDown @bind-Value="Gorev.HaftaninGunu" Data="@haftaninGunleri" class="w-100" />
-                </RadzenFormField>
+                <div class="row g-2" style="margin-top:5px;">
+                    <div class="col-md-6">
+                        <RadzenFormField Text="Kaç Ayda Bir" style="width:100%;">
+                            <RadzenNumeric @bind-Value="Gorev.TekrarAraligi"
+                                           TValue="int?"
+                                           Min="1"
+                                           Style="width:100%;" />
+                        </RadzenFormField>
+                    </div>
+
+                    <div class="col-md-6">
+                        <RadzenFormField Text="Ayın Günü" style="width:100%;">
+                            <RadzenNumeric @bind-Value="Gorev.AyinGunu"
+                                           TValue="int?"
+                                           Min="1"
+                                           Max="31"
+                                           Style="width:100%;" />
+                        </RadzenFormField>
+                    </div>
+                </div>
             }
 
             <div class="row g-2" style="margin-top: 5px;">
@@ -567,22 +584,41 @@
                 if (string.IsNullOrWhiteSpace(tekrarAraligiString))
                 {
                     notificationService.Notify(NotificationSeverity.Error, "Hata", "Günlük tekrar için aralık girmeniz gerekiyor!");
+                    isSaving = false;
+                    StateHasChanged();
                     return;
                 }
 
                 if (!int.TryParse(tekrarAraligiString, out int aralik) || aralik < 1)
                 {
                     notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçerli bir sayı girmeniz gerekiyor (1 veya daha büyük)!");
+                    isSaving = false;
+                    StateHasChanged();
                     return;
                 }
 
                 Gorev.TekrarAraligi = aralik;
             }
+            if (Gorev.TekrarlamaTipi == "Aylık")
+            {
+                if (!Gorev.AyinGunu.HasValue)
+                {
+                    notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Ayın günü seçilmelidir.");
+                    isSaving = false;
+                    StateHasChanged();
+                    return;
+                }
+
+                if (yeniKayıt || Gorev.BaslangicTarihi == originalGorev.BaslangicTarihi)
+                {
+                    Gorev.BaslangicTarihi = HesaplaAylikTarihIlkGorev(DateTime.Now, Gorev.AyinGunu.Value);
+                    Gorev.BitisTarihi = Gorev.BaslangicTarihi.Value.AddDays(1);
+                }
+            }
             else
             {
                 Gorev.TekrarAraligi = null;
             }
-
             if (Gorev.TekrarlamaTipi == "Haftalık")
             {
                 if (seciliHaftaninGunleri == null || !seciliHaftaninGunleri.Any())
@@ -600,26 +636,27 @@
 
             if (Gorev.TekrarlamaTipi == "Aylık")
             {
-                if (string.IsNullOrWhiteSpace(ayinGunuString))
+                if (!Gorev.TekrarAraligi.HasValue || Gorev.TekrarAraligi < 1)
                 {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Aylık tekrar için gün girmeniz gerekiyor!");
+                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Kaç ayda bir tekrar edeceğini girmeniz gerekiyor!");
                     return;
                 }
 
-                if (!int.TryParse(ayinGunuString, out int ayinGunu) || ayinGunu < 1 || ayinGunu > 31)
+                if (!Gorev.AyinGunu.HasValue || Gorev.AyinGunu < 1 || Gorev.AyinGunu > 31)
                 {
                     notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçerli bir gün girmeniz gerekiyor (1-31 arası)!");
                     return;
                 }
-
-                Gorev.AyinGunu = ayinGunu;
             }
             else
             {
                 Gorev.AyinGunu = null;
             }
 
-            HesaplaSonrakiCalismaTarihi(Gorev);
+            if (yeniKayıt)
+            {
+                HesaplaSonrakiCalismaTarihi(Gorev);
+            }
 
             if (yeniKayıt && Gorev.Kilitli && seciliKullaniciIdler.Count > 1)
             {
@@ -649,8 +686,10 @@
                         AtayanKisiID = Gorev.AtayanKisiID
                     };
 
-                    HesaplaSonrakiCalismaTarihi(yeniGorev);
-
+                    if (yeniKayıt)
+                    {
+                        HesaplaSonrakiCalismaTarihi(yeniGorev);
+                    }
                     var sonuc = await DataService.SetGorev(yeniGorev);
                     if (sonuc.SonucKodu != 0)
                     {
@@ -732,6 +771,7 @@
 
                 return;
             }
+
             else
             {
                 if (Gorev.Kilitli && seciliKullaniciIdler.Any())
@@ -747,34 +787,10 @@
                 var sonuc = await DataService.SetGorev(Gorev);
                 if (sonuc.SonucKodu == 0)
                 {
-                    if (yeniKayıt && sonuc.Data > 0)
+                    // Güncelleme logunu burada sadece bir kez çağır
+                    if (!yeniKayıt)
                     {
-                        Gorev.ID = sonuc.Data;
-                    }
-
-                     await KaydetGorevLoglari(yeniKayıt);
-
-                    if (yeniKayıt)
-                    {
-                        if (Gorev.Kilitli && Gorev.Kullanici_ID > 0)
-                        {
-                            await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_Ozel_{Gorev.Kullanici_ID}");
-                        }
-                        else if (!Gorev.Kilitli)
-                        {
-                            try
-                            {
-                                var tumKullanicilar = await _kullaniciRepo.GetAllAsync();
-                                foreach (var kullanici in tumKullanicilar)
-                                {
-                                    await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_Genel_{kullanici.ID}");
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-
-                            }
-                        }
+                        await KaydetGorevLoglari(yeniKayıt: false); // false = güncelleme
                     }
 
                     notificationService.Notify(NotificationSeverity.Success, "Başarılı", yeniKayıt ? "Görev eklendi!" : "Görev güncellendi!");
@@ -796,13 +812,9 @@
                             {
                                 await GonderYeniGorevEpostalariArkaPlanda(gorevKopyasi);
                             }
-                            catch (Exception ex)
-                            {
-                            }
+                            catch { }
                         });
                     }
-
-                    return;
                 }
                 else
                 {
@@ -849,7 +861,7 @@
                             var bitisTarihi = gorev.BitisTarihi.Value.Date;
                             var ilkGun = seciliGunler.First();
 
-                            var sonrakiHaftaBaslangic = bitisTarihi.AddDays(1); // Bitiş tarihinden sonraki gün
+                            var sonrakiHaftaBaslangic = bitisTarihi.AddDays(1); 
 
                             while (sonrakiHaftaBaslangic.DayOfWeek != ilkGun)
                             {
@@ -862,10 +874,10 @@
                         {
                             DateTime? enYakinTarih = null;
 
-                            foreach (var hedefGun in seciliGunler)
+                            foreach (var hedefGunn in seciliGunler)
                             {
                                 var tarih = baslangic.Date;
-                                while (tarih.DayOfWeek != hedefGun)
+                                while (tarih.DayOfWeek != hedefGunn)
                                 {
                                     tarih = tarih.AddDays(1);
                                 }
@@ -907,21 +919,15 @@
                 break;
 
             case "Aylık":
-                if (gorev.AyinGunu.HasValue)
-                {
-                    var maxGun = DateTime.DaysInMonth(baslangic.Year, baslangic.Month);
-                    var ayinGunu = Math.Min(gorev.AyinGunu.Value, maxGun);
+                if (!gorev.AyinGunu.HasValue)
+                    break;
 
-                    var tarih = new DateTime(baslangic.Year, baslangic.Month, ayinGunu);
-                    if (tarih <= baslangic)
-                        tarih = tarih.AddMonths(aralik);
+                gorev.BaslangicTarihi = HesaplaAylikTarihIlkGorev(DateTime.Now, gorev.AyinGunu.Value);
 
-                    gorev.SonrakiCalismaTarihi = tarih;
-                }
-                else
-                {
-                    gorev.SonrakiCalismaTarihi = baslangic.AddMonths(aralik);
-                }
+                gorev.BitisTarihi = gorev.BaslangicTarihi.Value.AddDays(1);
+
+                gorev.SonrakiCalismaTarihi = null;
+
                 break;
 
             case "Yok":
@@ -1209,5 +1215,72 @@
         {
             
         }
+    }
+
+    //aylık tekrar eden görevlerin bir sonraki tarihini hesaplamak için kullanılıyor.
+    public static DateTime HesaplaAylikTarih(DateTime baslangic,int ayinGunu,int tekrarAraligi,DateTime? oncekiCalismaTarihi = null)
+    {
+        if (tekrarAraligi < 1)
+            tekrarAraligi = 1;
+
+        // Eğer daha önce çalıştıysa zincir devam eder
+        DateTime referans = oncekiCalismaTarihi ?? baslangic;
+
+        // Eğer ilk oluşturuluyorsa
+        if (oncekiCalismaTarihi == null)
+        {
+            int maxGun = DateTime.DaysInMonth(referans.Year, referans.Month);
+
+            DateTime aday = new DateTime(
+                referans.Year,
+                referans.Month,
+                Math.Min(ayinGunu, maxGun),
+                referans.Hour,
+                referans.Minute,
+                referans.Second
+            );
+
+            if (aday > baslangic)
+                return aday;
+
+            referans = referans.AddMonths(tekrarAraligi);
+        }
+        else
+        {
+            referans = referans.AddMonths(tekrarAraligi);
+        }
+
+        int maxGunYeniAy = DateTime.DaysInMonth(referans.Year, referans.Month);
+
+        return new DateTime(
+            referans.Year,
+            referans.Month,
+            Math.Min(ayinGunu, maxGunYeniAy),
+            referans.Hour,
+            referans.Minute,
+            referans.Second
+        );
+    }
+
+    //Sadece ilk aylık görev tarihini hesaplamak için yazılmış bir basitleştirilmiş versiyondur.
+    private DateTime HesaplaAylikTarihIlkGorev(DateTime bugun, int ayinGunu)
+    {
+        var yil = bugun.Year;
+        var ay = bugun.Month;
+
+        // Bugünden sonraki ayın günü
+        if (ayinGunu <= bugun.Day)
+        {
+            ay += 1;
+            if (ay > 12)
+            {
+                ay = 1;
+                yil += 1;
+            }
+        }
+
+        // Geçerli ayın gününü oluştur
+        int gun = Math.Min(ayinGunu, DateTime.DaysInMonth(yil, ay));
+        return new DateTime(yil, ay, gun);
     }
 }

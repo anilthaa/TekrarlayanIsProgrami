@@ -109,7 +109,10 @@ namespace TekrarlayanIsProgrami.Services
                 var yetkiMap = forms.ToDictionary(f => f.ID, _ => 0);
                 foreach (var detay in detaylar)
                 {
-                    yetkiMap[detay.Form_ID] = Math.Max(yetkiMap[detay.Form_ID], detay.Yetki);
+                    if (yetkiMap.ContainsKey(detay.Form_ID))  // form mevcutsa güncelle
+                    {
+                        yetkiMap[detay.Form_ID] = Math.Max(yetkiMap[detay.Form_ID], detay.Yetki);
+                    }
                 }
                 foreach (var tipDetay in tipDetaylar)
                 {
@@ -260,6 +263,23 @@ namespace TekrarlayanIsProgrami.Services
             var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
             return user?.Identity?.IsAuthenticated == true && user.IsInRole("Admin");
+        }
+        public async Task<YetkiTipi> GetCurrentUserYetkiAsync(int formId)
+        {
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+                return YetkiTipi.Gizli;
+
+            int userId = int.Parse(
+                user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0"
+            );
+
+            int tipId = int.Parse(
+                user.FindFirst("KullaniciTip_ID")?.Value ?? "0"
+            );
+            return await _dataService.GetUserFormYetkiAsync(userId, tipId, formId);
         }
     }
 }

@@ -90,17 +90,6 @@ namespace TekrarlayanIsProgrami.Services
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
-        //tarayıcıdaki localStorage’dan kullanıcı bilgilerini yükler.
-        public async Task LoadUserFromLocalStorageAsync()
-        {
-            var userJson = await _Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
-            if (!string.IsNullOrEmpty(userJson))
-            {
-                _currentUser = JsonSerializer.Deserialize<User>(userJson);
-                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-            }
-        }
-
         //kullanıcının giriş (login) işlemini gerçekleştirir ve sonucu döndürür.
         public async Task<AuthResult> GirisYapAsync(string EPosta, string Sifre)
         {
@@ -108,7 +97,6 @@ namespace TekrarlayanIsProgrami.Services
             new { Email = EPosta, Password = Sifre });
 
             var raw = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] Login Response: {response.StatusCode} - {raw}");
 
             if (!response.IsSuccessStatusCode)
             {

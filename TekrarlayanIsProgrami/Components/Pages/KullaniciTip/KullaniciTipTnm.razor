@@ -1,154 +1,140 @@
 @inherits ComponentBase
-@if (ItemData.ID != 0)
-{
-	<RadzenCard Style="padding:20px;">
-	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
-		<ChildContent>
-			<DataAnnotationsValidator></DataAnnotationsValidator>
-			<h4 style="text-align:center;"> Kullanıcı Tipini Düzenle</h4>
 
-			<RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-top:15px;">
-				<RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi"  />
-			</RadzenFormField>
-			<ValidationMessage For="@(()=>ItemData.Adi)"></ValidationMessage>
+<RadzenCard Style="padding:20px;">
+    <RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
+        <ChildContent>
+            <DataAnnotationsValidator></DataAnnotationsValidator>
 
-			<div style="display:flex; align-items:center; margin-top:15px;">
-				<RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
-				<span class="rz-ml-2">Aktif</span>
-			</div>
+            <h4 style="text-align:center;">
+                @(ItemData.ID != 0 ? "Kullanıcı Tipini Düzenle" : "Kullanıcı Tipi Ekle")
+            </h4>
 
-			<div class="btn-group">
-				<RadzenButton Text="Güncelle" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-buttonKaydet" Disabled="@isSaving" />
-				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
-			</div>
-		</ChildContent>
-	</RadzenTemplateForm>
-	</RadzenCard>
-}
-else
-{
-	<RadzenCard Style="padding:20px;">
-	<RadzenTemplateForm TItem="ItemKullaniciTip" Data="@ItemData" Submit="@OnSubmit">
-		<ChildContent>
-			<DataAnnotationsValidator></DataAnnotationsValidator>
-			<h4 style="text-align:center;"> Kullanıcı Tipi Ekle</h4>
+            <RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-top:15px;">
+                <RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi" />
+            </RadzenFormField>
+            <ValidationMessage For="@(() => ItemData.Adi)"></ValidationMessage>
 
-			<RadzenFormField Text="Kullanıcı Tip Adı" Style="width:100%; margin-top:15px;">
-				<RadzenTextBox @bind-Value="ItemData.Adi" />
-			</RadzenFormField>
-			<ValidationMessage For="@(() => ItemData.Adi)"></ValidationMessage>
+            <div style="display:flex; align-items:center; margin-top:15px;">
+                <RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
+                <span class="rz-ml-2">Aktif</span>
+            </div>
 
-			<div style="display:flex; align-items:center; margin-bottom:15px;">
-				<RadzenCheckBox @bind-Value="ItemData.Aktif" TValue="bool" />
-				<span class="rz-ml-2">Aktif</span>
-			</div>
+            <div class="btn-group" style="margin-top:15px;">
+                <RadzenButton Text="@(ItemData.ID != 0 ? "Güncelle" : "Kaydet")"
+                              Icon="save"
+                              ButtonType="ButtonType.Submit"
+                              Style="width:30%; margin:auto;"
+                              class="radzen-buttonKaydet"
+                              Disabled="@isSaving" />
+                <RadzenButton Text="İptal"
+                              Icon="cancel"
+                              Click="@Iptal"
+                              Style="width:30%; margin:auto;"
+                              class="radzen-buttonIptal"
+                              ButtonType="ButtonType.Button"
+                              Disabled="@isSaving" />
+            </div>
+        </ChildContent>
+    </RadzenTemplateForm>
+</RadzenCard>
 
-			<div class="btn-group">
-				<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:30%; margin:auto;" class="radzen-buttonKaydet" Disabled="@isSaving" />
-				<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%; margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
-			</div>
-		</ChildContent>
-	</RadzenTemplateForm>
-	</RadzenCard>
-}
 @code {
-	[Parameter] public ItemKullaniciTip ItemData { get; set; } = new();
-	[Parameter] public int CurrentUserId { get; set; } = 1;
-	private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
-	private ItemKullaniciTip originalTip;
-	private bool isSaving;
-	private string? hataMesaji;
+    [Parameter] public ItemKullaniciTip ItemData { get; set; } = new();
+    [Parameter] public int CurrentUserId { get; set; } = 1;
+    private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
+    private ItemKullaniciTip originalTip;
+    private bool isSaving;
+    private string? hataMesaji;
 
-	//sayfa yüklendiğinde kullanıcı tipi verilerini başlatır.
-	protected override async Task OnInitializedAsync()
-	{
-		kullaniciTip = ItemData;
-		originalTip = new ItemKullaniciTip
-		{
-			ID = ItemData.ID,
-			Adi = ItemData.Adi,
-			Aktif = ItemData.Aktif,
-			UpdUser = ItemData.UpdUser,
-			UpdDate=ItemData.UpdDate
-		};
-	}
+    //sayfa yüklendiğinde kullanıcı tipi verilerini başlatır.
+    protected override async Task OnInitializedAsync()
+    {
+        kullaniciTip = ItemData;
+        originalTip = new ItemKullaniciTip
+        {
+            ID = ItemData.ID,
+            Adi = ItemData.Adi,
+            Aktif = ItemData.Aktif,
+            UpdUser = ItemData.UpdUser,
+            UpdDate = ItemData.UpdDate
+        };
+    }
 
-	//Tip ekleme yada düzenleme işlemi için kullanılır.
-	private async Task OnSubmit()
-	{
-		try
-		{
-			isSaving = true;
-			hataMesaji = null;
+    //Tip ekleme yada düzenleme işlemi için kullanılır.
+    private async Task OnSubmit()
+    {
+        try
+        {
+            isSaving = true;
+            hataMesaji = null;
 
-			if (ItemData.ID == 0)
-			{
-				ItemData.CreUser = CurrentUserId;
-				ItemData.DelUser = 0;
-				ItemData.UpdUser = 0;
-			}
-			else
-			{
-				ItemData.UpdUser = CurrentUserId;
-				ItemData.DelUser = 0;
-			}
+            if (ItemData.ID == 0)
+            {
+                ItemData.CreUser = CurrentUserId;
+                ItemData.DelUser = 0;
+                ItemData.UpdUser = 0;
+            }
+            else
+            {
+                ItemData.UpdUser = CurrentUserId;
+                ItemData.DelUser = 0;
+            }
 
-			var response = await DataService.SetKullaniciTip(ItemData);
-			var yeniId = response.Data;
-			if (yeniId > 0)
-			{
-				ItemData.ID = yeniId;
-				DialogService.Close(ItemData);
-			}
-			else
-			{
-				hataMesaji = "Kayıt işlemi tamamlanamadı.";
-			}
-		}
-		catch (Exception ex)
-		{
-			hataMesaji = $"Kaydetme sırasında hata oluştu: {ex.Message}";
-		}
-		finally
-		{
-			isSaving = false;
-		}
-	}
+            var response = await DataService.SetKullaniciTip(ItemData);
+            var yeniId = response.Data;
+            if (yeniId > 0)
+            {
+                ItemData.ID = yeniId;
+                DialogService.Close(ItemData);
+            }
+            else
+            {
+                hataMesaji = "Kayıt işlemi tamamlanamadı.";
+            }
+        }
+        catch (Exception ex)
+        {
+            hataMesaji = $"Kaydetme sırasında hata oluştu: {ex.Message}";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
 
-	//Tip ekleme yada düzenleme işleminde iptal etme işlemi için kullanılır.değişiklik varsa iptal onayı verir.
-	private async Task Iptal()
-	{
-		if (ItemData.ID == 0)
-		{
-			DialogService.Close(null);
-			return;
-		}
+    //Tip ekleme yada düzenleme işleminde iptal etme işlemi için kullanılır.değişiklik varsa iptal onayı verir.
+    private async Task Iptal()
+    {
+        if (ItemData.ID == 0)
+        {
+            DialogService.Close(null);
+            return;
+        }
 
-		if (HasChanges(kullaniciTip, originalTip))
-		{
-			var confirmed = await DialogService.Confirm(
-				"Formda yaptığınız değişiklikler kaybolacak. Çıkmak istediğinize emin misiniz?",
-				"İptal Onayı",
-				new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" });
+        if (HasChanges(kullaniciTip, originalTip))
+        {
+            var confirmed = await DialogService.Confirm(
+                "Formda yaptığınız değişiklikler kaybolacak. Çıkmak istediğinize emin misiniz?",
+                "İptal Onayı",
+                new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" });
 
-			if (confirmed == true)
-			{
-				notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme işlemi iptal edildi.");
-				DialogService.Close(null);
-			}
+            if (confirmed == true)
+            {
+                notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme işlemi iptal edildi.");
+                DialogService.Close(null);
+            }
 
-			return;
-		}
+            return;
+        }
 
-		notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme işlemi iptal edildi.");
-		DialogService.Close(null);
-	}
+        notificationService.Notify(NotificationSeverity.Info, "Bilgi", "Düzenleme işlemi iptal edildi.");
+        DialogService.Close(null);
+    }
 
-	//İptal onay mesajını alabilmek için bu metot değişiklik yağılığ yapılmadığını kontrol eder.
-	private bool HasChanges(ItemKullaniciTip current, ItemKullaniciTip original)
-	{
-		return current.Adi != original.Adi
-			|| current.Aktif != original.Aktif;
-	}
+    //İptal onay mesajını alabilmek için bu metot değişiklik yağılığ yapılmadığını kontrol eder.
+    private bool HasChanges(ItemKullaniciTip current, ItemKullaniciTip original)
+    {
+        return current.Adi != original.Adi
+            || current.Aktif != original.Aktif;
+    }
 }
-

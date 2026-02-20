@@ -141,116 +141,74 @@ namespace TekrarlayanIsProgrami.Services
         //form (sayfa/menu) bilgilerini veritabanından getirir.
         public async Task<List<ItemForm>> GetFormsAsync(bool sadeceMenuler = false)
         {
-            // Formları çek
-            var sqlForms = $@"
-    SELECT 
-        ""ID"",
-        ""Adi"",
-        COALESCE(""IsMenu"", FALSE) AS ""IsMenu"", 
-        COALESCE(""Sira"", 0) AS ""Sira"",
-        ""SayfaURL"",
-        ""Icon"",
-        ""UstMenu_ID""
-    FROM ""Form""
-    WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
-    {(sadeceMenuler ? @"AND ""IsMenu"" = TRUE" : string.Empty)}
-    ORDER BY COALESCE(""Sira"", 0), ""ID"";
-    ";
-
-            var formlar = await SQLQueryAsync<ItemForm>(sqlForms);
-
-            var sqlFormRol = @"
-    SELECT ""Menu_ID"", ""Rol_ID""
-    FROM ""FormRol""
-    WHERE ""Rol_ID"" IS NOT NULL;
-    ";
-
-            var formRoller = await SQLQueryAsync<ItemFormRol>(sqlFormRol);
-
-            // Her form için YetkiliRol_ID listesini doldur
-            foreach (var f in formlar)
-            {
-                f.YetkiliRol_ID = formRoller
-                    .Where(fr => fr.Menu_ID == f.ID)
-                    .Select(fr => fr.Rol_ID)
-                    .ToList();
-            }
-
-            return formlar.ToList();
-        }
-
-        public async Task<List<ItemForm>> GetMenusByRoleAsync(User user)
-        {
-            // Rol yoksa -> HİÇBİR ŞEY GÖSTERME
-            if (user.KullaniciTip_ID <= 0)
-                return new List<ItemForm>();
-
-            var sql = @"
-SELECT DISTINCT
-    f.""ID"",
-    f.""Adi"",
-    COALESCE(f.""IsMenu"", FALSE) AS ""IsMenu"",
-    COALESCE(f.""Sira"", 0) AS ""Sira"",
-    f.""SayfaURL"",
-    f.""Icon"",
-    f.""UstMenu_ID""
-FROM ""Form"" f
-INNER JOIN ""FormRol"" fr ON fr.""Menu_ID"" = f.""ID""
-WHERE (f.""DelUser"" IS NULL OR f.""DelUser"" = 0)
-  AND fr.""Rol_ID"" = @RolId
-ORDER BY COALESCE(f.""Sira"", 0), f.""ID"";
+            var sql = $@"
+SELECT 
+    ""ID"",
+    ""Adi"",
+    COALESCE(""IsMenu"", FALSE) AS ""IsMenu"",
+    COALESCE(""Sira"", 0) AS ""Sira"",
+    ""SayfaURL"",
+    ""Icon"",
+    ""UstMenu_ID""
+FROM ""Form""
+WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
+AND NOT(coalesce(""IsMenu"",false)=true and ""SayfaURL"" IS NULL)
+{(sadeceMenuler ? @"AND ""IsMenu"" = TRUE" : string.Empty)}
+ORDER BY COALESCE(""Sira"", 0), ""ID"";
 ";
 
-            var result = await SQLQueryAsync<ItemForm>(
-                sql,
-                new { RolId = user.KullaniciTip_ID }
-            );
+            var formlar = await SQLQueryAsync<ItemForm>(sql);
 
-            return result.ToList();
+            return formlar.ToList();
         }
 
         //belirli bir kullanıcının form bazlı yetkilerini veritabanından getirir.
         public async Task<ItemKullaniciDetay[]> GetKullaniciFormYetkileriAsync(int kullaniciId)
         {
             var sql = @"
-                select ""ID"", ""Form_ID"", ""Yetki"", ""Kullanici_ID"", ""CreUser"", ""CreDate"", ""UpdUser"", ""UpdDate"", ""DelUser"", ""DelDate""
-                from ""KullaniciDetay""
-                where ""Kullanici_ID"" = @KullaniciId and (""DelUser"" is null or ""DelUser"" = 0);
-            ";
+        SELECT 
+            f.""ID"" AS ""Form_ID"",
+            COALESCE(kd.""Yetki"", ktd.""Yetki"") AS ""Yetki"",
+            @KullaniciId AS ""Kullanici_ID""
+        FROM ""Form"" f
 
-            return (await SQLQueryAsync<ItemKullaniciDetay>(sql, new { KullaniciId = kullaniciId })).ToArray();
+        LEFT JOIN ""KullaniciDetay"" kd
+            ON kd.""Form_ID"" = f.""ID""
+            AND kd.""Kullanici_ID"" = @KullaniciId
+            AND (kd.""DelUser"" IS NULL OR kd.""DelUser"" = 0)
+
+        LEFT JOIN ""KullaniciTipDetay"" ktd
+            ON ktd.""Form_ID"" = f.""ID""
+            AND ktd.""KullaniciTip_ID"" = (
+                SELECT ""KullaniciTip_ID""
+                FROM ""Kullanici""
+                WHERE ""ID"" = @KullaniciId
+            )
+            AND (ktd.""DelUser"" IS NULL OR ktd.""DelUser"" = 0)
+
+        WHERE COALESCE(kd.""Yetki"", ktd.""Yetki"") IS NOT NULL;
+    ";
+
+            return (await SQLQueryAsync<ItemKullaniciDetay>(sql, new
+            {
+                KullaniciId = kullaniciId
+            })).ToArray();
         }
 
         //kullanıcının form bazlı yetkilerini ekleme, güncelleme ve silme (soft delete) işlemlerini yönetir.
         public async Task<DataResult<int>> SetKullaniciFormYetkiAsync(ItemKullaniciDetay item)
         {
-            if (item.ID.Equals(0) && item.DelUser.Equals(0))
-            {
-                item.ID = await SQLExecuteScalar<int>(
-                    @"INSERT INTO ""KullaniciDetay"" (""Form_ID"", ""Kullanici_ID"", ""Yetki"", ""CreUser"", ""CreDate"")
-                      VALUES (@Form_ID, @Kullanici_ID, @Yetki, @CreUser, now())
-                      RETURNING ""ID""",
-                    item);
-            }
-            else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
-            {
-                await SQLExecute(
-                    @"UPDATE ""KullaniciDetay""
-                      SET ""Yetki"" = @Yetki,
-                          ""UpdUser"" = @UpdUser,
-                          ""UpdDate"" = now()
-                      WHERE ""ID"" = @ID",
-                    item);
-            }
-            else if (!item.ID.Equals(0) && !item.DelUser.Equals(0))
-            {
-                await SQLExecute(
-                    @"UPDATE ""KullaniciDetay""
-                      SET ""DelUser"" = @DelUser,
-                          ""DelDate"" = now()
-                      WHERE ""ID"" = @ID",
-                    item);
-            }
+            item.ID = await SQLExecuteScalar<int>(@"
+        INSERT INTO ""KullaniciDetay""
+        (""Form_ID"", ""Kullanici_ID"", ""Yetki"", ""CreUser"", ""CreDate"")
+        VALUES (@Form_ID, @Kullanici_ID, @Yetki, @CreUser, now())
+        ON CONFLICT (""Kullanici_ID"", ""Form_ID"")
+        DO UPDATE SET
+            ""Yetki"" = EXCLUDED.""Yetki"",
+            ""UpdUser"" = @UpdUser,
+            ""UpdDate"" = now()
+        RETURNING ""ID"";
+    ", item);
 
             return new() { Data = item.ID };
         }
@@ -495,5 +453,121 @@ ORDER BY COALESCE(f.""Sira"", 0), f.""ID"";
             }
         }
 
+        //bir kullanıcının erişebileceği menü ve formları döndürmek için yazılmış bir sorgu ve işleyiş mantığına sahip.
+        public async Task<List<ItemForm>> GetMenusByUserAsync(User user)
+        {
+            if (user == null || user.ID <= 0)
+                return new List<ItemForm>();
+
+            var sql = @"
+
+WITH SonKullaniciYetki AS (
+    SELECT DISTINCT ON (kd.""Form_ID"")
+           kd.""Form_ID"",
+           kd.""Yetki""
+    FROM ""KullaniciDetay"" kd
+    WHERE kd.""Kullanici_ID"" = @UserId
+    ORDER BY kd.""Form_ID"", kd.""ID"" DESC
+),
+
+YetkiliFormlar AS (
+
+    -- Kullanıcı özel yetki (son kayıt > 0)
+    SELECT f.*
+    FROM ""Form"" f
+    INNER JOIN SonKullaniciYetki ky
+        ON ky.""Form_ID"" = f.""ID""
+    WHERE (f.""DelUser"" IS NULL OR f.""DelUser"" = 0)
+      AND ky.""Yetki"" > 0
+
+    UNION
+
+    -- Tip yetkisi (kullanıcı override yoksa)
+    SELECT f.*
+    FROM ""Form"" f
+    INNER JOIN ""KullaniciTipDetay"" ktd
+        ON ktd.""Form_ID"" = f.""ID""
+    WHERE (f.""DelUser"" IS NULL OR f.""DelUser"" = 0)
+      AND ktd.""KullaniciTip_ID"" = @TipId
+      AND ktd.""Yetki"" > 0
+      AND NOT EXISTS (
+            SELECT 1
+            FROM SonKullaniciYetki ky
+            WHERE ky.""Form_ID"" = f.""ID""
+      )
+)
+
+SELECT DISTINCT
+       f.""ID"",
+       f.""Adi"",
+       COALESCE(f.""IsMenu"", false) AS ""IsMenu"",
+       COALESCE(f.""Sira"", 0) AS ""Sira"",
+       f.""SayfaURL"",
+       f.""Icon"",
+       f.""UstMenu_ID""
+FROM ""Form"" f
+WHERE f.""ID"" IN (
+        SELECT ""ID"" FROM YetkiliFormlar
+    )
+    OR f.""ID"" IN (
+        SELECT DISTINCT f2.""UstMenu_ID""
+        FROM YetkiliFormlar f2
+        WHERE f2.""UstMenu_ID"" IS NOT NULL
+    )
+
+ORDER BY ""Sira"", ""ID"";
+";
+
+            var result = await SQLQueryAsync<ItemForm>(sql, new
+            {
+                UserId = user.ID,
+                TipId = user.KullaniciTip_ID
+            });
+
+            return result.ToList();
+        }
+
+        //belirli bir kullanıcı için tek bir formdaki yetki seviyesini döndürmek için yazılmıştır.
+        public async Task<YetkiTipi> GetUserFormYetkiAsync(int userId, int tipId, int formId)
+        {
+            var sql = @"
+
+(
+    SELECT kd.""Yetki""
+    FROM ""KullaniciDetay"" kd
+    WHERE kd.""Kullanici_ID"" = @UserId
+      AND kd.""Form_ID"" = @FormId
+    ORDER BY kd.""ID"" DESC
+    LIMIT 1
+)
+
+UNION ALL
+
+(
+    SELECT ktd.""Yetki""
+    FROM ""KullaniciTipDetay"" ktd
+    WHERE ktd.""KullaniciTip_ID"" = @TipId
+      AND ktd.""Form_ID"" = @FormId
+      AND NOT EXISTS (
+            SELECT 1
+            FROM ""KullaniciDetay"" kd
+            WHERE kd.""Kullanici_ID"" = @UserId
+              AND kd.""Form_ID"" = @FormId
+      )
+    LIMIT 1
+)
+
+LIMIT 1;
+";
+
+            var result = await SQLQueryFirstOrDefaultAsync<int?>(sql, new
+            {
+                UserId = userId,
+                TipId = tipId,
+                FormId = formId
+            });
+
+            return (YetkiTipi)(result ?? 0);
+        }
     }
 }

@@ -121,10 +121,18 @@
     private List<ItemGorev> gorevList = new();
     private Dictionary<int, string> kullaniciAdlari = new();
     private Dictionary<int, string> gorevBasliklari = new();
+    private YetkiTipi _yetki;
 
     //sayfa ilk yüklendiğinde log (kayıt) verilerini getirmek için kullanılır.
     protected override async Task OnInitializedAsync()
     {
+        _yetki = await PermissionService.GetCurrentUserYetkiAsync(12);
+        if (_yetki == YetkiTipi.Gizli)
+        {
+            NavigationManager.NavigateTo("/yetkisiz");
+            notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya ERişme Yetkiniz Yok");
+            return;
+        }
         var currentUser = await girisSaglayici.GetCurrentUserAsync();
 
         if (currentUser != null)
@@ -143,23 +151,45 @@
         try
         {
             isLoading = true;
-            
-            var loglar = await DataService.GetGorevLoglari();
-            logList = loglar.ToList();
-            
+
+            var loglar = (await DataService.GetGorevLoglari()).ToList();
             var kullanicilar = await _kullaniciRepo.GetAllAsync();
             kullaniciAdlari = kullanicilar.ToDictionary(k => k.ID, k => $"{k.Adi} {k.Soyadi}");
-            
+
             var gorevler = await DataService.GetGorevler();
             gorevList = gorevler.ToList();
-            gorevBasliklari = gorevler.ToDictionary(g => g.ID, g => g.Baslik ?? "");
+            gorevBasliklari = gorevList.ToDictionary(g => g.ID, g => g.Baslik ?? "");
+
+            // Yetkiye göre filtreleme
+            if (_yetki ==YetkiTipi.Okuma) // okuma yetkisine sahip kullanıcı
+            {
+                loglar = loglar
+                    .Where(l =>
+                    {
+                        var gorev = gorevList.FirstOrDefault(g => g.ID == l.Gorev_ID);
+                        if (gorev == null) return false;
+
+                        // kendi görevi veya herkese atanmış görev
+                        return gorev.Kullanici_ID == currentUserId || !gorev.Kilitli;
+                    })
+                    .ToList();
+            }
+
+            // yazma yetkisi varsa filtre yok, tüm liste
+            logList = loglar;
+
+            // Grid'i tekrar yükle
+            if (logGrid != null)
+            {
+                await logGrid.Reload();
+            }
+
             isLoading = false;
             StateHasChanged();
         }
         catch (Exception ex)
         {
             notificationService.Notify(NotificationSeverity.Error, "Hata", $"Loglar yüklenirken bir hata oluştu: {ex.Message}");
-            Console.WriteLine($"Log yükleme hatası: {ex.Message}");
             isLoading = false;
         }
     }
