@@ -265,7 +265,6 @@
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine($"Dialog açılırken hata: {ex.Message}");
 			notificationService.Notify(NotificationSeverity.Error, "Hata", "Dialog açılırken bir hata oluştu.");
 		}
 	}

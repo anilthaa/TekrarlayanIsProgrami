@@ -1,22 +1,11 @@
-@* Kullanıcı tipine göre sayfa (form) yetkileri. Bu tipi taşıyan tüm kullanıcılar, atanan Form_ID + Yetki ile ilgili sayfaya erişir.
-   Bu bileşen popup (DialogService) olarak açılacak şekilde tasarlanmıştır. *@
 @layout EmptyLayout
 @attribute [Authorize]
 
 <RadzenCard class="container mt-4">
-    @if (!_canAccess)
-    {
-        <RadzenCard Style="max-width:400px; margin:100px auto; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; border-left:5px solid #e74c3c;">
-            <RadzenIcon Icon="lock" Style="font-size:64px; color:#e74c3c; margin-bottom:20px;" />
-            <h2 style="margin-bottom:10px;">Erişim Engellendi</h2>
-            <p style="color:#555; font-size:14px; margin-bottom:20px;">Bu sayfaya erişim yetkiniz bulunmamaktadır.</p>
-            <RadzenButton Text="Geri Dön" Icon="arrow_back" Click="@(() => NavigationManager.NavigateTo("/admin/kullanicitipleri"))" />
-        </RadzenCard>
-    }
-    else if (isLoading)
+    @if (isLoading)
     {
         <RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:260px;" />
-        <p class="mt-2">Yetkiler yükleniyor...</p>
+        <p class="mt-2">Veriler yükleniyor...</p>
     }
     else if (!string.IsNullOrWhiteSpace(hataMesaji))
     {
@@ -35,15 +24,8 @@
 
         <div class="d-flex justify-content-between align-items-center mb-2">
             <span class="text-muted">0 = Gizli, 1 = Okuma, 2 = Yazma</span>
-            @if (_canWrite)
-            {
-                <RadzenButton Text="Değişiklikleri Kaydet" Icon="save" ButtonStyle="ButtonStyle.Success"
-                              Disabled="@(!HasChanges || isSaving)" Click="@KaydetAsync" />
-            }
-            else
-            {
-                <RadzenBadge Text="Sadece Görüntüleme Modu" BadgeStyle="BadgeStyle.Info" />
-            }
+            <RadzenButton Text="Değişiklikleri Kaydet" Icon="save" ButtonStyle="ButtonStyle.Success"
+                          Disabled="@(!HasChanges || isSaving)" Click="@KaydetAsync" />
         </div>
 
         <div class="mt-3" style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;">
@@ -54,26 +36,15 @@
                     <div class="text-muted small" style="margin-bottom:6px;">
                         Men&uuml;de: @(item.IsMenu ? "Evet" : "Hayır")
                     </div>
-                    @if (_canWrite)
-                    {
-                        <RadzenDropDown TValue="int"
-                                        Data="@PermissionService.PermissionOptions"
-                                        TextProperty="Label"
-                                        ValueProperty="Value"
-                                        Style="width:100%;"
-                                        Value="@GetYetki(item.ID)"
-                                        Change="@(args => OnYetkiChanged(item.ID, args is int value ? value : 0))" />
-                    }
-                    else
-                    {
-                        <RadzenDropDown TValue="int"
-                                        Data="@PermissionService.PermissionOptions"
-                                        TextProperty="Label"
-                                        ValueProperty="Value"
-                                        Style="width:100%;"
-                                        Value="@GetYetki(item.ID)"
-                                        Disabled="true" />
-                    }
+
+                    <RadzenDropDown TValue="int"
+                                    Data="@PermissionService.PermissionOptions"
+                                    TextProperty="Label"
+                                    ValueProperty="Value"
+                                    Style="width:100%;"
+                                    Value="@GetYetki(item.ID)"
+                                    Change="@(args => OnYetkiChanged(item.ID, args is int value ? value : 0))" />
+
                     <div class="text-muted small" style="margin-top:4px;">
                         @PermissionService.GetPermissionDescription(GetYetki(item.ID))
                     </div>
@@ -94,21 +65,9 @@
     private bool isLoading = true;
     private bool isSaving;
     private string? hataMesaji;
-    private bool _canAccess = false;
-    private bool _canWrite = false;
 
     protected override async Task OnParametersSetAsync()
     {
-        _canAccess = await PermissionService.CanReadAsync("/admin/kullanicitipleri");
-        _canWrite = await PermissionService.CanWriteAsync("/admin/kullanicitipleri");
-
-        if (!_canAccess)
-        {
-            hataMesaji = "Bu sayfaya erişim yetkiniz bulunmamaktadır.";
-            isLoading = false;
-            return;
-        }
-
         await YukleAsync();
     }
 
@@ -159,12 +118,6 @@
 
     private async Task KaydetAsync()
     {
-        if (!_canWrite)
-        {
-            notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu işlem için yazma yetkiniz bulunmamaktadır.");
-            return;
-        }
-
         if (isSaving || !HasChanges)
             return;
 

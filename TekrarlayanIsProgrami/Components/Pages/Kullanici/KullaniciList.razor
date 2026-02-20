@@ -2,32 +2,46 @@
 @layout MainLayout
 @attribute [Authorize]
 
-<RadzenCard class="container mt-4 " Style="z-index:2000 !important;">
-    <h3 class="text-center mb-4" style="font-family:Calibri;font-weight:bold;">Kullanıcılar Listesi</h3>
-
-    @if (_canWrite)
+<RadzenCard class="container mt-4" Style="z-index:2000 !important;">
+    <h3 class="text-center mb-4" style="font-family:Calibri;font-weight:bold;">
+        Kullanıcılar Listesi
+    </h3>
+    @if (_yetki != YetkiTipi.Gizli)
     {
         <div class="d-flex gap-2 mb-3">
-            <RadzenButton Text="Yeni Kullanıcı Ekle" Icon="add" Style=" background:#ba76d3; color:white;border-radius:10px;" Click="@OpenRegisterDialog"> </RadzenButton>
+            <RadzenButton Text="Yeni Kullanıcı Ekle"
+                          Icon="add"
+                          Style="background:#ba76d3; color:white;border-radius:10px;"
+                          Disabled="@(_yetki == YetkiTipi.Okuma)"
+                          Click="@OpenRegisterDialog" />
         </div>
     }
-
-    <RadzenDataGrid @ref="kullaniciGrid" Data="@kullanicilar" Property="Name" TItem="User" RowSelect="@OnRowSelect" RowDoubleClick="@OnRowDoubleClick"
-                    AllowPaging="true" PageSize="10" AllowSorting="true" AllowFiltering="true"
+    <RadzenDataGrid @ref="kullaniciGrid"
+                    Data="@kullanicilar"
+                    TItem="User"
+                    RowSelect="@OnRowSelect"
+                    RowDoubleClick="@OnRowDoubleClick"
+                    AllowPaging="true"
+                    PageSize="10"
+                    AllowSorting="true"
+                    AllowFiltering="true"
                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                     class="align-middle">
 
         <Columns>
+
             <RadzenDataGridColumn TItem="User" Property="ID" Title="ID" Width="0px" />
+
             <RadzenDataGridColumn Title="No" Width="100px">
                 <Template Context="g">
                     @(kullanicilar.ToList().IndexOf(g) + 1)
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" Width="auto" />
-            <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px"/>
-            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-posta" Width="250px;"/>
-            
+
+            <RadzenDataGridColumn TItem="User" Property="Adi" Title="Ad" />
+            <RadzenDataGridColumn TItem="User" Property="Soyadi" Title="Soyad" Width="150px" />
+            <RadzenDataGridColumn TItem="User" Property="EPosta" Title="E-posta" Width="250px" />
+
             <RadzenDataGridColumn TItem="User" Title="Rol" Width="180px">
                 <Template Context="k">
                     @GetKullaniciTipAdi(k.KullaniciTip_ID)
@@ -36,38 +50,63 @@
 
             <RadzenDataGridColumn TItem="User" Title="Durum" Width="150px">
                 <Template Context="k">
-                    @if (_canWrite)
+
+                    @if (_yetki != YetkiTipi.Gizli)
                     {
-                        <span style="cursor:pointer;" @onclick="@(async () => await ToggleDurum(k))">
-                            <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
-                                         Style="@(k.Aktif
-                                                     ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
-                                                     : "background-color:red;color:white;padding:5px 10px;border-radius:10px;")" />
-                        </span>
-                    }
-                    else
-                    {
+                        <span style="cursor:@(_yetki == YetkiTipi.Yazma ? "pointer" : "not-allowed");"
+                              @onclick="async () =>
+                              {
+                                  if (_yetki == YetkiTipi.Yazma)
+                                      await ToggleDurum(k);
+                              }">
+
                         <RadzenBadge Text="@(k.Aktif ? "Aktif" : "Pasif")"
                                      Style="@(k.Aktif
-                                                 ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
-                                                 : "background-color:red;color:white;padding:5px 10px;border-radius:10px;")" />
+                                                                                 ? "background-color:#3498db;color:white;padding:5px 10px;border-radius:10px;"
+                                                                                 : "background-color:red;color:white;padding:5px 10px;border-radius:10px;")" />
+                    </span>
                     }
+
                 </Template>
             </RadzenDataGridColumn>
 
-            @if (_canWrite)
+            @if (_yetki != YetkiTipi.Gizli)
             {
                 <RadzenDataGridColumn TItem="User" Title="İşlemler" Width="240px">
                     <Template Context="user">
-                        <RadzenButton Icon="mail" Style="margin-right:5px;" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@(user.Aktif)" Click="@(() => IzinMailiGonder(user.ID))" />
-                        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="edit" Size="ButtonSize.Small" Click="@(() => OpenEditDialog(user.ID))" Style="margin-right:5px;" @onclick:stopPropagation="true" />
-                        <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="lock" Size="ButtonSize.Small" Style="margin-right:5px;"
+
+                        <RadzenButton Icon="mail"
+                                      Style="margin-right:5px;"
+                                      Size="ButtonSize.Small"
+                                      ButtonStyle="ButtonStyle.Primary"
+                                      Disabled="@(_yetki == YetkiTipi.Okuma || user.Aktif)"
+                                      Click="@(() => IzinMailiGonder(user.ID))" />
+
+                        <RadzenButton ButtonStyle="ButtonStyle.Success"
+                                      Icon="edit"
+                                      Size="ButtonSize.Small"
+                                      Style="margin-right:5px;"
+                                      Disabled="@(_yetki == YetkiTipi.Okuma)"
+                                      Click="@(() => OpenEditDialog(user.ID))"
+                                      @onclick:stopPropagation="true" />
+
+                        <RadzenButton ButtonStyle="ButtonStyle.Info"
+                                      Icon="lock"
+                                      Size="ButtonSize.Small"
+                                      Style="margin-right:5px;"
+                                      Disabled="@(_yetki == YetkiTipi.Okuma)"
                                       Click="@(() => NavigateToYetki(user.ID))" />
-                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Size="ButtonSize.Small" Click="@(async () => await ConfirmDelete(user))" />
+
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger"
+                                      Icon="delete"
+                                      Size="ButtonSize.Small"
+                                      Disabled="@(_yetki == YetkiTipi.Okuma)"
+                                      Click="@(async () => await ConfirmDelete(user))" />
 
                     </Template>
                 </RadzenDataGridColumn>
             }
+
         </Columns>
 
     </RadzenDataGrid>
@@ -77,14 +116,20 @@
     private List<ItemKullaniciTip> kullaniciTipleri = new();
     private RadzenDataGrid<User> kullaniciGrid;
     private User user = new User();
-    private bool _canWrite = false;
     [Parameter]
     public int KullaniciId { get; set; }
+    private YetkiTipi _yetki;
 
     //sayfa ilk açıldığında kullanıcı yönetimi ekranını hazırlayan başlangıç işlemlerini yapar.
     protected override async Task OnInitializedAsync()
     {
-        _canWrite = await PermissionService.CanWriteAsync("kullanicilar");
+        _yetki = await PermissionService.GetCurrentUserYetkiAsync(6);
+        if (_yetki == YetkiTipi.Gizli)
+        {
+            NavigationManager.NavigateTo("/yetkisiz");
+            notificationService.Notify(NotificationSeverity.Warning,"Uyarı","Bu Sayfaya ERişme Yetkiniz Yok");
+            return;
+        }
 
         kullanicilar = (await _kullaniciRepo.GetAllAsync()).OrderBy(k => k.ID).ToList();
         kullaniciTipleri = (await DataService.GetKullaniciTipleri()).ToList();
@@ -93,6 +138,8 @@
     //Kayıt olma popupunu açmak için kullanılır.
     private async Task OpenRegisterDialog()
     {
+        if (_yetki != YetkiTipi.Yazma)
+            return;
         var result = await DialogService.OpenAsync<KullaniciTnm>(" ", null, new DialogOptions { Width = "550px", Height = "auto" });
 
         if (result == true) 
@@ -105,6 +152,8 @@
     //Düzenleme işleminin popupu açılması için kullanılır.
     private async Task OpenEditDialog(int id)
     {
+        if (_yetki != YetkiTipi.Yazma)
+            return;
         var result = await DialogService.OpenAsync<KullaniciTnm>(
              " ",
              new Dictionary<string, object>() { { "KullaniciId", id } },
@@ -156,10 +205,11 @@
     //Silme işlemi için kullanılr.
     private async Task Sil(int id)
     {
+        if (_yetki != YetkiTipi.Yazma)
+            return;
         var kullanici = kullanicilar.FirstOrDefault(k => k.ID == id);
         if (kullanici == null) return;
 
-        // Kullanıcıya atanmış aktif görevleri kontrol et
         var tumGorevler = await DataService.GetGorevler();
         var kullaniciyaAitAktifGorevler = tumGorevler
             .Where(g => g.Kullanici_ID == id && g.Aktif && g.DelUser == 0)
@@ -201,6 +251,8 @@
     //bir kullanıcının aktif / pasif durumunu tek tıklamayla değiştirmek için kullanılır.
     private async Task ToggleDurum(User user)
     {
+        if (_yetki != YetkiTipi.Yazma)
+            return;
         user.Aktif = !user.Aktif;
 
         var sonuc = await _kullaniciRepo.UpdateAsync(user);
@@ -247,6 +299,8 @@
     //Mesaj gönderme buttonu için izin maili göndermek için kullanılır.
     private async Task IzinMailiGonder(int userId)
     {
+        if (_yetki != YetkiTipi.Yazma)
+            return;
         var u = kullanicilar.FirstOrDefault(x => x.ID == userId);
         if (u == null) return;
 

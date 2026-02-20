@@ -17,12 +17,7 @@
                     Menü yükleniyor...
                 </div>
             }
-            else if (!VisibleMenus.Any())
-            {
-                <div class="nav-link" style="opacity:0.6;">
-                    Menü bulunamadı
-                </div>
-            }
+           
             else
             {
                 <RadzenCard class="dashboard-nav">
@@ -30,10 +25,12 @@
                         <h3>📊 Dashboard</h3>
                     </a>
 
-                    @foreach (var anaMenu in VisibleMenus.Where(x => x.UstMenu_ID == 0 || x.UstMenu_ID == null &&x.IsMenu).OrderBy(x => x.Sira))
-                    {
+                    @foreach (var anaMenu in VisibleMenus
+                                .Where(x => (x.UstMenu_ID == 0 || x.UstMenu_ID == null) && x.IsMenu)
+                                .OrderBy(x => x.Sira))
+                       {
                         var altMenuler = VisibleMenus
-                        .Where(x => x.UstMenu_ID == anaMenu.ID)
+                        .Where(x => x.UstMenu_ID == anaMenu.ID && x.IsMenu)
                         .OrderBy(x => x.Sira)
                         .ToList();
 
@@ -84,6 +81,7 @@
     private bool IsLoading = true;
     private HashSet<int> AcikMenuler = new();
     private User? currentUser;
+    //metodu, sayfa yüklenirken kullanıcı ve menü görünürlüğünü ayarlıyor.
     protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
@@ -105,21 +103,15 @@
         IsLoading = false;
     }
 
-
+    //bir menünün görünürlüğünü ve erişilebilirliğini kontrol etmek için yazılmıştır.
     private bool UserHasAccessToMenu(ItemForm anaMenu, List<ItemForm> altMenuler)
     {
-        if (currentUser == null)
+        if (currentUser == null || !anaMenu.IsMenu)
             return false;
 
-        // Admin kontrolü enum ile
-        if ((KullaniciRol)currentUser.KullaniciTip_ID == KullaniciRol.Admin)
-            return true;
-
-        // Ana menüye direkt yetkisi varsa
         if (VisibleMenus.Any(m => m.ID == anaMenu.ID))
             return true;
 
-        // Alt menülerden herhangi birine yetkisi varsa ana menü görünür
         if (altMenuler.Any(alt => VisibleMenus.Any(v => v.ID == alt.ID)))
             return true;
 
@@ -128,12 +120,14 @@
 
     private string GetHref(ItemForm form) => string.IsNullOrWhiteSpace(form.SayfaURL) ? "#" : (form.SayfaURL.StartsWith("/") ? form.SayfaURL : "/" + form.SayfaURL);
 
+    //kullanıcı bir menü başlığına tıkladığında menünün açılıp kapanmasını yönetiyor.
     private void ToggleMenu(int id)
     {
         if (!AcikMenuler.Add(id))
             AcikMenuler.Remove(id);
     }
 
+    //Çıkış işlemleri için kullanılıyor
     private async void CikisYap()
     {
         try
@@ -158,6 +152,7 @@
         NavigationManager.NavigateTo("/GirisYap", true);
     }
 
+    //Profili açmak için kullanılan bir metot
     async Task ProfilPopupAc()
     {
         await DialogService.OpenAsync<KullaniciProfil>(

@@ -2,45 +2,75 @@
 @layout MainLayout
 @attribute [Authorize]
 <RadzenCard Style="margin:20px;">
-	<h3 style="text-align:center; font-family:Calibri;font-weight: bold; ">Kategori Listesi</h3>
+	<h3 style="text-align:center; font-family:Calibri;font-weight: bold;">
+		Kategori Listesi
+	</h3>
 
-	@if (_canWrite)
+	@if (_yetki != YetkiTipi.Gizli)
 	{
-		<RadzenButton Text="Yeni Kategori" Icon="add_circle"
+		<RadzenButton Text="Yeni Kategori"
+					  Icon="add_circle"
 					  Style="margin-bottom:15px; background:#ba76d3; color:white;border-radius:10px;"
+					  Disabled="@(_yetki == YetkiTipi.Okuma)"
 					  Click="@Ekle" />
 	}
 
-	
 	@if (DataList == null || !DataList.Any())
 	{
 		<p>Veri yükleniyor... veya veri bulunamadı.</p>
 	}
 	else
 	{
-		<RadzenDataGrid TItem="ItemKategori" Data="@DataList" @ref="GrdData"
-						RowDoubleClick="@(_canWrite ? OnRowDoubleClick : null)"
-						AllowPaging="true" PageSize="20"
-						AllowSorting="true" AllowFiltering="true">
+		<RadzenDataGrid TItem="ItemKategori"
+						Data="@DataList"
+						@ref="GrdData"
+						RowDoubleClick="@OnRowDoubleClick"
+						AllowPaging="true"
+						PageSize="20"
+						AllowSorting="true"
+						AllowFiltering="true">
+
 			<Columns>
-				<RadzenDataGridColumn TItem="ItemKategori" Property="ID" Title="ID" Width="0px" />
+
+				<RadzenDataGridColumn TItem="ItemKategori"
+									  Property="ID"
+									  Title="ID"
+									  Width="0px" />
+
 				<RadzenDataGridColumn Title="No" Width="100px">
 					<Template Context="g">
 						@(DataList.ToList().IndexOf(g) + 1)
 					</Template>
 				</RadzenDataGridColumn>
-				<RadzenDataGridColumn TItem="ItemKategori" Property="Adi" Title="Kategori Adı" />
-				@if (_canWrite)
+
+				<RadzenDataGridColumn TItem="ItemKategori"
+									  Property="Adi"
+									  Title="Kategori Adı" />
+
+				@if (_yetki != YetkiTipi.Gizli)
 				{
-					<RadzenDataGridColumn TItem="ItemKategori" Title="İşlemler" Width="150px">
+					<RadzenDataGridColumn TItem="ItemKategori"
+										  Title="İşlemler"
+										  Width="150px">
 						<Template Context="data">
-							<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:5px"
-										  Click="@(() => Duzenle(data))" ButtonStyle="ButtonStyle.Success" />
-							<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
+
+							<RadzenButton Icon="edit"
+										  Size="ButtonSize.Small"
+										  Style="margin-right:5px"
+										  Disabled="@(_yetki == YetkiTipi.Okuma)"
+										  Click="@(() => Duzenle(data))"
+										  ButtonStyle="ButtonStyle.Success" />
+
+							<RadzenButton Icon="delete"
+										  Size="ButtonSize.Small"
+										  Disabled="@(_yetki == YetkiTipi.Okuma)"
+										  ButtonStyle="ButtonStyle.Danger"
 										  Click="@(() => Sil(data))" />
+
 						</Template>
 					</RadzenDataGridColumn>
 				}
+
 			</Columns>
 		</RadzenDataGrid>
 	}
@@ -49,12 +79,17 @@
 @code {
 	private List<ItemKategori> DataList = new();
 	private RadzenDataGrid<ItemKategori>? GrdData;
-	private bool _canWrite = false;
-
+	private YetkiTipi _yetki;
 	//Sayfa açıldığında kullanıcının kategori ekleme/düzenleme yetkisini kontrol eder ve gerekli verileri yükler.
 	protected override async Task OnInitializedAsync()
 	{
-		_canWrite = await PermissionService.CanWriteAsync("kategori");
+	 _yetki = await PermissionService.GetCurrentUserYetkiAsync(7);
+        if (_yetki == YetkiTipi.Gizli)
+        {
+            NavigationManager.NavigateTo("/yetkisiz");
+            notificationService.Notify(NotificationSeverity.Warning,"Uyarı","Bu Sayfaya ERişme Yetkiniz Yok");
+            return;
+        }
 		await YukleDataAsync();
 	}
 

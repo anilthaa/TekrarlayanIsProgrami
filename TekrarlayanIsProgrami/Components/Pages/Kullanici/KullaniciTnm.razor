@@ -38,9 +38,9 @@ else
 
 				<div class="btn-group">
 					<RadzenButton Text="Güncelle" Icon="save" ButtonType="ButtonType.Submit"
-									  Style="width:100%; margin-left:100px;" class="radzen-buttonKaydet" Disabled="@isSaving" />
+									   class="radzen-buttonKaydet" Disabled="@isSaving" />
 					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
-									  Style="width:100%; margin-left:100px;" class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
+									  class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
 				</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
@@ -79,8 +79,8 @@ else
 						<ValidationMessage For="@(() => secilenTipId)" />
 					</RadzenFormField>
 					<div class="btn-group">
-						<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit" Style="width:100%; margin-left:100px;" class="radzen-buttonKaydet"></RadzenButton>
-						<RadzenButton Text="İptal" Icon="cancel" ButtonType="ButtonType.Button" Click="@Iptal" Style="width:100%; margin-left:50px;" class="radzen-buttonIptal"></RadzenButton>
+						<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"  class="radzen-buttonKaydet"></RadzenButton>
+						<RadzenButton Text="İptal" Icon="cancel" ButtonType="ButtonType.Button" Click="@Iptal" class="radzen-buttonIptal"></RadzenButton>
 					</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
@@ -217,15 +217,12 @@ else
 		if (currentUser == null)
 			throw new Exception("Oturum bilgisi alınamadı.");
 
-		// Eklenen kullanıcının CreUser alanı ekleyen kullanıcının ID'si olacak
 		newUser.CreUser = currentUser.ID;
 
-		// Seçilen kullanıcı tipi
 		newUser.KullaniciTip_ID = secilenTipId;
 
 		newUser.Aktif = false;
 
-		// Varsayılan şifre
 		newUser.Sifre = "00000000";
 		newUser.SifreTekrar = "00000000";
 
