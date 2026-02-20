@@ -10,6 +10,7 @@ namespace TekrarlayanIsProgrami.Repository
     public class UserRepository
     {
         private readonly string _connectionString;
+        private readonly DataService dataService;
         public UserRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("PostgreSqlConnection");
@@ -114,12 +115,10 @@ namespace TekrarlayanIsProgrami.Repository
                 @"SELECT * FROM ""Kullanici"" WHERE ""ResetToken"" = @token and ""ResetTokenExpiry"" > now() at time zone 'utc'",
                 new { token }
             );
-            Console.WriteLine($"Kullanıcı bulundu mu: {kullanici != null}, ID: {kullanici?.ID}");
 
             if (kullanici == null)
                 return false;
 
-            // Şifreyi hash'le
             var hashedPassword = PasswordHelper.HashPassword(yeniSifre);
 
             var sql = @"UPDATE ""Kullanici"" 
@@ -150,7 +149,6 @@ namespace TekrarlayanIsProgrami.Repository
 
             if (user.KullaniciTip_ID == null || user.KullaniciTip_ID == 0)
             {
-                Console.WriteLine("Hiç tip seçilmemiş, varsayılan tip atanacak.");
                 Tip_ID = 2;
             }
             else
@@ -158,7 +156,6 @@ namespace TekrarlayanIsProgrami.Repository
                 Tip_ID = user.KullaniciTip_ID;
             }
             user.KullaniciTip_ID = Tip_ID;
-            user.Aktif = user.KullaniciTip_ID == 1 ? false : true;
             user.ID = await conn.ExecuteScalarAsync<int>(@"INSERT INTO ""Kullanici"" 
  (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
  VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, Now(), @ResetToken)

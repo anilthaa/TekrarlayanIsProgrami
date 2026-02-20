@@ -71,10 +71,18 @@
     private RadzenDataGrid<ItemKullaniciLog>? logGrid;
     private bool isLoading = true;
     private Dictionary<int, string> kullaniciAdlari = new();
+    private YetkiTipi _yetki;
 
     //sayfa ilk yüklendiğinde log (kayıt) verilerini getirmek için kullanılır.
     protected override async Task OnInitializedAsync()
     {
+        _yetki = await PermissionService.GetCurrentUserYetkiAsync(10);
+        if (_yetki == YetkiTipi.Gizli)
+        {
+            NavigationManager.NavigateTo("/yetkisiz");
+            notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya ERişme Yetkiniz Yok");
+            return;
+        }
         await YukleLoglarAsync();
     }
 
@@ -88,12 +96,8 @@
             var loglar = await DataService.GetKullaniciLoglari();
             logList = loglar.ToList();
             
-            Console.WriteLine($"Toplam log sayısı: {logList.Count}");
-            Console.WriteLine($"Giriş logları: {logList.Count(l => l.IslemTipi?.Equals("Giris", StringComparison.OrdinalIgnoreCase) == true)}");
-            Console.WriteLine($"Çıkış logları: {logList.Count(l => l.IslemTipi?.Equals("Cikis", StringComparison.OrdinalIgnoreCase) == true)}");
             
             var uniqueIslemTipleri = logList.Select(l => l.IslemTipi).Distinct().ToList();
-            Console.WriteLine($"Tüm IslemTipi değerleri: {string.Join(", ", uniqueIslemTipleri)}");
             
             foreach (var log in logList.Take(5))
             {
@@ -109,8 +113,6 @@
         catch (Exception ex)
         {
             notificationService.Notify(NotificationSeverity.Error, "Hata", $"Loglar yüklenirken bir hata oluştu: {ex.Message}");
-            Console.WriteLine($"Log yükleme hatası: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
             isLoading = false;
         }
     }

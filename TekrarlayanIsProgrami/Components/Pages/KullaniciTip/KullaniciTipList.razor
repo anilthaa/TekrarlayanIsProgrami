@@ -2,12 +2,14 @@
 @layout MainLayout
 @attribute [Authorize]
 <RadzenCard Style="margin:20px;">
-	<h3 style="text-align:center; font-family:Calibri;font-weight: bold; ">Kullanıcı Tipleri</h3>
+	<h3 style="text-align:center; font-family:Calibri;font-weight: bold;">Kullanıcı Tipleri</h3>
 
-	@if (_canWrite)
+	@if (_yetki != YetkiTipi.Gizli)
 	{
-		<RadzenButton Text="Yeni Tip" Icon="add"
+		<RadzenButton Text="Yeni Tip"
+					  Icon="add"
 					  Style="margin-bottom:15px; background:#ba76d3; color:white;border-radius:10px;"
+					  Disabled="@(_yetki == YetkiTipi.Okuma)"
 					  Click="@YeniTip" />
 	}
 
@@ -24,32 +26,39 @@
 		<RadzenDataGrid TItem="ItemKullaniciTip" Data="@DataList" @ref="grid"
 						AllowPaging="true" PageSize="10"
 						AllowSorting="true" AllowFiltering="true"
-						RowDoubleClick="@(_canWrite ? OnRowDoubleClick : null)">
+						RowDoubleClick="@((_yetki != YetkiTipi.Okuma && _yetki != YetkiTipi.Gizli) ? OnRowDoubleClick : null)">
 			<Columns>
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="0px" />
+
 				<RadzenDataGridColumn Title="No" Width="100px">
 					<Template Context="g">
 						@(DataList.ToList().IndexOf(g) + 1)
 					</Template>
 				</RadzenDataGridColumn>
+
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
+
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
 					<Template Context="item">
 						<RadzenCheckBox Value="item.Aktif" TValue="bool" Disabled="true" Style="margin-right:5px;" />
 						@(item.Aktif ? "Aktif" : "Pasif")
 					</Template>
 				</RadzenDataGridColumn>
-				@if (_canWrite)
+
+				@if (_yetki != YetkiTipi.Gizli)
 				{
 					<RadzenDataGridColumn TItem="ItemKullaniciTip" Title="İşlemler" Width="220px">
 						<Template Context="item">
 							<RadzenButton Icon="security" Size="ButtonSize.Small" Style="margin-right:6px"
 										  ButtonStyle="ButtonStyle.Info" Title="Tip sayfa yetkileri"
+										  Disabled="@(_yetki == YetkiTipi.Okuma)"
 										  Click="@(() => TipYetkileri(item))" />
 							<RadzenButton Icon="edit" Size="ButtonSize.Small" Style="margin-right:6px"
-										  ButtonStyle="ButtonStyle.Success" Click="@(() => Duzenle(item))" />
+										  ButtonStyle="ButtonStyle.Success" Click="@(() => Duzenle(item))"
+										  Disabled="@(_yetki == YetkiTipi.Okuma)" />
 							<RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
-										  Click="@(() => Sil(item))" />
+										  Click="@(() => Sil(item))"
+										  Disabled="@(_yetki == YetkiTipi.Okuma)" />
 						</Template>
 					</RadzenDataGridColumn>
 				}
@@ -57,18 +66,23 @@
 		</RadzenDataGrid>
 	}
 </RadzenCard>
-
 @code {
 	    private List<ItemKullaniciTip> DataList = new();
 	    private RadzenDataGrid<ItemKullaniciTip>? grid;
 	    private bool isLoading = true;
 	    private int? currentUserId;
-	    private bool _canWrite = false;
+		private YetkiTipi _yetki;
 
 		//sayfa yüklendiğinde başlangıç işlemlerini yapar.
         protected override async Task OnInitializedAsync()
 	    {
-		   _canWrite = await PermissionService.CanWriteAsync("admin/kullanicitipleri");
+		_yetki = await PermissionService.GetCurrentUserYetkiAsync(9);
+		if (_yetki == YetkiTipi.Gizli)
+		{
+			NavigationManager.NavigateTo("/yetkisiz");
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya ERişme Yetkiniz Yok");
+			return;
+		}
 		   await YukleKullaniciAsync();
 		   await YukleDataAsync();
 	    }

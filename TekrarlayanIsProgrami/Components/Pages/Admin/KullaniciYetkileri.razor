@@ -2,22 +2,10 @@
 @attribute [Authorize]
 
 <RadzenCard class="container mt-4">
-    @if (!_canAccess)
-    {
-        <RadzenCard Style="max-width:400px; margin:100px auto; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; border-left:5px solid #e74c3c;">
-            <RadzenIcon Icon="lock" Style="font-size:64px; color:#e74c3c; margin-bottom:20px;" />
-            <h2 style="margin-bottom:10px;">Erişim Engellendi</h2>
-            <p style="color:#555; font-size:14px; margin-bottom:20px;">
-                Bu sayfaya erişim yetkiniz bulunmamaktadır.<br />
-                Lütfen yönetici ile iletişime geçin veya başka bir sayfaya dönün.
-            </p>
-            <RadzenButton Text="Anasayfaya Dön" Icon="home" Style="background-color:#3498db; color:white;" Click="@(() => NavigationManager.NavigateTo("/dashboard"))" />
-        </RadzenCard>
-    }
-    else if (isLoading)
+    @if (isLoading)
     {
         <RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:260px;" />
-        <p class="mt-2">Yetkiler yükleniyor...</p>
+        <p class="mt-2">Veriler yükleniyor...</p>
     }
     else if (!string.IsNullOrWhiteSpace(hataMesaji))
     {
@@ -42,19 +30,13 @@
 
         <div class="d-flex justify-content-between align-items-center mb-2">
             <span class="text-muted">0 = Gizli, 1 = Okuma, 2 = Yazma</span>
-            @if (_canWrite)
-            {
-                <RadzenButton Text="Değişiklikleri Kaydet"
-                              Icon="save"
-                              ButtonStyle="ButtonStyle.Success"
-                              Disabled="@(!HasChanges || isSaving)"
-                              Click="@KaydetAsync" />
-            }
-            else
-            {
-                <RadzenBadge Text="Sadece Görüntüleme Modu" BadgeStyle="BadgeStyle.Info" />
-            }
+            <RadzenButton Text="Değişiklikleri Kaydet"
+                          Icon="save"
+                          ButtonStyle="ButtonStyle.Success"
+                          Disabled="@(!HasChanges || isSaving)"
+                          Click="@KaydetAsync" />
         </div>
+
         <div class="mt-3" style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;">
             @foreach (var item in formYetkileri)
             {
@@ -63,35 +45,22 @@
                     <div class="text-muted small" style="margin-bottom:6px;">
                         Men&uuml;de: @(item.IsMenu ? "Evet" : "Hayır")
                     </div>
-                    
+
                     <div style="margin-bottom:6px;">
                         <div class="text-muted small" style="margin-bottom:2px;">Kullanıcı Yetkisi:</div>
-                        @if (_canWrite)
-                        {
-                            <RadzenDropDown TValue="int"
-                                            Data="@PermissionService.PermissionOptions"
-                                            TextProperty="Label"
-                                            ValueProperty="Value"
-                                            Style="width:100%;"
-                                            Value="@GetKullaniciYetki(item.ID)"
-                                            Change="@(args => OnYetkiChanged(item.ID, args is int value ? value : 0))" />
-                        }
-                        else
-                        {
-                            <RadzenDropDown TValue="int"
-                                            Data="@PermissionService.PermissionOptions"
-                                            TextProperty="Label"
-                                            ValueProperty="Value"
-                                            Style="width:100%;"
-                                            Value="@GetKullaniciYetki(item.ID)"
-                                            Disabled="true" />
-                        }
+                        <RadzenDropDown TValue="int"
+                                        Data="@PermissionService.PermissionOptions"
+                                        TextProperty="Label"
+                                        ValueProperty="Value"
+                                        Style="width:100%;"
+                                        Value="@GetKullaniciYetki(item.ID)"
+                                        Change="@(args => OnYetkiChanged(item.ID, args is int value ? value : 0))" />
                     </div>
 
                     @if (GetTipYetki(item.ID) > 0)
                     {
                         <div style="margin-bottom:6px;">
-                            <div class="text-muted small" style="margin-bottom:2px;">Tip Yetkisi (@kullaniciTipAdi):</div>
+                            <div class="text-muted small" style="margin-bottom:2px;">Tipa Yetkisi (@kullaniciTipAdi):</div>
                             <RadzenDropDown TValue="int"
                                             Data="@PermissionService.PermissionOptions"
                                             TextProperty="Label"
@@ -113,36 +82,23 @@
         </div>
     }
 </RadzenCard>
-
 @code {
     [Parameter] public int KullaniciId { get; set; }
 
     private User? hedefKullanici;
     private string? kullaniciTipAdi;
     private List<ItemForm> formYetkileri = new();
-    private Dictionary<int, int> mevcutYetkiler = new(); // Kullanıcıya özel yetkiler
-    private Dictionary<int, int> tipYetkileri = new(); // Tip bazlı yetkiler
+    private Dictionary<int, int> mevcutYetkiler = new(); 
+    private Dictionary<int, int> tipYetkileri = new(); 
     private Dictionary<int, int> orijinalYetkiler = new();
     private Dictionary<int, int> detayKayitlari = new();
     private bool isLoading = true;
     private bool isSaving;
     private string? hataMesaji;
-    private bool _canAccess = false;
-    private bool _canWrite = false;
 
     //sayfa parametreleri değiştiğinde çalışır ve sayfa erişim kontrolü yapar.
     protected override async Task OnParametersSetAsync()
     {
-        _canAccess = await PermissionService.CanReadAsync("/admin/kullanici-yetkileri");
-        _canWrite = await PermissionService.CanWriteAsync("/admin/kullanici-yetkileri");
-
-        if (!_canAccess)
-        {
-            hataMesaji = "Bu sayfaya erişim yetkiniz bulunmamaktadır.";
-            isLoading = false;
-            return;
-        }
-
         await YukleAsync();
     }
 
@@ -155,15 +111,13 @@
             hataMesaji = null;
 
             hedefKullanici = await _kullaniciRepo.GetByIDAsync(KullaniciId);
-            
-            // Kullanıcının tipini al
+
             if (hedefKullanici != null && hedefKullanici.KullaniciTip_ID > 0)
             {
                 var tipler = await DataService.GetKullaniciTipleri();
                 var tip = tipler.FirstOrDefault(t => t.ID == hedefKullanici.KullaniciTip_ID);
                 kullaniciTipAdi = tip?.Adi;
-                
-                // Tip bazlı yetkileri yükle
+
                 var tipDetaylar = await DataService.GetKullaniciTipFormYetkileriAsync(hedefKullanici.KullaniciTip_ID);
                 tipYetkileri = tipDetaylar.ToDictionary(d => d.Form_ID, d => d.Yetki);
             }
@@ -171,7 +125,6 @@
             var formlar = await DataService.GetFormsAsync();
             formYetkileri = formlar.OrderBy(f => f.Sira).ThenBy(f => f.Adi).ToList();
 
-            // Kullanıcıya özel yetkileri yükle
             var detaylar = await DataService.GetKullaniciFormYetkileriAsync(KullaniciId);
             detayKayitlari = detaylar.ToDictionary(d => d.Form_ID, d => d.ID);
             var detayYetkileri = detaylar.ToDictionary(d => d.Form_ID, d => d.Yetki);
@@ -193,38 +146,30 @@
     }
 
     private bool HasChanges =>
-        formYetkileri.Any(form =>
-        {
-            var mevcut = GetKullaniciYetki(form.ID);
-            var orijinal = orijinalYetkiler.TryGetValue(form.ID, out var value) ? value : 0;
-            return mevcut != orijinal;
-        });
+          formYetkileri.Any(form =>
+          {
+              var mevcut = GetKullaniciYetki(form.ID);
+              var orijinal = orijinalYetkiler.TryGetValue(form.ID, out var value) ? value : 0;
+              return mevcut != orijinal;
+          });
 
     //verilen form ID’sine karşılık kullanıcının mevcut yetkisini döndürür.
     private int GetKullaniciYetki(int formId)
-        => mevcutYetkiler.TryGetValue(formId, out var yetki) ? yetki : 0;
+           => mevcutYetkiler.TryGetValue(formId, out var yetki) ? yetki : 0;
 
     //verilen form ID'sine karşılık tip bazlı yetkiyi döndürür.
     private int GetTipYetki(int formId)
-        => tipYetkileri.TryGetValue(formId, out var yetki) ? yetki : 0;
+       => tipYetkileri.TryGetValue(formId, out var yetki) ? yetki : 0;
 
     //verilen form ID'sine karşılık etkili yetkiyi döndürür (max(kullanıcı, tip)).
     private int GetEtkiliYetki(int formId)
-        => Math.Max(GetKullaniciYetki(formId), GetTipYetki(formId));
+       => Math.Max(GetKullaniciYetki(formId), GetTipYetki(formId));
+
 
     //kullanıcının form yetkilerini kaydeder ve günceller.
     private async Task KaydetAsync()
     {
-        if (!_canWrite)
-        {
-            notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu işlem için yazma yetkiniz bulunmamaktadır.");
-            return;
-        }
-
-        if (isSaving || !HasChanges)
-        {
-            return;
-        }
+        if (isSaving || !HasChanges) return;
 
         isSaving = true;
         hataMesaji = null;
@@ -239,10 +184,7 @@
                 var mevcutYetki = GetKullaniciYetki(form.ID);
                 var orijinalYetki = orijinalYetkiler.TryGetValue(form.ID, out var value) ? value : 0;
 
-                if (mevcutYetki == orijinalYetki)
-                {
-                    continue;
-                }
+                if (mevcutYetki == orijinalYetki) continue;
 
                 var detayId = detayKayitlari.TryGetValue(form.ID, out var id) ? id : 0;
                 var kayit = new ItemKullaniciDetay
@@ -257,9 +199,7 @@
                 };
 
                 var sonuc = await DataService.SetKullaniciFormYetkiAsync(kayit);
-                var detailId = kayit.ID != 0 ? kayit.ID : sonuc.Data;
-
-                detayKayitlari[form.ID] = detailId;
+                detayKayitlari[form.ID] = kayit.ID != 0 ? kayit.ID : sonuc.Data;
                 orijinalYetkiler[form.ID] = mevcutYetki;
             }
 
@@ -275,7 +215,6 @@
         {
             isSaving = false;
         }
-
     }
 
     //kullanıcının bir form için yetkisini değiştirdiğinde çağrılır.

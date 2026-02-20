@@ -27,13 +27,10 @@ namespace TekrarlayanIsProgrami.Api
             if (await _userRepository.EpostaVarMiAsync(model.EPosta))
                 return BadRequest(new AuthResult { Basarili = false, Mesaj = "Bu e-posta zaten kayıtlı" });
 
-            // Token'ı önce oluştur (kayıt sırasında veritabanına kaydedilecek)
             var token = _jwtService.GenerateToken(model.EPosta);
             
-            // Token'ı veritabanı kolonuna uygun uzunlukta tut (100 karakter sınırı varsa)
             var tokenToStore = !string.IsNullOrEmpty(token) && token.Length > 100 ? token.Substring(0, 100) : token;
 
-            // Şifreyi hashlemeyin - UserRepository.KayitOlAsync zaten hashliyor
             var yeniUser = await _userRepository.KayitOlAsync(model);
 
             return Ok(new AuthResult
@@ -58,7 +55,6 @@ namespace TekrarlayanIsProgrami.Api
             if (user == null)
                 return Unauthorized(new AuthResult { Basarili = false, Mesaj = "Kullanıcı bulunamadı" });
 
-            // Hash doğrulaması
             bool ok = PasswordHelper.VerifyPassword(model.Password, user.Sifre);
             if (!ok)
                 return Unauthorized(new AuthResult { Basarili = false, Mesaj = "Şifre yanlış" });
