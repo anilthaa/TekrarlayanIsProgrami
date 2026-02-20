@@ -177,7 +177,9 @@ button RadzenIcon {
 
 .btn-group {
     margin-top: 20px;
+    width:100%;
     display: flex;
+    text-align:center;
     justify-content: space-between;
 }
 
@@ -441,7 +443,7 @@ fieldset .rz-form-field-label {
 }
 
 .rz-layout .rz-sidebar {
-    grid-area:auto;
+    grid-area:auto !important;
 }
 .compact-grid .rz-datatable-data tr {
     height: 27px;
