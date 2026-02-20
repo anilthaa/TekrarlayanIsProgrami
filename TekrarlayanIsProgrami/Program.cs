@@ -12,6 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddSingleton<DBClass>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var connectionString = config.GetConnectionString("PostgreSqlConnection");
+    return new DBClass(connectionString);
+});
 
 var connectionString = builder.Configuration.GetConnectionString("PostgreSqlConnection"); 
 
@@ -56,7 +62,8 @@ builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
-builder.Services.AddScoped<TooltipService>(); 
+builder.Services.AddScoped<TooltipService>();
+builder.Services.AddScoped<DBSeeder>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<KullaniciTipRepository>();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
@@ -84,6 +91,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbSeeder = scope.ServiceProvider.GetRequiredService<DBSeeder>();
+    await dbSeeder.AdminSeed();
+}
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
