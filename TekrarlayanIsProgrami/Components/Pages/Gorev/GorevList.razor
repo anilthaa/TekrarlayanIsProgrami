@@ -405,8 +405,6 @@
 			g.Kilitli &&
 			g.Baslik == gorev.Baslik &&
 			g.Kategori_ID == gorev.Kategori_ID &&
-			g.BaslangicTarihi == gorev.BaslangicTarihi &&
-			g.BitisTarihi == gorev.BitisTarihi &&
 			g.DelUser == 0
 		).ToList();
 
@@ -415,7 +413,6 @@
 
 		return (tamamlanan, toplam);
 	}
-
 	//bir görevin kimlere atandığını ve kimin tamamladığını modal pencerede gösterir.
 	private async Task ShowAtananKisilerDialog(ItemGorev gorev)
 	{

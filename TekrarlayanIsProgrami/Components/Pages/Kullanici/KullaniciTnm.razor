@@ -36,12 +36,17 @@ else
 					@bind-Value="kullanicilar.KullaniciTip_ID" />
 				</RadzenFormField>
 
-				<div class="btn-group">
-					<RadzenButton Text="Güncelle" Icon="save" ButtonType="ButtonType.Submit"
-									   class="radzen-buttonKaydet" Disabled="@isSaving" />
-					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal"
-									  class="radzen-buttonIptal" ButtonType="ButtonType.Button" Disabled="@isSaving" />
-				</div>
+					<div class="text-center mt-4">
+							<div class="btn-group">
+								<RadzenButton Text="Güncelle"
+											  ButtonType="ButtonType.Submit"
+											  Icon="save"
+											  Style="width:30%; margin:auto;"
+											  class="radzen-buttonKaydet" />
+
+								<RadzenButton Text="İptal" Click="@Iptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin:auto;" class="radzen-buttonIptal"></RadzenButton>
+							</div>
+					</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
 		</div>
@@ -78,9 +83,16 @@ else
 										Style="width:100%;" />
 						<ValidationMessage For="@(() => secilenTipId)" />
 					</RadzenFormField>
-					<div class="btn-group">
-						<RadzenButton Text="Kaydet" Icon="save" ButtonType="ButtonType.Submit"  class="radzen-buttonKaydet"></RadzenButton>
-						<RadzenButton Text="İptal" Icon="cancel" ButtonType="ButtonType.Button" Click="@Iptal" class="radzen-buttonIptal"></RadzenButton>
+					<div class="text-center mt-4">
+						<div class="btn-group">
+							<RadzenButton Text="Kaydet"
+										  ButtonType="ButtonType.Submit"
+										  Icon="save"
+										  Style="width:30%; margin:auto;"
+										  class="radzen-buttonKaydet" />
+
+							<RadzenButton Text="İptal" Click="@Iptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin:auto;" class="radzen-buttonIptal"></RadzenButton>
+						</div>
 					</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
@@ -88,6 +100,7 @@ else
 		</div>
 	}
 }
+
 @code {
 	private User kullanicilar = new();
 	private User originalKullanici;

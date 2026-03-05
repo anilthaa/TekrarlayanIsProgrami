@@ -77,6 +77,7 @@
                             <RadzenNumeric @bind-Value="Gorev.TekrarAraligi"
                                            TValue="int?"
                                            Min="1"
+                                           Max="12"
                                            Style="width:100%;" />
                         </RadzenFormField>
                     </div>
@@ -922,11 +923,27 @@
                 if (!gorev.AyinGunu.HasValue)
                     break;
 
-                gorev.BaslangicTarihi = HesaplaAylikTarihIlkGorev(DateTime.Now, gorev.AyinGunu.Value);
+                var aralikAy = gorev.TekrarAraligi ?? 1;
 
-                gorev.BitisTarihi = gorev.BaslangicTarihi.Value.AddDays(1);
+                var referans = gorev.BaslangicTarihi.Value;
 
-                gorev.SonrakiCalismaTarihi = null;
+                var sonrakiAy = referans.AddMonths(aralikAy);
+
+                int gun = gorev.AyinGunu.Value;
+
+                var ayinSonGunu = DateTime.DaysInMonth(sonrakiAy.Year, sonrakiAy.Month);
+
+                if (gun > ayinSonGunu)
+                    gun = ayinSonGunu;
+
+                gorev.SonrakiCalismaTarihi = new DateTime(
+                    sonrakiAy.Year,
+                    sonrakiAy.Month,
+                    gun,
+                    referans.Hour,
+                    referans.Minute,
+                    referans.Second
+                );
 
                 break;
 
@@ -1268,8 +1285,8 @@
         var yil = bugun.Year;
         var ay = bugun.Month;
 
-        // Bugünden sonraki ayın günü
-        if (ayinGunu <= bugun.Day)
+        // sadece geçmiş günse sonraki aya geç
+        if (ayinGunu < bugun.Day)
         {
             ay += 1;
             if (ay > 12)
@@ -1279,8 +1296,15 @@
             }
         }
 
-        // Geçerli ayın gününü oluştur
         int gun = Math.Min(ayinGunu, DateTime.DaysInMonth(yil, ay));
-        return new DateTime(yil, ay, gun);
+
+        return new DateTime(
+            yil,
+            ay,
+            gun,
+            bugun.Hour,
+            bugun.Minute,
+            bugun.Second
+        );
     }
 }
