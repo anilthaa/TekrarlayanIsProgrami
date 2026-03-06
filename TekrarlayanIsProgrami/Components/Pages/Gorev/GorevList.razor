@@ -29,7 +29,7 @@
             <div class="my-tab @(SelectedTabIndex == 3 ? "active" : "")" @onclick="() => SelectedTabIndex = 3">Süresi Dolanlar</div>
             <div class="my-tab @(SelectedTabIndex == 4 ? "active" : "")" @onclick="() => SelectedTabIndex = 4">Pasif Görevler</div>
             <div class="my-tab @(SelectedTabIndex == 6 ? "active" : "")" @onclick="() => SelectedTabIndex = 6">Bana Özel Görevler</div>
-            <div class="my-tab @(SelectedTabIndex == 7 ? "active" : "")" @onclick="() => SelectedTabIndex = 7">Tüm Görevler</div>
+            <div class="my-tab @(SelectedTabIndex == 7 ? "active" : "")" @onclick="() => SelectedTabIndex = 5">Tüm Görevler</div>
         </div>
 
         @if (!AktifListe.Any())
@@ -54,17 +54,20 @@
                         <Template Context="g">@((AktifListe.ToList().IndexOf(g) + 1))</Template>
                     </RadzenDataGridColumn>
 
-                    <RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px">
-                        <Template Context="g">
-                            <div style="@($"padding:5px; background-color:{(g.ID == gorevId ? "#d1e7dd" : "transparent")};")">
-                                @g.Baslik
-                                @if ((DateTime.Now - g.BaslangicTarihi)?.TotalHours < 24)
-                                {
-                                    <span style="color:#ff9800; font-size:11px;">⭐</span>
-                                }
-                            </div>
-                        </Template>
-                    </RadzenDataGridColumn>
+					<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px">
+						<Template Context="g">
+							<div style="@($"padding:5px; background-color:{(g.ID == gorevId ? "#d1e7dd" : "transparent")};")">
+								@g.Baslik
+								@if (g.BaslangicTarihi.HasValue
+														&& g.BaslangicTarihi.Value <= DateTime.Now
+														&& (DateTime.Now - g.BaslangicTarihi.Value).TotalHours < 24)
+								{
+									<span style="color:#ff9800; font-size:11px;">⭐</span>
+								}
+							</div>
+						</Template>
+					</RadzenDataGridColumn>
+
 					<RadzenDataGridColumn TItem="ItemGorev" Width="250px"
 										  Title="@(_yetki == YetkiTipi.Yazma ? "Atanan Kişi" : "Atayan Kişi")">
 						<Template Context="g">
@@ -111,17 +114,32 @@
                     <RadzenDataGridColumn TItem="ItemGorev" Property="TekrarlamaTipi" Title="Tekrarlama" Width="200px">
                         <Template Context="g">@(!string.IsNullOrWhiteSpace(g.TekrarlamaTipi) ? g.TekrarlamaTipi : "Yok")</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ItemGorev" Property="TekrarAraligi" Title="Tekrar Aralığı" Width="200px">
-                        <Template Context="g">@((g.TekrarAraligi.HasValue) ? g.TekrarAraligi.ToString() : "Yok")</Template>
-                    </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
+					<RadzenDataGridColumn TItem="ItemGorev" Title="Tekrar" Width="200px">
+						<Template Context="g">
+							@if (g.TekrarAraligi.HasValue)
+							{
+								@($"{g.TekrarAraligi} {(g.TekrarlamaTipi == "Günlük" ? "günde bir" : g.TekrarlamaTipi == "Aylık" ? "ayda bir" : "")}")
+							}
+							else if (!string.IsNullOrEmpty(g.HaftaninGunu))
+							{
+								@($" {g.HaftaninGunu}")
+							}
+							else
+							{
+								@("Yok")
+							}
+						</Template>
+					</RadzenDataGridColumn>
+					<RadzenDataGridColumn TItem="ItemGorev" Property="BaslangicTarihi" Title="Başlangıç" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="170px" Filterable="false" Sortable="true" TextAlign="TextAlign.Center">
                         <Template Context="gorev">
 							<RadzenCheckBox @bind-Value="gorev.Tamamlandi" TValue="bool"
 											Change="@(async (args) => await ToggleTamamlandi(gorev))"
-											Disabled="@(gorev.Aktif == false || (gorev.BaslangicTarihi.HasValue && gorev.BaslangicTarihi.Value > DateTime.Now))">
-							</RadzenCheckBox>
+											Disabled="@(gorev.Aktif == false
+											 || (gorev.BaslangicTarihi.HasValue && gorev.BaslangicTarihi.Value > DateTime.Now)
+											 || (gorev.Kilitli && gorev.Kullanici_ID != currentUserId))">
+					</RadzenCheckBox>
                         </Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="ItemGorev" Title="Durum" Width="150px">
@@ -195,8 +213,8 @@
 	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi && (_yetki == YetkiTipi.Yazma || g.Kullanici_ID == currentUserId || !g.Kilitli));
 	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (_yetki == YetkiTipi.Yazma || g.Kullanici_ID == currentUserId || !g.Kilitli));
 	private IEnumerable<ItemGorev> BanaOzelGorevler => GorevListt.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.DelUser == 0 && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
-	private IEnumerable<ItemGorev> TumGorevler => GorevListt.Where(g => g.DelUser == 0 && (_yetki == YetkiTipi.Yazma || g.Kullanici_ID == currentUserId || !g.Kilitli) && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-
+	private IEnumerable<ItemGorev> TumGorevler => GorevListt
+		.Where(g => g.DelUser == 0 && (_yetki == YetkiTipi.Yazma || !g.Kilitli));   
 	//URL’den gelen tab parametresine göre ekrandaki sekmelerin doğru seçili kalmasını sağlar.
 	protected override void OnParametersSet()
 	{

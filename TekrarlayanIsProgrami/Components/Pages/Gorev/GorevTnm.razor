@@ -599,8 +599,24 @@
                 }
 
                 Gorev.TekrarAraligi = aralik;
+                Gorev.HaftaninGunu = null;
+                Gorev.AyinGunu = null;
             }
-            if (Gorev.TekrarlamaTipi == "Aylık")
+
+            else if (Gorev.TekrarlamaTipi == "Haftalık")
+            {
+                if (seciliHaftaninGunleri == null || !seciliHaftaninGunleri.Any())
+                {
+                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için en az bir gün seçmeniz gerekiyor!");
+                    return;
+                }
+
+                Gorev.HaftaninGunu = string.Join(",", seciliHaftaninGunleri);
+                Gorev.TekrarAraligi = null;
+                Gorev.AyinGunu = null;
+            }
+
+            else if (Gorev.TekrarlamaTipi == "Aylık")
             {
                 if (!Gorev.AyinGunu.HasValue)
                 {
@@ -610,47 +626,19 @@
                     return;
                 }
 
+                Gorev.HaftaninGunu = null;
+
                 if (yeniKayıt || Gorev.BaslangicTarihi == originalGorev.BaslangicTarihi)
                 {
                     Gorev.BaslangicTarihi = HesaplaAylikTarihIlkGorev(DateTime.Now, Gorev.AyinGunu.Value);
                     Gorev.BitisTarihi = Gorev.BaslangicTarihi.Value.AddDays(1);
                 }
             }
+
             else
             {
                 Gorev.TekrarAraligi = null;
-            }
-            if (Gorev.TekrarlamaTipi == "Haftalık")
-            {
-                if (seciliHaftaninGunleri == null || !seciliHaftaninGunleri.Any())
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için en az bir gün seçmeniz gerekiyor!");
-                    return;
-                }
-
-                Gorev.HaftaninGunu = string.Join(",", seciliHaftaninGunleri);
-            }
-            else
-            {
                 Gorev.HaftaninGunu = null;
-            }
-
-            if (Gorev.TekrarlamaTipi == "Aylık")
-            {
-                if (!Gorev.TekrarAraligi.HasValue || Gorev.TekrarAraligi < 1)
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Kaç ayda bir tekrar edeceğini girmeniz gerekiyor!");
-                    return;
-                }
-
-                if (!Gorev.AyinGunu.HasValue || Gorev.AyinGunu < 1 || Gorev.AyinGunu > 31)
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçerli bir gün girmeniz gerekiyor (1-31 arası)!");
-                    return;
-                }
-            }
-            else
-            {
                 Gorev.AyinGunu = null;
             }
 

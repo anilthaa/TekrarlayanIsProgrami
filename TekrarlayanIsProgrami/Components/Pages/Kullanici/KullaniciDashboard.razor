@@ -1,39 +1,38 @@
 @page "/dashboard"
 @layout MainLayout
 
-@if (showYeniGorevBildirimi && !IsLoading)
-{
-	<RadzenCard Style="margin:20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1000;">
-		<div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
-			<div style="display:flex; align-items:center; gap:15px; flex:1;">
-				<RadzenIcon Icon="notifications" Style="font-size:28px; color:white;"></RadzenIcon>
-				<div>
-					<h4 style="margin:0; color:white; font-weight:600;">Yeni Görevleriniz Var!</h4>
-					<p style="margin:5px 0 0 0; color:rgba(255,255,255,0.9); font-size:14px;">
-						@if (gosterilecekOzelGorevSayisi > 0 && gosterilecekGenelGorevSayisi > 0)
-						{
-							<span>@(gosterilecekOzelGorevSayisi + gosterilecekGenelGorevSayisi) yeni göreviniz var! (<a href="#" @onclick="@(async () => await NavigateToOzelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekOzelGorevSayisi size özel</a>, <a href="#" @onclick="@(async () => await NavigateToGenelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekGenelGorevSayisi herkese açık</a>) Dashboard'ınızı kontrol ediniz.</span>
-						}
-						else if (gosterilecekOzelGorevSayisi > 0)
-						{
-							<span><a href="#" @onclick="@(async () => await NavigateToOzelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekOzelGorevSayisi size özel</a> yeni göreviniz var! Dashboard'ınızı kontrol ediniz.</span>
-						}
-						else if (gosterilecekGenelGorevSayisi > 0)
-						{
-							<span><a href="#" @onclick="@(async () => await NavigateToGenelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekGenelGorevSayisi yeni göreviniz</a> var! Dashboard'ınızı kontrol ediniz.</span>
-						}
-					</p>
-				</div>
-			</div>
-			<RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-						  Style="background:rgba(255,255,255,0.2); color:white; border:none; min-width:auto;"
-						  Click="@(async () => { await BildirimiKapat(); })"></RadzenButton>
-		</div>
-	</RadzenCard>
-}
 
-@if (kullaniciTip != null && kullaniciTip.Adi == "Admin")
-{
+	@if (showYeniGorevBildirimi && !IsLoading)
+	{
+		<RadzenCard Style="margin:20px; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; box-shadow:0 4px 6px rgba(0,0,0,0.1); z-index:1000;">
+			<div style="display:flex; justify-content:space-between; align-items:center; padding:15px;">
+				<div style="display:flex; align-items:center; gap:15px; flex:1;">
+					<RadzenIcon Icon="notifications" Style="font-size:28px; color:white;"></RadzenIcon>
+					<div>
+						<h4 style="margin:0; color:white; font-weight:600;">Yeni Görevleriniz Var!</h4>
+						<p style="margin:5px 0 0 0; color:rgba(255,255,255,0.9); font-size:14px;">
+							@if (gosterilecekOzelGorevSayisi > 0 && gosterilecekGenelGorevSayisi > 0)
+							{
+								<span>@(gosterilecekOzelGorevSayisi + gosterilecekGenelGorevSayisi) yeni göreviniz var! (<a href="#" @onclick="@(async () => await NavigateToOzelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekOzelGorevSayisi size özel</a>, <a href="#" @onclick="@(async () => await NavigateToGenelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekGenelGorevSayisi herkese açık</a>) Dashboard'ınızı kontrol ediniz.</span>
+							}
+							else if (gosterilecekOzelGorevSayisi > 0)
+							{
+								<span><a href="#" @onclick="@(async () => await NavigateToOzelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekOzelGorevSayisi size özel</a> yeni göreviniz var! Dashboard'ınızı kontrol ediniz.</span>
+							}
+							else if (gosterilecekGenelGorevSayisi > 0)
+							{
+								<span><a href="#" @onclick="@(async () => await NavigateToGenelGorevler())" @onclick:preventDefault="true" style="color:white; text-decoration:underline; cursor:pointer;">@gosterilecekGenelGorevSayisi yeni göreviniz</a> var! Dashboard'ınızı kontrol ediniz.</span>
+							}
+						</p>
+					</div>
+				</div>
+				<RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+							  Style="background:rgba(255,255,255,0.2); color:white; border:none; min-width:auto;"
+							  Click="@(async () => { await BildirimiKapat(); })"></RadzenButton>
+			</div>
+		</RadzenCard>
+	}
+
 	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
 		<h2 style="font-family:serif;font-weight: bold; "> Admin Kontrol Paneli</h2>
 		@if (IsLoading)
@@ -48,162 +47,156 @@
 				<div class="col-md-6">
 					<div class="shimmer-wrapper" style="height:	320px; border-radius:6px;"></div>
 				</div>
-			</div>
-		}
-		else
-		{
-			<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1.5rem">
-				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => NavigateToGorevler(5))">
-					<div style="display:flex; justify-content:space-between; align-items:center;">
-						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2">Tüm  Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4">@(TumGorevler.Count())</RadzenText>
-						</div>
-						<RadzenIcon Icon="list" Style=" font-size:32px; color:#3498db; opacity:0.6;"></RadzenIcon>
+		</div>
+	}
+	else
+	{
+		<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="1.5rem">
+			<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #3498db; cursor:pointer;" @onclick="@(() => NavigateToGorevler(5))">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Tüm  Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@(TumGorevler.Count())</RadzenText>
 					</div>
-				</RadzenCard>
-
-				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #f1c40f; cursor:pointer;" @onclick="@(() => NavigateToGorevler(0))">
-					<div style="display:flex; justify-content:space-between; align-items:center;">
-						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2">Aktif Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4" >@(aktifGorevler.Count())</RadzenText>
-						</div>
-						<RadzenIcon Icon="schedule" Style=" font-size:32px; opacity:0.6; color:#f1c40f; "></RadzenIcon>
-					</div>
-				</RadzenCard>
-
-
-				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #e74c3c; cursor:pointer;" @onclick="@(() => NavigateToGorevler(1))">
-					<div style="display:flex; justify-content:space-between; align-items:center;">
-						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2">Bugünkü Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4">@(BugunkuGorevler.Count())</RadzenText>
-						</div>
-						<RadzenIcon Icon="schedule" Style="font-size:32px; opacity:0.6; color:#e74c3c;"></RadzenIcon>
-					</div>
-				</RadzenCard>
-
-				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #9b59b6; cursor:pointer;" @onclick="@(() => NavigateToGorevler(2))">
-					<div style="display:flex; justify-content:space-between; align-items:center;">
-						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2">Tamamlanan Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4">@(tamamlananGorevler.Count())</RadzenText>
-						</div>
-						<RadzenIcon Icon="done_all" Style="font-size:32px; opacity:0.6; color:#9b59b6;"></RadzenIcon>
-					</div>
-				</RadzenCard>
-
-				<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #f39c12; cursor:pointer;" @onclick="@(() => NavigateToGorevler(6))">
-					<div style="display:flex; justify-content:space-between; align-items:center;">
-						<div>
-							<RadzenText TextStyle="TextStyle.Subtitle2">Size Özel Görevler</RadzenText>
-							<RadzenText TextStyle="TextStyle.H4">@(SizeOzelGorevler.Count())</RadzenText>
-						</div>
-						<RadzenIcon Icon="lock" Style="font-size:32px; opacity:0.6; color:#f39c12;"></RadzenIcon>
-					</div>
-				</RadzenCard>
-			</RadzenStack>
-
-			<div class="row">
-				<div class="col-md-6">
-					<RadzenChart Style="height:300px; transition: all 0.4s ease-in-out;"
-								 Palette="@(new[] { "#3498db", "#9b59b6", "#e74c3c", "#f39c12" })">
-
-						<RadzenPieSeries Data="@GorevDurumData"
-										 ValueProperty="Value"
-										 CategoryProperty="Category"
-										 Title="Görev Durum Dağılımı">
-							<TooltipTemplate Context="data">
-								<div style="padding:4px 8px; font-size:13px;">
-									<strong>@data.Category:</strong> @data.Value görev
-								</div>
-							</TooltipTemplate>
-
-						</RadzenPieSeries>
-						<RadzenLegend Position="LegendPosition.Right"></RadzenLegend>
-					</RadzenChart>
-				</div>
-
-				<div class="col-md-6">
-					<RadzenChart Style="height:320px; transition:all 0.4s ease-in-out;" Palette="@(new[] { "#3498db", "#9b59b6", "#e74c3c", "#f39c12" })">
-						<RadzenColumnSeries Data="@GorevDurumData" CategoryProperty="Category" ValueProperty="Value" Title="Görev Sayısı">
-							<TooltipTemplate Context="data">
-								<div style="padding:4px 8px; font-size:13px;">
-									<strong>@data.Category:</strong> @data.Value görev
-								</div>
-							</TooltipTemplate>
-
-						</RadzenColumnSeries>
-
-						<RadzenCategoryAxis Padding="20"></RadzenCategoryAxis>
-						<RadzenValueAxis></RadzenValueAxis>
-						<RadzenLegend Position="LegendPosition.Right"></RadzenLegend>
-					</RadzenChart>
-				</div>
-			</div>
-
-			<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
-				<h5 style="color:#3498db; font-weight:600; margin-bottom:15px;">Görev Takvimi</h5>
-				<p style="color:#555; font-size:14px; margin-bottom:15px;">
-					Tüm görevleri tarihlerine göre görüntüleyin
-				</p>
-				<div class="calendar-container" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-top:20px;">
-					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Pzt</div>
-					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Sal</div>
-					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Çar</div>
-					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Per</div>
-					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cum</div>
-					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cmt</div>
-					<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Paz</div>
-
-					@foreach (var day in GetCalendarDays())
-					{
-						var dayGorevler = GetGorevlerForDate(day);
-						var isToday = day.Date == DateTime.Today;
-						var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
-
-						<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px;
-															background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
-															cursor:pointer; position:relative;"
-							 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
-							<div style="font-weight:@(isToday ? "bold" : "normal");
-																color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
-																margin-bottom:5px;">
-								@day.Day
-							</div>
-							@if (dayGorevler.Any())
-							{
-								<div style="display:flex; flex-direction:column; gap:2px;">
-									@foreach (var gorev in dayGorevler.Take(3))
-									{
-										var renk = GetGorevRengi(gorev);
-										<div style="font-size:10px; padding:2px 4px; background:@renk; color:white;
-																							border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-											 title="@gorev.Baslik">
-											@gorev.Baslik
-										</div>
-									}
-									@if (dayGorevler.Count() > 3)
-									{
-										<div style="font-size:10px; color:#666; text-align:center; margin-top:2px;">
-											+@(dayGorevler.Count() - 3) daha
-										</div>
-									}
-								</div>
-							}
-						</div>
-					}
-				</div>
-
-				<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
-					<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-								  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
-					<h6 style="margin:0; font-weight:600;">@selectedMonth.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</h6>
-					<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-								  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
+					<RadzenIcon Icon="list" Style="font-size:32px; color:#3498db; opacity:0.6;"></RadzenIcon>
 				</div>
 			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #f1c40f; cursor:pointer;" @onclick="@(() => NavigateToGorevler(0))">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Aktif Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@(aktifGorevler.Count())</RadzenText>
+					</div>
+					<RadzenIcon Icon="schedule" Style="font-size:32px; opacity:0.6; color:#f1c40f;"></RadzenIcon>
+				</div>
+			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #e74c3c; cursor:pointer;" @onclick="@(() => NavigateToGorevler(1))">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Bugünkü Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@(BugunkuGorevler.Count())</RadzenText>
+					</div>
+					<RadzenIcon Icon="schedule" Style="font-size:32px; opacity:0.6; color:#e74c3c;"></RadzenIcon>
+				</div>
+			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #9b59b6; cursor:pointer;" @onclick="@(() => NavigateToGorevler(2))">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Tamamlanan Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@(tamamlananGorevler.Count())</RadzenText>
+					</div>
+					<RadzenIcon Icon="done_all" Style="font-size:32px; opacity:0.6; color:#9b59b6;"></RadzenIcon>
+				</div>
+			</RadzenCard>
+
+			<RadzenCard class="radzen-hover-effect" Style="width:230px; border-left: 5px solid #f39c12; cursor:pointer;" @onclick="@(() => NavigateToGorevler(6))">
+				<div style="display:flex; justify-content:space-between; align-items:center;">
+					<div>
+						<RadzenText TextStyle="TextStyle.Subtitle2">Bana Özel Görevler</RadzenText>
+						<RadzenText TextStyle="TextStyle.H4">@(SizeOzelGorevler.Count())</RadzenText>
+					</div>
+					<RadzenIcon Icon="lock" Style="font-size:32px; opacity:0.6; color:#f39c12;"></RadzenIcon>
+				</div>
+			</RadzenCard>
+		</RadzenStack>
+
+		<div class="row">
+			<div class="col-md-6">
+				<RadzenChart Style="height:300px; transition: all 0.4s ease-in-out;"
+							 Palette="@(new[] { "#3498db", "#9b59b6", "#e74c3c", "#f39c12" })">
+					<RadzenPieSeries Data="@GorevDurumData" ValueProperty="Value" CategoryProperty="Category" Title="Görev Durum Dağılımı">
+						<TooltipTemplate Context="data">
+							<div style="padding:4px 8px; font-size:13px;">
+								<strong>@data.Category:</strong> @data.Value görev
+							</div>
+						</TooltipTemplate>
+					</RadzenPieSeries>
+					<RadzenLegend Position="LegendPosition.Right"></RadzenLegend>
+				</RadzenChart>
+			</div>
+
+			<div class="col-md-6">
+				<RadzenChart Style="height:320px; transition:all 0.4s ease-in-out;"
+							 Palette="@(new[] { "#3498db", "#9b59b6", "#e74c3c", "#f39c12" })">
+					<RadzenColumnSeries Data="@GorevDurumData" CategoryProperty="Category" ValueProperty="Value" Title="Görev Sayısı">
+						<TooltipTemplate Context="data">
+							<div style="padding:4px 8px; font-size:13px;">
+								<strong>@data.Category:</strong> @data.Value görev
+							</div>
+						</TooltipTemplate>
+					</RadzenColumnSeries>
+
+					<RadzenCategoryAxis Padding="20"></RadzenCategoryAxis>
+					<RadzenValueAxis></RadzenValueAxis>
+					<RadzenLegend Position="LegendPosition.Right"></RadzenLegend>
+				</RadzenChart>
+			</div>
+		</div>
+
+		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
+			<h5 style="color:#3498db; font-weight:600; margin-bottom:15px;">Görev Takvimi</h5>
+			<p style="color:#555; font-size:14px; margin-bottom:15px;">
+				Tüm görevleri tarihlerine göre görüntüleyin
+			</p>
+			<div class="calendar-container" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-top:20px;">
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Pzt</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Sal</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Çar</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Per</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cum</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cmt</div>
+				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Paz</div>
+
+				@foreach (var day in GetCalendarDays())
+				{
+					var dayGorevler = GetGorevlerForDate(day);
+					var isToday = day.Date == DateTime.Today;
+					var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
+
+					<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px;
+		                        background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
+		                        cursor:pointer; position:relative;"
+						 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
+						<div style="font-weight:@(isToday ? "bold" : "normal");
+		                            color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
+		                            margin-bottom:5px;">
+							@day.Day
+						</div>
+						@if (dayGorevler.Any())
+						{
+							<div style="display:flex; flex-direction:column; gap:2px;">
+								@foreach (var gorev in dayGorevler.Take(3))
+								{
+									var renk = GetGorevRengi(gorev);
+									<div style="font-size:10px; padding:2px 4px; background:@renk; color:white;
+				                                        border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+										 title="@gorev.Baslik">
+										@gorev.Baslik
+									</div>
+								}
+								@if (dayGorevler.Count() > 3)
+								{
+									<div style="font-size:10px; color:#666; text-align:center; margin-top:2px;">
+										+@(dayGorevler.Count() - 3) daha
+									</div>
+								}
+							</div>
+						}
+					</div>
+				}
+			</div>
+
+			<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
+				<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
+				<h6 style="margin:0; font-weight:600;">@selectedMonth.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</h6>
+				<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
+			</div>
+		</RadzenCard>
 
 			<div class="row mt-4">
 				<div class="col-md-12">
@@ -347,22 +340,21 @@
 							</Template>
 						</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Title="Atanan Kişi">
-							<Template Context="g">
-								@if (!g.Kilitli)
+					<RadzenDataGridColumn TItem="ItemGorev"
+										  Title="@(_yetki == YetkiTipi.Yazma ? "Atanan Kişiler" :
+				 		   _yetki == YetkiTipi.Okuma ? "Atayan Kişi" : "—")">
+					<Template Context="g">
+						@if (_yetki == YetkiTipi.Yazma)
+							{
+								var list = GetAtananKisiListesi(g);
+								if (list != null && list.Any())
 								{
-									<span>—</span>
-								}
-								else if (GetAtananKisiSayisi(g) > 1)
-								{
-									var list = GetAtananKisiListesi(g);
-
 									<div style="display:flex; flex-direction:column; gap:4px;">
 										<div style="display:flex; flex-wrap:wrap; gap:6px;">
 											@foreach (var ad in list)
 											{
 												<span style="background:#f0f0f0; padding:2px 6px;
-				                                      border-radius:4px; font-size:11px; color:#333;">
+				                                  border-radius:4px; font-size:11px; color:#333;">
 													@ad
 												</span>
 											}
@@ -371,10 +363,19 @@
 								}
 								else
 								{
-									<span>@GetTekKisiAdi(g)</span>
+									<span>—</span>
 								}
-							</Template>
-						</RadzenDataGridColumn>
+							}
+							else if (_yetki == YetkiTipi.Okuma)
+							{
+								var atayan = GetAtayanKullaniciAdi(g.CreUser);
+							}
+							else
+							{
+								<span>—</span>
+							}
+						</Template>
+					</RadzenDataGridColumn>
 						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="120px">
 							<Template Context="onem">
 								<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
@@ -405,312 +406,6 @@
 		}
 	</RadzenStack>
 
-}
-else if (kullaniciTip != null || kullaniciTip.Adi == "Standart")
-{
-	<RadzenStack Orientation="Orientation.Vertical" Gap="20px" class="rz-p-md">
-
-		<h2 style="font-family:serif;font-weight: bold; ">Gösterge Paneli</h2>
-		<RadzenStack Orientation="Orientation.Horizontal" Gap="20px">
-
-			<RadzenCard class="radzen-hover-effect" Style="width:230px;cursor:pointer; border-left:5px solid #3498db;" @onclick="@(() => NavigateToGorevler2(6))">
-				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<div>
-						<RadzenText TextStyle="TextStyle.Subtitle2">Toplam Görev</RadzenText>
-						<RadzenText TextStyle="TextStyle.H4">@(STumGorevler.Count())</RadzenText>
-					</div>
-					<RadzenIcon Icon="list" Style="font-size:32px; color:#3498db; opacity:0.6;" />
-				</div>
-			</RadzenCard>
-
-			<RadzenCard class="radzen-hover-effect"
-						Style="width:230px; border-left:5px solid #27ae60; cursor:pointer;"  @onclick="@(() => NavigateToGorevler2(0))">
-				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<div>
-						<RadzenText TextStyle="TextStyle.Subtitle2">Aktif Görevler</RadzenText>
-						<RadzenText TextStyle="TextStyle.H4">@(SAktifGorevler.Count())</RadzenText>
-					</div>
-					<RadzenIcon Icon="play_circle" Style="font-size:32px; color:#27ae60; opacity:0.6;" />
-				</div>
-			</RadzenCard>
-
-			<RadzenCard class="radzen-hover-effect"
-						Style="width:230px; border-left:5px solid #f39c12;">
-				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<div>
-						<RadzenText TextStyle="TextStyle.Subtitle2">Bugünkü Görevler</RadzenText>
-						<RadzenText TextStyle="TextStyle.H4">@BugunkuGorevler.Count()</RadzenText>
-					</div>
-					<RadzenIcon Icon="schedule" Style="font-size:32px; color:#f39c12; opacity:0.6;" />
-				</div>
-			</RadzenCard>
-
-			<RadzenCard class="radzen-hover-effect"
-						Style="width:230px; border-left:5px solid #9b59b6; cursor:pointer;" @onclick="@(() => NavigateToGorevler2(2))">
-				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<div>
-						<RadzenText TextStyle="TextStyle.Subtitle2">Tamamlanan</RadzenText>
-						<RadzenText TextStyle="TextStyle.H4">@(STamamlananGorevler.Count())</RadzenText>
-					</div>
-					<RadzenIcon Icon="done_all" Style="font-size:32px; color:#9b59b6; opacity:0.6;" />
-				</div>
-			</RadzenCard>
-
-			<RadzenCard class="radzen-hover-effect"
-						Style="width:230px; border-left:5px solid pink; cursor:pointer;" @onclick="@(() => NavigateToGorevler2(5))">
-				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<div>
-						<RadzenText TextStyle="TextStyle.Subtitle2">Size Özel Görevler</RadzenText>
-						<RadzenText TextStyle="TextStyle.H4">@(SizeOzelGorevler.Count())</RadzenText>
-					</div>
-					<RadzenIcon Icon="lock" Style="font-size:32px; color:pink; opacity:0.6;" />
-				</div>
-			</RadzenCard>
-
-		</RadzenStack>
-
-		
-
-
-		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #3498db; margin-top:20px;">
-			<h5 style="color:#3498db; font-weight:600; margin-bottom:15px;">Görev Takvimi</h5>
-			<p style="color:#555; font-size:14px; margin-bottom:15px;">
-				Görevlerinizi tarihlerine göre görüntüleyin
-			</p>
-			<div class="calendar-container" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:8px; margin-top:20px;">
-				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Pzt</div>
-				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Sal</div>
-				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Çar</div>
-				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Per</div>
-				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cum</div>
-				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Cmt</div>
-				<div style="text-align:center; font-weight:600; padding:10px; background:#f8f9fa; border-radius:4px; color:#555;">Paz</div>
-
-				@foreach (var day in GetCalendarDays())
-				{
-					var dayGorevler = GetGorevlerForDate(day);
-					var isToday = day.Date == DateTime.Today;
-					var isCurrentMonth = day.Month == selectedMonth.Month && day.Year == selectedMonth.Year;
-
-					<div style="min-height:100px; padding:8px; border:1px solid #e0e0e0; border-radius:4px;
-												background:@(isToday ? "#e3f2fd" : isCurrentMonth ? "white" : "#f5f5f5");
-												cursor:pointer; position:relative;"
-						 @onclick="@(() => ShowDayDetails(day, dayGorevler))">
-						<div style="font-weight:@(isToday ? "bold" : "normal");
-													color:@(isToday ? "#1976d2" : isCurrentMonth ? "#333" : "#999");
-													margin-bottom:5px;">
-							@day.Day
-						</div>
-						@if (dayGorevler.Any())
-						{
-							<div style="display:flex; flex-direction:column; gap:2px;">
-								@foreach (var gorev in dayGorevler.Take(3))
-								{
-									var renk = GetGorevRengi(gorev);
-									<div style="font-size:10px; padding:2px 4px; background:@renk; color:white;
-																				border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-										 title="@gorev.Baslik">
-										@gorev.Baslik
-									</div>
-								}
-								@if (dayGorevler.Count() > 3)
-								{
-									<div style="font-size:10px; color:#666; text-align:center; margin-top:2px;">
-										+@(dayGorevler.Count() - 3) daha
-									</div>
-								}
-							</div>
-						}
-					</div>
-				}
-			</div>
-
-			<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
-				<RadzenButton Icon="chevron_left" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(-1); StateHasChanged(); })" />
-				<h6 style="margin:0; font-weight:600;">@selectedMonth.ToString("MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))</h6>
-				<RadzenButton Icon="chevron_right" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-							  Click="@(() => { selectedMonth = selectedMonth.AddMonths(1); StateHasChanged(); })" />
-			</div>
-		</RadzenCard>
-		<div class="row mt-4">
-			<div class="col-md-12">
-				<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0,0.1); border-left:5px solid #e74c3c;">
-					<h5 style="color:#e74c3c; font-weight:600; margin-bottom:10px;">Kritik Aktif Görevler </h5>
-					<p style="color:#555; font-size:14px; margin-bottom:10px;">
-						Yüksek öneme sahip aktif görevlerin listesi
-					</p>
-
-					@if (kritikGorevler != null && kritikGorevler.Any())
-					{
-						<RadzenDataGrid Data="@kritikGorevler" TItem="ItemGorev" RowSelect="GorevSecildi" Style="max-height:250px; overflow-y:auto;">
-							<Columns>
-								<RadzenDataGridColumn TItem="ItemGorev" Width="55px">
-									<Template Context="g">
-										@if (g.BitisTarihi.HasValue &&
-																		g.BitisTarihi.Value < DateTime.Now &&
-																		!g.Tamamlandi)
-										{
-											<RadzenIcon Icon="warning"
-														Style="color:#e74c3c;"
-														Title="Süresi dolmuş görev" />
-										}
-									</Template>
-								</RadzenDataGridColumn>
-								<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık"></RadzenDataGridColumn>
-								<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}"></RadzenDataGridColumn>
-								<RadzenDataGridColumn TItem="ItemGorev" Title="Önem">
-									<Template Context="onem">
-										<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:4px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
-											@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
-										</span>
-									</Template>
-								</RadzenDataGridColumn>
-								<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Durum">
-									<Template Context="durum">
-										<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Aktif ? "#4caf50" : "#e53935"); color:white;">
-											@(durum.Aktif ? "Aktif" : "Pasif")
-										</span>
-									</Template>
-								</RadzenDataGridColumn>
-							</Columns>
-						</RadzenDataGrid>
-					}
-					else
-					{
-						<div style="padding:10px; color:#888;">Kritik aktif görev bulunmuyor.</div>
-					}
-
-				</RadzenCard>
-			</div>
-
-		</div>
-
-		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid lightskyblue; margin-top:20px;">
-			<h5 style="color:lightskyblue; font-weight:600; margin-bottom:10px;">Bana Atanan Görevler</h5>
-			<p style="color:#555; font-size:14px; margin-bottom:10px;">
-				Size Özel Görevlerin listesi @(currentUserId.HasValue ? $"(Kullanıcı ID: {currentUserId.Value})" : "(Kullanıcı ID yüklenemedi)")
-			</p>
-			@if (adminGorevleri != null && adminGorevleri.Any())
-			{
-				<RadzenDataGrid Data="@adminGorevleri" TItem="ItemGorev" RowSelect="GorevSecildi" AllowPaging="true" PageSize="5" AllowSorting="true" class="radzen-grid">
-					<Columns>
-						<RadzenDataGridColumn TItem="ItemGorev" Width="55px">
-							<Template Context="g">
-								@if (g.BitisTarihi.HasValue &&
-														g.BitisTarihi.Value < DateTime.Now &&
-														!g.Tamamlandi)
-								{
-									<RadzenIcon Icon="warning"
-												Style="color:#e74c3c;"
-												Title="Süresi dolmuş görev" />
-								}
-							</Template>
-						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="No" Width="0px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn Title="No" Width="100px">
-							<Template Context="g">
-								@(adminGorevleri.ToList().IndexOf(g) + 1)
-							</Template>
-						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="350px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Title="Atayan Kişi" Width="150px">
-							<Template Context="g">
-								@GetAtayanKullaniciAdi(g.CreUser)
-							</Template>
-
-						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="150px"></RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="OnemDerecesi" Title="Önem" Width="100px">
-							<Template Context="onem">
-								<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; color:white; background-color:@GetOnemRengi(onem.OnemDerecesi)">
-									@(string.IsNullOrWhiteSpace(onem.OnemDerecesi) ? "Yok" : onem.OnemDerecesi)
-								</span>
-							</Template>
-						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Aktif" Title="Aktif" Width="80px">
-							<Template Context="durum">
-								<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Aktif ? "#4caf50" : "#e53935"); color:white;">
-									@(durum.Aktif ? "Aktif" : "Pasif")
-								</span>
-							</Template>
-						</RadzenDataGridColumn>
-						<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Tamamlandı" Width="100px">
-							<Template Context="durum">
-								<span style="display:inline-block; width:60px; text-align:center; font-size:12px; padding:3px 8px; border-radius:6px; background-color:@(durum.Tamamlandi ? "#4caf50" : "#e53935"); color:white;">
-									@(durum.Tamamlandi ? "Evet" : "Hayır")
-								</span>
-							</Template>
-						</RadzenDataGridColumn>
-					</Columns>
-				</RadzenDataGrid>
-			}
-			else
-			{
-				<div style="padding:20px; text-align:center; color:#888;">
-					<p>Size atanan görev bulunmuyor.</p>
-					<p style="font-size:12px; margin-top:10px;">
-						@if (!currentUserId.HasValue)
-						{
-							<span>Kullanıcı ID yüklenemedi. Lütfen giriş yaptığınızdan emin olun.</span>
-						}
-						else
-						{
-							<span>Kilitli görevler ve size atanan görevler burada görünecektir.</span>
-						}
-					</p>
-				</div>
-			}
-		</RadzenCard>
-
-		<RadzenCard Style="box-shadow:0 4px 10px rgba(0, 0, 0, 0.1); border-left:5px solid #16a085; margin-top:20px;">
-			<h5 style="font-weight:600; margin-bottom:10px; color:#16a085;">Görevlerim</h5>
-
-			<RadzenDataGrid Data="@kullaniciGorevler"
-							TItem="ItemGorev"
-							AllowPaging="true"
-							PageSize="5"
-							RowSelect="GorevSecildi"
-							AllowSorting="true"
-							class="radzen-grid">
-				<Columns>
-					<RadzenDataGridColumn Title="No" Width="100px">
-						<Template Context="g">
-							@(kullaniciGorevler.ToList().IndexOf(g) + 1)
-						</Template>
-					</RadzenDataGridColumn>
-					<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Görev" />
-					<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş"
-										  FormatString="{0:dd.MM.yyyy HH:mm}" />
-
-					<RadzenDataGridColumn TItem="ItemGorev" Property="Tamamlandi" Title="Durum">
-						<Template Context="item">
-							<span style="@($"font-size:12px; padding:3px 8px; display:inline-block; text-align:center; width:90px; border-radius:6px; background-color:{(item.Tamamlandi ? "#4caf50" : "#e53935")}; color:white;")">
-								@(item.Tamamlandi ? "Tamamlandı" : "Devam Ediyor")
-							</span>
-						</Template>
-					</RadzenDataGridColumn>
-
-				</Columns>
-			</RadzenDataGrid>
-		</RadzenCard>
-
-	</RadzenStack>
-}
-else
-{
-	<RadzenCard Style="max-width:400px; margin:100px auto; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.1); padding:30px; border-left:5px solid #e74c3c;">
-		<RadzenIcon Icon="lock" Style="font-size:64px; color:#e74c3c; margin-bottom:20px;" />
-
-		<h2 style="margin-bottom:10px;">Erişim Engellendi</h2>
-		<p style="color:#555; font-size:14px; margin-bottom:20px;">
-			Bu sayfaya erişim yetkiniz bulunmamaktadır.<br />
-			Lütfen yönetici ile iletişime geçin veya başka bir sayfaya dönün.
-		</p>
-
-		<RadzenButton Text="Anasayfaya Dön" Icon="home" Style="background-color:#3498db; color:white;" Click="@GoHome" />
-	</RadzenCard>
-}
 
 
 @code {
@@ -722,27 +417,32 @@ else
 	private List<ItemGorev> GorevListt = new();
 	private List<ItemGorev> adminGorevleri = new();
 	private List<User> kullaniciListesi = new();
+	private List<Panel> DashboardPanelleri = new();
 	private bool IsLoading = true;
 	private int? currentUserId = null;
 	ItemGorev? SeciliGorev;
+	private ItemForm form;
 	int? gorevId;
+	private YetkiTipi _yetki;
+	
+	private IEnumerable<ItemGorev> DashboardGorevleri = new List<ItemGorev>();
 
-	private IEnumerable<ItemGorev> TumGorevler => GorevListt.Where(g => g.DelUser == 0).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> aktifGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
+	private IEnumerable<ItemGorev> TumGorevler => DashboardGorevleri.Where(g => g.DelUser == 0).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> aktifGorevler => DashboardGorevleri.Where(g => g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today));
 	private IEnumerable<ItemGorev> yaklasanGorevler => aktifGorevler.Where(g => g.BitisTarihi.HasValue && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> tamamlananGorevler => GorevListt.Where(g => g.Tamamlandi).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> gecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
-	private IEnumerable<ItemGorev> pasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> tamamlananGorevler => DashboardGorevleri.Where(g => g.Tamamlandi).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> gecmisGorevler => DashboardGorevleri.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
+	private IEnumerable<ItemGorev> pasifGorevler => DashboardGorevleri.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 	private IEnumerable<ItemGorev> yuksekOnemliGorevler => aktifGorevler.Where(g => g.OnemDerecesi?.ToLower() == "yüksek").OrderBy(g => g.BitisTarihi).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 
-	private IEnumerable<ItemGorev> BugunkuGorevler => GorevListt.Where(g => g.Aktif && !g.Tamamlandi && g.CreDate.Date == DateTime.Today).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> SAktifGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> SYaklasanGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && !g.Kilitli && g.Aktif && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && g.DelUser == 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> STamamlananGorevler =>GorevListt.Where(g => g.Tamamlandi && g.DelUser == 0 && (!g.Kilitli || g.Kullanici_ID == currentUserId));
-	private IEnumerable<ItemGorev> SGecmisGorevler => GorevListt.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
-	private IEnumerable<ItemGorev> SPasifGorevler => GorevListt.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> SizeOzelGorevler => GorevListt.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
-	private IEnumerable<ItemGorev> STumGorevler => GorevListt.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> BugunkuGorevler => DashboardGorevleri.Where(g => g.Aktif && !g.Tamamlandi && g.CreDate.Date == DateTime.Today).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> SAktifGorevler => DashboardGorevleri.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> SYaklasanGorevler => DashboardGorevleri.Where(g => g.BitisTarihi.HasValue && !g.Kilitli && g.Aktif && (g.BitisTarihi.Value - DateTime.Now).TotalDays > 0 && g.DelUser == 0 && (g.BitisTarihi.Value - DateTime.Now).TotalDays <= 7).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> STamamlananGorevler => DashboardGorevleri.Where(g => g.Tamamlandi && g.DelUser == 0 && (!g.Kilitli || g.Kullanici_ID == currentUserId));
+	private IEnumerable<ItemGorev> SGecmisGorevler => DashboardGorevleri.Where(g => g.BitisTarihi.HasValue && g.BitisTarihi.Value < DateTime.Now && !g.Tamamlandi);
+	private IEnumerable<ItemGorev> SPasifGorevler => DashboardGorevleri.Where(g => !g.Aktif && !g.Tamamlandi && (!g.BitisTarihi.HasValue || g.BitisTarihi.Value >= DateTime.Today)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> SizeOzelGorevler => DashboardGorevleri.Where(g => g.Kullanici_ID == currentUserId && g.Kilitli && !g.Tamamlandi && g.Aktif).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
+	private IEnumerable<ItemGorev> STumGorevler => DashboardGorevleri.Where(g => (g.Kullanici_ID == currentUserId || !g.Kilitli) && g.DelUser == 0).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First());
 
 	class GorevDurum
 	{
@@ -760,6 +460,8 @@ else
 	private bool ozelGorevBildirimiGoruldu = false;
 	private bool genelGorevBildirimiGoruldu = false;
 	private DateTime selectedMonth = DateTime.Now;
+
+	IEnumerable<ItemGorev> TakvimGorevler;
 
 	//sayfa ilk kez ekrana çizildikten sonra dashboard verilerini yüklemek için kullanılır.
 	protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -840,47 +542,75 @@ else
 		// dashboard'da da görev verileri gösterilir. Yetki kontrolü yapılmaz.
 		await YukleGorevler();
 
-		if (kullaniciTip.Adi == "Standart")
+		_yetki = await DataService.GetUserFormYetkiAsync(currentUserId.Value, kullaniciTip.ID, 8);
+
+		if (_yetki == YetkiTipi.Yazma)
 		{
-			kullaniciGorevler = GorevListt
-				.Where(x => (x.Kullanici_ID == currentUserId || !x.Kilitli) && x.Aktif)
-				.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First())
+			DashboardGorevleri = GorevListt;
+		}
+		else if (_yetki == YetkiTipi.Okuma)
+		{
+			DashboardGorevleri = GorevListt
+				.Where(g => !g.Kilitli || g.Kullanici_ID == currentUserId)
 				.ToList();
 		}
 		else
 		{
-			kullaniciGorevler = GorevListt.GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First()).ToList();
+			DashboardGorevleri = new List<ItemGorev>();
 		}
+		kullaniciGorevler = DashboardGorevleri
+	.Where(g => g.DelUser == 0)   // gerekirse filtre
+	.OrderByDescending(g => g.BaslangicTarihi)
+	.ToList();
+		TakvimGorevler = _yetki switch
+		{
+			YetkiTipi.Yazma => DashboardGorevleri
+								.Where(g => g.Aktif || g.Tamamlandi)
+								.OrderBy(g => g.BaslangicTarihi)
+								.ToList(),
 
+			YetkiTipi.Okuma => DashboardGorevleri
+								.Where(g => (g.Aktif || g.Tamamlandi)
+											&& (!g.Kilitli || g.Kullanici_ID == currentUserId))
+								.OrderBy(g => g.BaslangicTarihi)
+								.ToList(),
+
+			_ => new List<ItemGorev>()
+		};
 		HazirlaDashboardVerileri();
 
-		if (kullaniciTip?.Adi == "Admin")
+		if (_yetki == YetkiTipi.Yazma)
 		{
-			kritikGorevler = GorevListt
+			kritikGorevler = DashboardGorevleri
 				.Where(g => g.OnemDerecesi?.ToLower() == "yüksek"
 							&& g.Aktif
-							&& !g.Tamamlandi).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First())
+							&& !g.Tamamlandi)
+				.GroupBy(g => new { g.BaslangicTarihi, g.Baslik })
+				.Select(x => x.First())
 				.ToList();
 		}
-		else if (kullaniciTip?.Adi == "Standart")
+		else if (_yetki == YetkiTipi.Okuma)
 		{
-			kritikGorevler = GorevListt
+			kritikGorevler = DashboardGorevleri
 				.Where(g => g.OnemDerecesi?.ToLower() == "yüksek"
 							&& g.Aktif
 							&& !g.Tamamlandi
-							&& (!g.Kilitli || g.Kullanici_ID == currentUserId)).GroupBy(g => new { g.BaslangicTarihi, g.Baslik }).Select(x => x.First())
+							&& (!g.Kilitli || g.Kullanici_ID == currentUserId))
+				.GroupBy(g => new { g.BaslangicTarihi, g.Baslik })
+				.Select(x => x.First())
 				.ToList();
 		}
 		else
 		{
 			kritikGorevler = new List<ItemGorev>();
 		}
+		
 
 		IsLoading = false;
 		await InvokeAsync(StateHasChanged);
 
 		await KontrolEtYeniGorevler();
-		await InvokeAsync(StateHasChanged); 
+		await InvokeAsync(StateHasChanged);
 	}
 
 	//kullanıcı için yeni görev bildirimi gösterilip gösterilmeyeceğini kontrol eden metottur.
@@ -889,40 +619,39 @@ else
 		try
 		{
 			if (!currentUserId.HasValue)
-			{
 				return;
-			}
 
+			// LocalStorage'dan bildirim durumlarını al
 			var ozelBildirimGoruldu = await Js.InvokeAsync<string>("localStorage.getItem", $"yeniGorevBildirimiGoruldu_Ozel_{currentUserId.Value}");
 			var genelBildirimGoruldu = await Js.InvokeAsync<string>("localStorage.getItem", $"yeniGorevBildirimiGoruldu_Genel_{currentUserId.Value}");
 
 			ozelGorevBildirimiGoruldu = ozelBildirimGoruldu == "true";
 			genelGorevBildirimiGoruldu = genelBildirimGoruldu == "true";
 
+			// Kullanıcının son giriş tarihini al
 			var sonGirisTarihi = await DataService.GetSonGirisAsync(currentUserId.Value);
 
-			yeniGenelGorevSayisi = await DataService.GetYeniGorevDetaylariGenel(currentUserId.Value, sonGirisTarihi);
+			// Kullanıcının yeni özel ve genel görev sayılarını al
 			yeniOzelGorevSayisi = await DataService.GetYeniGorevDetaylariOzel(currentUserId.Value, sonGirisTarihi);
-			yeniGorevSayisi = yeniGenelGorevSayisi + yeniOzelGorevSayisi;
+			yeniGenelGorevSayisi = await DataService.GetYeniGorevDetaylariGenel(currentUserId.Value, sonGirisTarihi);
 
+			// Gösterilecek sayıları belirle
 			gosterilecekOzelGorevSayisi = ozelGorevBildirimiGoruldu ? 0 : yeniOzelGorevSayisi;
 			gosterilecekGenelGorevSayisi = genelGorevBildirimiGoruldu ? 0 : yeniGenelGorevSayisi;
 
-			if (gosterilecekOzelGorevSayisi > 0 || gosterilecekGenelGorevSayisi > 0)
-			{
-				showYeniGorevBildirimi = true;
-			}
-			else
-			{
-				showYeniGorevBildirimi = false;
-			}
+			// Toplam yeni görev sayısı
+			yeniGorevSayisi = gosterilecekOzelGorevSayisi + gosterilecekGenelGorevSayisi;
+
+			// Bildirim gösterme kararı
+			showYeniGorevBildirimi = yeniGorevSayisi > 0;
 		}
 		catch (Exception ex)
 		{
-			
+			// Hata loglama
+			Console.WriteLine($"KontrolEtYeniGorevler hatası: {ex.Message}");
 		}
-	}
-
+	}   
+	
 	//oturum açmış olan kullanıcının kimliğini sisteme yüklemek için kullanılır.
 	private async Task YukleKullaniciId()
 	{
@@ -992,12 +721,6 @@ else
 
 	//kullanıcıyı görevler sayfasına belirli bir sekme açık olacak şekilde yönlendirmek için kullanılır.Admin için.
 	private void NavigateToGorevler(int tabIndex)
-	{
-		NavigationManager.NavigateTo($"/Gorevler?tab={tabIndex}");
-	}
-
-	//kullanıcıyı görevler sayfasına belirli bir sekme açık olacak şekilde yönlendirmek için kullanılır.Standart tipi için.
-	private void NavigateToGorevler2(int tabIndex)
 	{
 		NavigationManager.NavigateTo($"/Gorevler?tab={tabIndex}");
 	}
@@ -1100,45 +823,17 @@ else
 	}
 
 	//Takvimde her tarih için gösterilen görevler metodu.
-	private IEnumerable<ItemGorev> GetGorevlerForDate(DateTime date)
-	{
-		if (GorevListt == null || !GorevListt.Any())
-			return Enumerable.Empty<ItemGorev>();
-
-		var tarihFiltreli = GorevListt
-		.Where(g => g.Aktif) 
-		.Where(g =>
-			(g.BitisTarihi.HasValue && g.BitisTarihi.Value.Date == date.Date) ||
-			(g.BaslangicTarihi.HasValue && g.BaslangicTarihi.Value.Date == date.Date));
-		var tekil = tarihFiltreli
-			.GroupBy(g => new
-			{
-				Gun = (g.BitisTarihi ?? g.BaslangicTarihi)?.Date,
-				g.Baslik,
-				g.Kullanici_ID
-			})
-			.Select(x => x.First());
-
-		if (!currentUserId.HasValue)
-			return Enumerable.Empty<ItemGorev>();
-
-		if (kullaniciTip?.Adi == "Standart")
-		{
-			return tekil.Where(g =>
-				!g.Kilitli ||
-				g.Kullanici_ID == currentUserId.Value
-			);
-		}
-
-		if (kullaniciTip?.Adi == "Admin")
-		{
-			return tekil.Where(g =>
-				!g.Kilitli ||
-				g.Kullanici_ID == currentUserId.Value
-			);
-		}
-		return Enumerable.Empty<ItemGorev>();
-	}
+	private List<ItemGorev> GetGorevlerForDate(DateTime day)
+{
+    return TakvimGorevler
+        .Where(g =>
+            g.DelUser == 0 &&
+            g.Aktif &&
+            g.BaslangicTarihi.HasValue &&
+            g.BaslangicTarihi.Value.Date == day.Date)
+        .OrderBy(g => g.BaslangicTarihi)
+        .ToList();
+}
 
 	//Takvim tarihinde her bir görevin önemine yada süresine göre renk verilen metot.
 	private string GetGorevRengi(ItemGorev gorev)
@@ -1249,9 +944,6 @@ else
 	// standart tipindeki Kullanıcı dashboard undaki görevlerim özeti yerinde atayan kişinin beli olmasına yarayan bir metot.
 	private MarkupString GetAtayanKullaniciAdi(int? creUserId)
 	{
-		Console.WriteLine($"CreUserId: {creUserId}");
-		Console.WriteLine($"Kullanıcı sayısı: {kullaniciListesi.Count}");
-
 		if (!creUserId.HasValue || creUserId.Value == 0)
 			return (MarkupString)"—";
 
@@ -1295,4 +987,5 @@ else
 	{
 		NavigationManager.NavigateTo("/", forceLoad: true);
 	}
+	
 }
