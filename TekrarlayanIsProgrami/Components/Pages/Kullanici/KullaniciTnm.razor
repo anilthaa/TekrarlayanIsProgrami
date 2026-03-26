@@ -1,5 +1,5 @@
 ﻿
-@if (isLoading || kullanicilar == null)
+@if ((isLoading || kullanicilar == null)&& IsEdit==true)
 {
 	<RadzenCard class="text-center mt-5">
 		<RadzenProgressBar Value="100" ShowValue="false" Indeterminate="true" Style="width:220px;" />
@@ -8,11 +8,9 @@
 }
 else
 {
-	@if (kullanicilar.ID != 0)
-	{
 		<div Style="max-width:600px; margin:auto; padding:20px;">
-			<h3 class="text-center mb-4">Kullanıcı Düzenle</h3>
-			<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@Kaydet" Style="align-items:center; border:none;">
+		<h3 class="text-center mb-4"> @(IsEdit ? "Kullanıcı Düzenle" : "Kullanıcı Ekle")</h3>
+			<RadzenTemplateForm Data="@kullanicilar" TItem="User" Submit="@OnSubmit" Style="align-items:center; border:none;">
 			  <RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
 					<DataAnnotationsValidator />
 
@@ -32,13 +30,13 @@ else
 				<ValidationMessage For="@(() => kullanicilar.EPosta)"></ValidationMessage>
 
 				<RadzenFormField Text="Kullanıcı Tipi" Style="width:85%; margin-left:41px; margin-top:4px;">
-					<RadzenDropDown Data="@kullaniciTipleri" TextProperty="Adi" ValueProperty="ID" Style="width:100%;"
+					<RadzenDropDown Data="@kullaniciTipleri" TValue="int" TextProperty="Adi" ValueProperty="ID" Style="width:100%;"
 					@bind-Value="kullanicilar.KullaniciTip_ID" />
 				</RadzenFormField>
 
 					<div class="text-center mt-4">
 							<div class="btn-group">
-								<RadzenButton Text="Güncelle"
+						<RadzenButton Text="@(IsEdit ? " Güncelle" : "Kaydet" )"
 											  ButtonType="ButtonType.Submit"
 											  Icon="save"
 											  Style="width:30%; margin:auto;"
@@ -49,57 +47,9 @@ else
 					</div>
 				</RadzenFieldset>
 			</RadzenTemplateForm>
-		</div>
-	}
-	else
-	{
-		<div class="max-width:600px; margin:auto; padding:20px;">
-
-			<h3 class="card-title text-center mb-4">Kullanıcı Ekle</h3>
-			<RadzenTemplateForm Data="@newUser" TItem="User" Submit="@OnSubmit">
-				<RadzenFieldset Text="Bilgiler" Style="margin-bottom:15px;">
-					<DataAnnotationsValidator />
-					<RadzenFormField Text="Ad" Style="width:85%; margin-left:41px; margin-top:4px;">
-						<RadzenTextBox class="form-control" @bind-Value="newUser.Adi" />
-					</RadzenFormField>
-					<ValidationMessage For="@(() => newUser.Adi)"></ValidationMessage>
-
-					<RadzenFormField Text="Soyad" Style="width:85%; margin-left:41px; margin-top:4px;">
-						<RadzenTextBox class="form-control" @bind-Value="newUser.Soyadi" />
-					</RadzenFormField>
-					<ValidationMessage For="@(() => newUser.Soyadi)"></ValidationMessage>
-
-					<RadzenFormField Text="E-posta" Style="width:85%; margin-left:41px; margin-top:4px;">
-						<RadzenTextBox class="form-control" @bind-Value="newUser.EPosta" />
-					</RadzenFormField>
-					<ValidationMessage For="@(() => newUser.EPosta)"></ValidationMessage>
-
-					<RadzenFormField Text="Tip Seçin" Style="width:85%; margin-left:41px; margin-top:4px;">
-						<RadzenDropDown @bind-Value="secilenTipId"
-										TValue="int"
-										Data="@kullaniciTipleri"
-										TextProperty="Adi"
-										ValueProperty="ID"
-										Style="width:100%;" />
-						<ValidationMessage For="@(() => secilenTipId)" />
-					</RadzenFormField>
-					<div class="text-center mt-4">
-						<div class="btn-group">
-							<RadzenButton Text="Kaydet"
-										  ButtonType="ButtonType.Submit"
-										  Icon="save"
-										  Style="width:30%; margin:auto;"
-										  class="radzen-buttonKaydet" />
-
-							<RadzenButton Text="İptal" Click="@Iptal" ButtonType="ButtonType.Button" Icon="cancel" Style="width:30%; margin:auto;" class="radzen-buttonIptal"></RadzenButton>
-						</div>
-					</div>
-				</RadzenFieldset>
-			</RadzenTemplateForm>
-
-		</div>
-	}
+	</div>
 }
+
 
 @code {
 	private User kullanicilar = new();
@@ -110,8 +60,8 @@ else
 	private List<ItemKullaniciTip> kullaniciTipleri = new();
 	private bool isLoading = true;
 	private bool isSaving;
+	bool IsEdit => kullanicilar?.ID > 0; 
 	private int secilenTipId = 0;
-	private User newUser = new User();
 	private string geriUrl = "/kullanicilar";
 
 	//kullanıcı ekleme / düzenleme sayfası açılırken gerekli tüm başlangıç verilerini hazırlamak için çalışır.
@@ -119,22 +69,25 @@ else
 	{
 		try
 		{
-			kullaniciTipleri = (await DataService.GetKullaniciTipleri()).Where(t => t.Aktif).ToList();
+			kullaniciTipleri = (await DataService.GetKullaniciTipleri())
+								.Where(t => t.Aktif).ToList();
 
 			if (KullaniciId != 0)
 			{
 				kullanicilar = await _kullaniciRepo.GetByIDAsync(KullaniciId) ?? new User();
 			}
+			else
+			{
+				kullanicilar = new User();
+			}
 
 			if (kullanicilar.KullaniciTip_ID == 0 && kullaniciTipleri.Any())
 			{
-				kullanicilar.KullaniciTip_ID = kullaniciTipleri.First().ID;
-			}
-
-			var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-			if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("geri", out var geri))
-			{
-				geriUrl = geri;
+				var admin = kullaniciTipleri.FirstOrDefault(x => x.Adi == "Admin");
+				if (admin != null)
+				{
+					kullanicilar.KullaniciTip_ID = admin.ID;
+				}
 			}
 
 			originalKullanici = kullanicilar.Clone();
@@ -142,38 +95,6 @@ else
 		finally
 		{
 			isLoading = false;
-		}
-	}
-
-	//kullanıcı düzenleme formunda yapılan değişiklikleri veritabanına kaydetmek için kullanılır.
-	private async Task Kaydet()
-	{
-		if (isSaving)
-		{
-			return;
-		}
-		if (kullanicilar == null || kullanicilar.ID == 0)
-		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz kullanıcı bilgisi.");
-			return;
-		}
-
-		isSaving = true;
-		var currentUser = await girisSaglayici.GetCurrentUserAsync();
-		kullanicilar.UpdUser = currentUser?.ID ?? 0;
-
-		kullanicilar.Sifre = null;
-
-		bool sonuc = await _kullaniciRepo.UpdateAsync(kullanicilar);
-		isSaving = false;
-		if (sonuc)
-		{
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Düzenleme işleminiz başarıyla tamamlandı.");
-			DialogService.Close(kullanicilar);
-		}
-		else
-		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Düzenleme işleminiz başarısız!");
 		}
 	}
 
@@ -220,39 +141,72 @@ else
 	//yeni kullanıcı kaydı yada düzenleme işlemini yapar.
 	private async Task OnSubmit()
 	{
-		if (!EpostaGecerliMi(newUser.EPosta))
+		if (IsEdit == true)
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
-			return;
-		}
+			if (isSaving)
+			{
+				return;
+			}
+			if (kullanicilar == null || kullanicilar.ID == 0)
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçersiz kullanıcı bilgisi.");
+				return;
+			}
 
-		var currentUser = await girisSaglayici.GetCurrentUserAsync();
-		if (currentUser == null)
-			throw new Exception("Oturum bilgisi alınamadı.");
+			isSaving = true;
+			var currentUser = await girisSaglayici.GetCurrentUserAsync();
+			kullanicilar.UpdUser = currentUser?.ID ?? 0;
 
-		newUser.CreUser = currentUser.ID;
+			kullanicilar.Sifre = null;
 
-		newUser.KullaniciTip_ID = secilenTipId;
-
-		newUser.Aktif = false;
-
-		newUser.Sifre = "00000000";
-		newUser.SifreTekrar = "00000000";
-
-		var result = await girisSaglayici.KayitOlAsync(newUser);
-
-		if (result.Basarili)
-		{
-			notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
-			await ListeyiYenileAsync(); 
-			StateHasChanged();
+			bool sonuc = await _kullaniciRepo.UpdateAsync(kullanicilar);
+			isSaving = false;
+			if (sonuc)
+			{
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Düzenleme işleminiz başarıyla tamamlandı.");
+				DialogService.Close(kullanicilar);
+			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Düzenleme işleminiz başarısız!");
+			}
 		}
 		else
 		{
-			notificationService.Notify(NotificationSeverity.Error, "Hata", "Kayıt Sırasında Bir Hata Oluştu.");
-		}
+			if (!EpostaGecerliMi(kullanicilar.EPosta))
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
+				return;
+			}
 
-		DialogService.Close(true);
+			var currentUser = await girisSaglayici.GetCurrentUserAsync();
+			if (currentUser == null)
+				throw new Exception("Oturum bilgisi alınamadı.");
+
+			kullanicilar.CreUser = currentUser.ID;
+
+			// kullanicilar.KullaniciTip_ID = secilenTipId;
+
+			kullanicilar.Aktif = false;
+
+			kullanicilar.Sifre = "00000000";
+			kullanicilar.SifreTekrar = "00000000";
+
+			var result = await girisSaglayici.KayitOlAsync(kullanicilar);
+
+			if (result.Basarili)
+			{
+				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kayıt Başarıyla Tamamlandı.");
+				await ListeyiYenileAsync();
+				StateHasChanged();
+			}
+			else
+			{
+				notificationService.Notify(NotificationSeverity.Error, "Hata", "Kayıt Sırasında Bir Hata Oluştu.");
+			}
+
+			DialogService.Close(true);
+		}
 	}
 
 	// kullanıcı kayıtı sırasında kullanıcı @ yazmayıp yada @ ten sonra random şeyler yazarsa hata verir.

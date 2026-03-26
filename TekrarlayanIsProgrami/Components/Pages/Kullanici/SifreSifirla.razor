@@ -3,30 +3,30 @@
 @layout EmptyLayout
 @attribute [AllowAnonymous]
 
-<RadzenCard Class="mx-auto mt-5" Style="max-width:400px;">
-    <h3 style="text-align:center;">Yeni Şifre Belirle</h3>
-   <EditForm Model="@model" OnValidSubmit="@OnSubmit">
-        <RadzenFormField Text="Yeni Şifre" Style="width:100%">
-            <RadzenTextBox @bind-Value="model.YeniSifre" type="@InputType" /> 
+<RadzenCard Class="mx-auto mt-5 p-4" Style="max-width:400px;">
+    <h3 class="text-center mb-4">Yeni Şifre Belirle</h3>
+    <EditForm Model="@model" OnValidSubmit="@OnSubmit">
+        <div class="mb-3" style="position:relative;">
+            <RadzenTextBox @bind-Value="model.YeniSifre" type="@InputType" Style="width:100%; padding-right:40px;" Placeholder="Yeni Şifre" />
             <button type="button"
                     @onclick="TogglePassword"
-                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:transparent;">
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:transparent; cursor:pointer;">
                 <RadzenIcon Icon="@Icon" Style="color:gray;" />
             </button>
-        </RadzenFormField>
-        <RadzenFormField Text="Yeni Şifre Tekrar" Style="width:100%" >
-            <RadzenTextBox @bind-Value="model.YeniSifreTekrar" type="@InputType2" />
+        </div>
+
+        <div class="mb-3" style="position:relative;">
+            <RadzenTextBox @bind-Value="model.YeniSifreTekrar" type="@InputType2" Style="width:100%; padding-right:40px;" Placeholder="Yeni Şifre Tekrar" />
             <button type="button"
                     @onclick="TogglePasswordAgain"
-                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:transparent;">
-                <RadzenIcon Icon="@Icon2" Style="color:gray;"/>
+                    style="position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:transparent; cursor:pointer;">
+                <RadzenIcon Icon="@Icon2" Style="color:gray;" />
             </button>
-        </RadzenFormField>
-        <RadzenButton Text="Şifreyi Kaydet" ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Class="mt-3 w-100" />
+        </div>
+
+        <RadzenButton Text="Şifreyi Kaydet"  ButtonType="ButtonType.Submit" Class="girisButton" Style="width:100%;height:auto;" />
     </EditForm>
-
 </RadzenCard>
-
 @code {
     [Inject] private UrlSigningService urlSigningService { get; set; } = null!;
     [Parameter]
