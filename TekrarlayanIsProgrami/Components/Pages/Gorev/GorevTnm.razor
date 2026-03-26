@@ -77,6 +77,7 @@
                             <RadzenNumeric @bind-Value="Gorev.TekrarAraligi"
                                            TValue="int?"
                                            Min="1"
+                                           Max="12"
                                            Style="width:100%;" />
                         </RadzenFormField>
                     </div>
@@ -139,18 +140,30 @@
                         @if (kullanicilarDropdownAcik)
                         {
                             <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999;" @onclick="@(() => kullanicilarDropdownAcik = false)"></div>
-                            <div style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; margin-top: 4px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 400px; overflow: hidden;" @onclick:stopPropagation="true" @onwheel:stopPropagation="true">
+                            <div style="position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; margin-top: 4px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-height: 400px; overflow: hidden;"
+                                 @onclick:stopPropagation="true" @onwheel:stopPropagation="true">
                                 <div style="margin-bottom: 8px;">
                                     <RadzenCheckBox @bind-Value="hepsiKullanicilarSecili" TValue="bool" Change="@OnHepsiKullanicilarChanged" />
-                                    <span style="margin-left: 8px; font-weight: 600; cursor: pointer; user-select: none;" @onclick="@(() => { hepsiKullanicilarSecili = !hepsiKullanicilarSecili; OnHepsiKullanicilarChanged(hepsiKullanicilarSecili); })">Hepsini Seç</span>
+                                    <span style="margin-left: 8px; font-weight: 600; cursor: pointer; user-select: none;"
+                                          @onclick="@(() => { hepsiKullanicilarSecili = !hepsiKullanicilarSecili; OnHepsiKullanicilarChanged(hepsiKullanicilarSecili); })">
+                                        Hepsini Seç
+                                    </span>
                                 </div>
                                 <div style="display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; overflow-x: hidden; padding-right: 5px;" @onwheel:stopPropagation="true">
                                     @foreach (var kullanici in kullanicilar.OrderBy(k => k.Adi).ThenBy(k => k.Soyadi))
                                     {
                                         var seciliMi = seciliKullaniciIdler.Contains(kullanici.ID);
                                         <div style="display: flex; align-items: center;">
-                                            <RadzenCheckBox Value="@seciliMi" TValue="bool" Change="@((bool value) => OnKullaniciChanged(kullanici.ID, value))" />
-                                            <span style="margin-left: 8px; cursor: pointer; user-select: none;" @onclick="@(() => OnKullaniciChanged(kullanici.ID, !seciliMi))">@kullanici.Adi @kullanici.Soyadi</span>
+                                            <RadzenCheckBox Value="@seciliMi" TValue="bool" Disabled="@(!kullanici.Aktif)"
+                                                            Change="@((bool value) => OnKullaniciChanged(kullanici.ID, value))" />
+                                            <span style="margin-left: 8px; cursor:@(kullanici.Aktif ? "pointer" : "default"); user-select: none; color:black;"
+                                                  @onclick="@(() => { if (kullanici.Aktif) OnKullaniciChanged(kullanici.ID, !seciliMi); })">
+                                                @kullanici.Adi @kullanici.Soyadi
+                                                @if (!kullanici.Aktif)
+                                                {
+                                                    <span style="margin-left:5px; font-size:11px; color:red;">(Pasif)</span>
+                                                }
+                                            </span>
                                         </div>
                                     }
                                 </div>
@@ -581,25 +594,55 @@
 
             if (Gorev.TekrarlamaTipi == "Günlük")
             {
-                if (string.IsNullOrWhiteSpace(tekrarAraligiString))
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Günlük tekrar için aralık girmeniz gerekiyor!");
-                    isSaving = false;
-                    StateHasChanged();
-                    return;
-                }
+                int aralik = 1;
 
-                if (!int.TryParse(tekrarAraligiString, out int aralik) || aralik < 1)
+                if (!string.IsNullOrWhiteSpace(tekrarAraligiString))
                 {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçerli bir sayı girmeniz gerekiyor (1 veya daha büyük)!");
-                    isSaving = false;
-                    StateHasChanged();
-                    return;
+                    if (!int.TryParse(tekrarAraligiString, out aralik) || aralik < 1)
+                    {
+                        notificationService.Notify(
+                            NotificationSeverity.Error,
+                            "Hata",
+                            "Geçerli bir sayı girmeniz gerekiyor (1 veya daha büyük)!"
+                        );
+                        isSaving = false;
+                        StateHasChanged();
+                        return;
+                    }
+                }
+                else
+                {
+                    aralik = 1;
                 }
 
                 Gorev.TekrarAraligi = aralik;
+                Gorev.HaftaninGunu = null;
+                Gorev.AyinGunu = null;
+
+                if (Gorev.BaslangicTarihi.HasValue)
+                {
+                    Gorev.SonrakiCalismaTarihi = Gorev.BaslangicTarihi.Value.AddDays(aralik);
+                }
+                else
+                {
+                    Gorev.SonrakiCalismaTarihi = DateTime.Now.AddDays(aralik);
+                }
             }
-            if (Gorev.TekrarlamaTipi == "Aylık")
+
+            else if (Gorev.TekrarlamaTipi == "Haftalık")
+            {
+                if (seciliHaftaninGunleri == null || !seciliHaftaninGunleri.Any())
+                {
+                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için en az bir gün seçmeniz gerekiyor!");
+                    return;
+                }
+
+                Gorev.HaftaninGunu = string.Join(",", seciliHaftaninGunleri);
+                Gorev.TekrarAraligi = null;
+                Gorev.AyinGunu = null;
+            }
+
+            else if (Gorev.TekrarlamaTipi == "Aylık")
             {
                 if (!Gorev.AyinGunu.HasValue)
                 {
@@ -609,66 +652,47 @@
                     return;
                 }
 
+                Gorev.HaftaninGunu = null;
+
                 if (yeniKayıt || Gorev.BaslangicTarihi == originalGorev.BaslangicTarihi)
                 {
                     Gorev.BaslangicTarihi = HesaplaAylikTarihIlkGorev(DateTime.Now, Gorev.AyinGunu.Value);
                     Gorev.BitisTarihi = Gorev.BaslangicTarihi.Value.AddDays(1);
                 }
             }
+
             else
             {
                 Gorev.TekrarAraligi = null;
-            }
-            if (Gorev.TekrarlamaTipi == "Haftalık")
-            {
-                if (seciliHaftaninGunleri == null || !seciliHaftaninGunleri.Any())
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Haftalık tekrar için en az bir gün seçmeniz gerekiyor!");
-                    return;
-                }
-
-                Gorev.HaftaninGunu = string.Join(",", seciliHaftaninGunleri);
-            }
-            else
-            {
                 Gorev.HaftaninGunu = null;
-            }
-
-            if (Gorev.TekrarlamaTipi == "Aylık")
-            {
-                if (!Gorev.TekrarAraligi.HasValue || Gorev.TekrarAraligi < 1)
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Kaç ayda bir tekrar edeceğini girmeniz gerekiyor!");
-                    return;
-                }
-
-                if (!Gorev.AyinGunu.HasValue || Gorev.AyinGunu < 1 || Gorev.AyinGunu > 31)
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", "Geçerli bir gün girmeniz gerekiyor (1-31 arası)!");
-                    return;
-                }
-            }
-            else
-            {
                 Gorev.AyinGunu = null;
             }
 
-            if (yeniKayıt)
+            HesaplaSonrakiCalismaTarihi(Gorev);
+
+            var aktifKullanicilar = seciliKullaniciIdler?
+            .Select(id => kullanicilar.FirstOrDefault(k => k.ID == id))
+            .Where(k => k != null && k.Aktif)
+            .Select(k => k!)
+            .ToList() ?? new List<User>();
+
+            if (Gorev.Kilitli && aktifKullanicilar.Count == 0)
             {
-                HesaplaSonrakiCalismaTarihi(Gorev);
+                notificationService.Notify(NotificationSeverity.Error, "Hata", "Aktif kullanıcı yok!");
+                return;
             }
 
-            if (yeniKayıt && Gorev.Kilitli && seciliKullaniciIdler.Count > 1)
+            if (yeniKayıt && Gorev.Kilitli && aktifKullanicilar.Count > 1)
             {
                 ItemGorev? ilkGorev = null;
                 int basariliSayisi = 0;
                 var kullaniciGorevIdleri = new Dictionary<int, int>();
 
-                foreach (var kullaniciId in seciliKullaniciIdler)
+                foreach (var kullanici in aktifKullanicilar)
                 {
                     var yeniGorev = new ItemGorev
                     {
-                        Kullanici_ID = kullaniciId,
+                        Kullanici_ID = kullanici.ID,
                         Baslik = Gorev.Baslik,
                         Kategori_ID = Gorev.Kategori_ID,
                         OnemDerecesi = Gorev.OnemDerecesi,
@@ -686,140 +710,66 @@
                         AtayanKisiID = Gorev.AtayanKisiID
                     };
 
-                    if (yeniKayıt)
-                    {
-                        HesaplaSonrakiCalismaTarihi(yeniGorev);
-                    }
+                    HesaplaSonrakiCalismaTarihi(yeniGorev);
+
                     var sonuc = await DataService.SetGorev(yeniGorev);
                     if (sonuc.SonucKodu != 0)
                     {
-                        notificationService.Notify(NotificationSeverity.Error, "Hata", $"Görev kullanıcıya atanırken hata oluştu. {basariliSayisi} görev başarıyla kaydedildi.");
+                        notificationService.Notify(NotificationSeverity.Error, "Hata", "Görev atanamadı!");
                         return;
                     }
 
                     basariliSayisi++;
+
                     if (ilkGorev == null)
-                    {
                         ilkGorev = yeniGorev;
-                    }
 
                     if (sonuc.Data > 0)
-                    {
-                        kullaniciGorevIdleri[kullaniciId] = sonuc.Data;
-                    }
+                        kullaniciGorevIdleri[kullanici.ID] = sonuc.Data;
                 }
 
-                notificationService.Notify(NotificationSeverity.Success, "Başarılı", $"{basariliSayisi} kullanıcıya görev başarıyla atandı.");
+                notificationService.Notify(NotificationSeverity.Success, "Başarılı", $"{basariliSayisi} kullanıcıya görev atandı.");
 
-                foreach (var kullaniciId in seciliKullaniciIdler)
+                foreach (var kullanici in aktifKullanicilar)
                 {
-                    await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_{kullaniciId}");
+                    await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_{kullanici.ID}");
                 }
 
                 DialogService.Close(ilkGorev);
-
-                if (ilkGorev != null)
-                {
-                    var gorevBilgileri = new
-                    {
-                        Baslik = ilkGorev.Baslik,
-                        Kategori_ID = ilkGorev.Kategori_ID,
-                        BaslangicTarihi = ilkGorev.BaslangicTarihi,
-                        BitisTarihi = ilkGorev.BitisTarihi,
-                        KullaniciGorevIdleri = kullaniciGorevIdleri
-                    };
-
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            foreach (var kullaniciId in seciliKullaniciIdler)
-                            {
-                                try
-                                {
-                                    var kullanici = await _kullaniciRepo.GetByIDAsync(kullaniciId);
-                                    if (kullanici != null && !string.IsNullOrEmpty(kullanici.EPosta))
-                                    {
-                                        if (gorevBilgileri.KullaniciGorevIdleri.TryGetValue(kullaniciId, out int gorevId))
-                                        {
-                                            var urlParams = new Dictionary<string, string>
-                                            {
-                                                { "gorevId", gorevId.ToString() },
-                                                { "userId", kullaniciId.ToString() }
-                                            };
-                                            var dashboardUrl = urlSigningService.SignUrl("https://localhost:7014/dashboard", urlParams);
-
-                                            await EpostaService.SendYeniGorevBildirimiAsync(
-                                                kullanici.EPosta,
-                                                kullanici.Adi,
-                                                gorevBilgileri.Baslik ?? "Yeni Görev",
-                                                dashboardUrl
-                                            );
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                        }
-                    });
-                }
-
                 return;
             }
 
+            // ---------------- TEKLİ ATAMA ----------------
+
+            if (Gorev.Kilitli && aktifKullanicilar.Any())
+            {
+                Gorev.Kullanici_ID = aktifKullanicilar.First().ID;
+            }
+
+            if (yeniKayıt)
+            {
+                Gorev.Aktif = true;
+            }
+
+            var sonucTek = await DataService.SetGorev(Gorev);
+
+            if (sonucTek.SonucKodu == 0)
+            {
+                Gorev.ID = sonucTek.Data;
+
+                await KaydetGorevLoglari(yeniKayıt);
+
+                notificationService.Notify(
+                    NotificationSeverity.Success,
+                    "Başarılı",
+                    yeniKayıt ? "Görev eklendi!" : "Görev güncellendi!"
+                );
+
+                DialogService.Close(Gorev);
+            }
             else
             {
-                if (Gorev.Kilitli && seciliKullaniciIdler.Any())
-                {
-                    Gorev.Kullanici_ID = seciliKullaniciIdler.First();
-                }
-
-                if (yeniKayıt)
-                {
-                    Gorev.Aktif = true;
-                }
-
-                var sonuc = await DataService.SetGorev(Gorev);
-                if (sonuc.SonucKodu == 0)
-                {
-                    // Güncelleme logunu burada sadece bir kez çağır
-                    if (!yeniKayıt)
-                    {
-                        await KaydetGorevLoglari(yeniKayıt: false); // false = güncelleme
-                    }
-
-                    notificationService.Notify(NotificationSeverity.Success, "Başarılı", yeniKayıt ? "Görev eklendi!" : "Görev güncellendi!");
-                    DialogService.Close(Gorev);
-
-                    if (yeniKayıt)
-                    {
-                        var gorevKopyasi = new ItemGorev
-                        {
-                            ID = Gorev.ID,
-                            Baslik = Gorev.Baslik,
-                            Kilitli = Gorev.Kilitli,
-                            Kullanici_ID = Gorev.Kullanici_ID
-                        };
-
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                await GonderYeniGorevEpostalariArkaPlanda(gorevKopyasi);
-                            }
-                            catch { }
-                        });
-                    }
-                }
-                else
-                {
-                    notificationService.Notify(NotificationSeverity.Error, "Hata", sonuc.SonucAciklama);
-                }
+                notificationService.Notify(NotificationSeverity.Error, "Hata", sonucTek.SonucAciklama);
             }
         }
         finally
@@ -856,65 +806,30 @@
 
                     if (seciliGunler.Any())
                     {
-                        if (gorev.BitisTarihi.HasValue)
+                        var bugun = DateTime.Now.Date;
+                        DayOfWeek bugunGunu = bugun.DayOfWeek;
+
+                        DayOfWeek? sonrakiGun = seciliGunler.FirstOrDefault(g => g > bugunGunu);
+
+                        if (!sonrakiGun.HasValue)
+                            sonrakiGun = seciliGunler.First();
+
+                        var sonrakiTarih = bugun;
+                        while (sonrakiTarih.DayOfWeek != sonrakiGun.Value)
                         {
-                            var bitisTarihi = gorev.BitisTarihi.Value.Date;
-                            var ilkGun = seciliGunler.First();
-
-                            var sonrakiHaftaBaslangic = bitisTarihi.AddDays(1); 
-
-                            while (sonrakiHaftaBaslangic.DayOfWeek != ilkGun)
-                            {
-                                sonrakiHaftaBaslangic = sonrakiHaftaBaslangic.AddDays(1);
-                            }
-
-                            gorev.SonrakiCalismaTarihi = sonrakiHaftaBaslangic.Add(baslangic.TimeOfDay);
+                            sonrakiTarih = sonrakiTarih.AddDays(1);
                         }
-                        else
-                        {
-                            DateTime? enYakinTarih = null;
 
-                            foreach (var hedefGunn in seciliGunler)
-                            {
-                                var tarih = baslangic.Date;
-                                while (tarih.DayOfWeek != hedefGunn)
-                                {
-                                    tarih = tarih.AddDays(1);
-                                }
-
-                                if (tarih > baslangic.Date)
-                                {
-                                    tarih = tarih.Add(baslangic.TimeOfDay);
-
-                                    if (!enYakinTarih.HasValue || tarih < enYakinTarih.Value)
-                                    {
-                                        enYakinTarih = tarih;
-                                    }
-                                }
-                            }
-
-                            if (!enYakinTarih.HasValue)
-                            {
-                                var ilkGun = seciliGunler.First();
-                                var tarih = baslangic.Date.AddDays(7);
-                                while (tarih.DayOfWeek != ilkGun)
-                                {
-                                    tarih = tarih.AddDays(1);
-                                }
-                                enYakinTarih = tarih.Add(baslangic.TimeOfDay);
-                            }
-
-                            gorev.SonrakiCalismaTarihi = enYakinTarih ?? baslangic.AddDays(7);
-                        }
+                        gorev.SonrakiCalismaTarihi = sonrakiTarih.Date.Add(gorev.BaslangicTarihi.Value.TimeOfDay);
                     }
                     else
                     {
-                        gorev.SonrakiCalismaTarihi = baslangic.AddDays(7);
+                        gorev.SonrakiCalismaTarihi = DateTime.Now.AddDays(7);
                     }
                 }
                 else
                 {
-                    gorev.SonrakiCalismaTarihi = baslangic.AddDays(7);
+                    gorev.SonrakiCalismaTarihi = DateTime.Now.AddDays(7);
                 }
                 break;
 
@@ -922,11 +837,27 @@
                 if (!gorev.AyinGunu.HasValue)
                     break;
 
-                gorev.BaslangicTarihi = HesaplaAylikTarihIlkGorev(DateTime.Now, gorev.AyinGunu.Value);
+                var aralikAy = gorev.TekrarAraligi ?? 1;
 
-                gorev.BitisTarihi = gorev.BaslangicTarihi.Value.AddDays(1);
+                var referans = gorev.BaslangicTarihi.Value;
 
-                gorev.SonrakiCalismaTarihi = null;
+                var sonrakiAy = referans.AddMonths(aralikAy);
+
+                int gun = gorev.AyinGunu.Value;
+
+                var ayinSonGunu = DateTime.DaysInMonth(sonrakiAy.Year, sonrakiAy.Month);
+
+                if (gun > ayinSonGunu)
+                    gun = ayinSonGunu;
+
+                gorev.SonrakiCalismaTarihi = new DateTime(
+                    sonrakiAy.Year,
+                    sonrakiAy.Month,
+                    gun,
+                    referans.Hour,
+                    referans.Minute,
+                    referans.Second
+                );
 
                 break;
 
@@ -934,6 +865,7 @@
             default:
                 gorev.SonrakiCalismaTarihi = gorev.BitisTarihi;
                 break;
+
         }
     }
 
@@ -1063,159 +995,67 @@
 
     //bir görevin log kaydını tutar:
     private async Task KaydetGorevLoglari(bool yeniKayıt)
+{
+    try
     {
-        try
+        int currentUserId = await girisSaglayici.GetUserIdAsync();
+        if (currentUserId == 0 || Gorev.ID == 0)
+            return;
+
+        if (yeniKayıt)
         {
-            int currentUserId = await girisSaglayici.GetUserIdAsync();
-            if (currentUserId == 0)
+            var log = new ItemGorevLoglari
             {
-                return;
-            }
-
-            if (Gorev.ID == 0)
-            {
-                return;
-            }
-
-            if (yeniKayıt)
-            {
-                // Yeni görev oluşturuldu
-                var log = new ItemGorevLoglari
-                {
-                    Gorev_ID = Gorev.ID,
-                    IslemTipi = "Oluşturuldu",
-                    AlanAdi = "Tümü",
-                    EskiDeger = "",
-                    YeniDeger = $"Görev oluşturuldu: {Gorev.Baslik}",
-                    IslemKullanici_ID = currentUserId,
-                    IslemTarih = DateTime.Now
-                };
-                var logSonuc = await DataService.SetGorevLog(log);
-                if (logSonuc.SonucKodu != 0)
-                {
-                    Console.WriteLine($"Görev log kaydetme hatası: {logSonuc.SonucAciklama}");
-                }
-            }
-            else
-            {
-                if (originalGorev.Baslik != Gorev.Baslik)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "Baslik",
-                        EskiDeger = originalGorev.Baslik ?? "",
-                        YeniDeger = Gorev.Baslik ?? "",
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-
-                if (originalGorev.Kategori_ID != Gorev.Kategori_ID)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "Kategori_ID",
-                        EskiDeger = originalGorev.Kategori_ID.ToString(),
-                        YeniDeger = Gorev.Kategori_ID.ToString(),
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-
-                if (originalGorev.OnemDerecesi != Gorev.OnemDerecesi)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "OnemDerecesi",
-                        EskiDeger = originalGorev.OnemDerecesi ?? "",
-                        YeniDeger = Gorev.OnemDerecesi ?? "",
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-
-                if (originalGorev.BaslangicTarihi != Gorev.BaslangicTarihi)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "BaslangicTarihi",
-                        EskiDeger = originalGorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-                        YeniDeger = Gorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-
-                if (originalGorev.BitisTarihi != Gorev.BitisTarihi)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "BitisTarihi",
-                        EskiDeger = originalGorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-                        YeniDeger = Gorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "",
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-
-                if (originalGorev.TekrarlamaTipi != Gorev.TekrarlamaTipi)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "TekrarlamaTipi",
-                        EskiDeger = originalGorev.TekrarlamaTipi ?? "",
-                        YeniDeger = Gorev.TekrarlamaTipi ?? "",
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-
-                if (originalGorev.Kilitli != Gorev.Kilitli)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "Kilitli",
-                        EskiDeger = originalGorev.Kilitli.ToString(),
-                        YeniDeger = Gorev.Kilitli.ToString(),
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-
-                if (originalGorev.Kullanici_ID != Gorev.Kullanici_ID)
-                {
-                    await DataService.SetGorevLog(new ItemGorevLoglari
-                    {
-                        Gorev_ID = Gorev.ID,
-                        IslemTipi = "Güncellendi",
-                        AlanAdi = "Kullanici_ID",
-                        EskiDeger = originalGorev.Kullanici_ID.ToString(),
-                        YeniDeger = Gorev.Kullanici_ID.ToString(),
-                        IslemKullanici_ID = currentUserId,
-                        IslemTarih = DateTime.Now
-                    });
-                }
-            }
+                Gorev_ID = Gorev.ID,
+                IslemTipi = "Oluşturuldu",
+                AlanAdi = "Tümü",
+                EskiDeger = "",
+                YeniDeger = $"Görev oluşturuldu: {Gorev.Baslik}",
+                IslemKullanici_ID = currentUserId,
+                IslemTarih = DateTime.Now
+            };
+            var logSonuc = await DataService.SetGorevLog(log);
         }
-        catch (Exception ex)
+        else
         {
-            
+            if (originalGorev == null)
+                return;
+
+            var alanlar = new List<(string AlanAdi, string EskiDeger, string YeniDeger)>
+            {
+                ("Baslik", originalGorev.Baslik ?? "", Gorev.Baslik ?? ""),
+                ("Kategori_ID", originalGorev.Kategori_ID.ToString(), Gorev.Kategori_ID.ToString()),
+                ("OnemDerecesi", originalGorev.OnemDerecesi ?? "", Gorev.OnemDerecesi ?? ""),
+                ("BaslangicTarihi", originalGorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "", Gorev.BaslangicTarihi?.ToString("dd.MM.yyyy HH:mm") ?? ""),
+                ("BitisTarihi", originalGorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? "", Gorev.BitisTarihi?.ToString("dd.MM.yyyy HH:mm") ?? ""),
+                ("TekrarlamaTipi", originalGorev.TekrarlamaTipi ?? "", Gorev.TekrarlamaTipi ?? ""),
+                ("Kilitli", originalGorev.Kilitli.ToString(), Gorev.Kilitli.ToString()),
+                ("Kullanici_ID", originalGorev.Kullanici_ID.ToString(), Gorev.Kullanici_ID.ToString())
+            };
+
+            foreach (var (AlanAdi, EskiDeger, YeniDeger) in alanlar)
+            {
+                if (EskiDeger != YeniDeger)
+                {
+                    var log = new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = AlanAdi,
+                        EskiDeger = EskiDeger,
+                        YeniDeger = YeniDeger,
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    };
+                }
+            }
         }
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Görev log kaydetme hatası: {ex.Message}");
+    }
+}
 
     //aylık tekrar eden görevlerin bir sonraki tarihini hesaplamak için kullanılıyor.
     public static DateTime HesaplaAylikTarih(DateTime baslangic,int ayinGunu,int tekrarAraligi,DateTime? oncekiCalismaTarihi = null)
@@ -1268,8 +1108,8 @@
         var yil = bugun.Year;
         var ay = bugun.Month;
 
-        // Bugünden sonraki ayın günü
-        if (ayinGunu <= bugun.Day)
+        // sadece geçmiş günse sonraki aya geç
+        if (ayinGunu < bugun.Day)
         {
             ay += 1;
             if (ay > 12)
@@ -1279,8 +1119,15 @@
             }
         }
 
-        // Geçerli ayın gününü oluştur
         int gun = Math.Min(ayinGunu, DateTime.DaysInMonth(yil, ay));
-        return new DateTime(yil, ay, gun);
+
+        return new DateTime(
+            yil,
+            ay,
+            gun,
+            bugun.Hour,
+            bugun.Minute,
+            bugun.Second
+        );
     }
 }

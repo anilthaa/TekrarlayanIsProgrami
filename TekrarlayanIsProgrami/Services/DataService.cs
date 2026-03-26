@@ -59,6 +59,18 @@ namespace TekrarlayanIsProgrami.Services
                 Order By g.""ID"" desc
             ")).ToArray();
         }
+        public async Task<ItemGorev[]> Gorevler()
+        {
+            return (await SQLQueryAsync<ItemGorev>($@"
+                Select g.""ID"", g.""Kullanici_ID"", g.""Baslik"", g.""Kategori_ID"", k.""Adi"" as ""KategoriAdi"", g.""OnemDerecesi"",
+                       g.""BaslangicTarihi"", g.""BitisTarihi"", g.""TekrarlamaTipi"", g.""Aktif"", g.""Kilitli"",
+                       g.""TekrarAraligi"", g.""HaftaninGunu"", g.""AyinGunu"", g.""SonrakiCalismaTarihi"", g.""Tamamlandi"",
+                       g.""CreUser"", g.""CreDate"", g.""UpdUser"", g.""UpdDate"", g.""DelUser"", g.""DelDate""
+                From ""Gorev"" g
+                Left Join ""Kategori"" k on g.""Kategori_ID"" = k.""ID""
+                Order By g.""ID"" desc
+            ")).ToArray();
+        }
 
         //görev ekleme, düzenleme ve silme işlemleri yapılır ve görev ID’si döndürülür.
         public async Task<DataResult<int>> SetGorev(ItemGorev item)

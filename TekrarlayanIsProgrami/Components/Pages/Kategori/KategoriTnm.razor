@@ -1,50 +1,27 @@
 ﻿@layout MainLayout
 @attribute [Authorize]
-@if (IsEdit)
-{
+
 	<RadzenCard Style="padding:20px;">
 		<RadzenTemplateForm TItem="ItemKategori" Data="@ItemData" Submit="@OnSubmit">
 			<ChildContent>
 				<DataAnnotationsValidator></DataAnnotationsValidator>
-				<h3 style="text-align:center;">Kategori Düzenle </h3>
+				<h3 style="text-align:center;">@(IsEdit? "Kategori Düzenle" : "Kategori Ekle") </h3>
 				<RadzenFormField Text="Kategori Adı" Style="width:100%; margin-top:15px;">
 					<RadzenTextBox @bind-Value="ItemData.Adi" Name="Adi" Change =" ()=> degisiklikYapildiMi = true" ></RadzenTextBox>
 				</RadzenFormField>
 				<ValidationMessage For="@(()=>ItemData.Adi)"></ValidationMessage>
 
 				<div class="btn-group">
-					<RadzenButton Text="Güncelle" Icon="save" Style="width:30%; margin:auto;"class="radzen-buttonKaydet" ButtonType="ButtonType.Submit"></RadzenButton>
+					<RadzenButton Text="@(IsEdit? "Güncelle" : "Kaydet")" Icon="save" Style="width:30%; margin:auto;"class="radzen-buttonKaydet" ButtonType="ButtonType.Submit"></RadzenButton>
 					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%;margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button"></RadzenButton>
 				</div>
 			</ChildContent>
 		</RadzenTemplateForm>
 	</RadzenCard>
-}
-else
-{
-	<RadzenCard Style="padding:20px;">
-		<RadzenTemplateForm TItem="ItemKategori" Data="@ItemData" Submit="@OnSubmit">
-			<ChildContent>
-				<DataAnnotationsValidator></DataAnnotationsValidator>
-				<h3 style="text-align:center;">Kategori Ekle </h3>
-				<RadzenFormField Text="Kategori Adı" Style="width:100%; margin-top:15px;">
-					<RadzenTextBox @bind-Value="ItemData.Adi"></RadzenTextBox>
-				</RadzenFormField>
-				<ValidationMessage For="@(() => ItemData.Adi)"></ValidationMessage>
-
-				<div class="btn-group">
-					<RadzenButton Text="Kaydet" Icon="save" Style="width:30%; margin:auto;" class="radzen-buttonKaydet" ButtonType="ButtonType.Submit"></RadzenButton>
-					<RadzenButton Text="İptal" Icon="cancel" Click="@Iptal" Style="width:30%;margin:auto;" class="radzen-buttonIptal" ButtonType="ButtonType.Button"></RadzenButton>
-				</div>
-			</ChildContent>
-		</RadzenTemplateForm>
-	</RadzenCard>
-}
-
 @code {
 	[Parameter] public ItemKategori ItemData { get; set; } = new();
 	private string ErrorMessage = string.Empty;
-	private bool IsEdit;
+	bool IsEdit =>ItemData.ID >0;
 	private bool isProcessing = false;
 	private bool degisiklikYapildiMi = false;
 	private string originalKategori;
@@ -52,57 +29,87 @@ else
 	//kod, bileşen başlatıldığında çalışır ve şunları yapar:
 	protected override void OnInitialized()
 	{
-		IsEdit = ItemData.ID != 0;
 		originalKategori = ItemData.Adi;
 	}
 
-	//kategori formunun submit (kaydet) işlemini yapar:
+	//kategori formunun submit  işlemini yapar:
 	private async Task OnSubmit(ItemKategori item)
 	{
-		if (isProcessing)
-			return; 
-
-		isProcessing = true;
-		ErrorMessage = string.Empty;
-
-		try
+		if (IsEdit==true)
 		{
-			item.DelUser = 0;
-			item.CreUser = IsEdit ? 0 : 1;
-			item.UpdUser = IsEdit ? 1 : 0;
+			if (isProcessing) return;
 
-			var wsCvp = await Task.Run(() => DataService.SetKategori(item));
-
-			if (wsCvp.SonucKodu == 0 && wsCvp.Data > 0)
-			{
-				if (!IsEdit)
-					item.ID = wsCvp.Data; 
-
-				notificationService.Notify(
-					NotificationSeverity.Success,
-					"Başarılı",
-					IsEdit ? "Kategori güncellendi!" : "Kategori eklendi!"
-				);
-
-				await Task.Delay(100);
-				DialogService.Close(item);
-				StateHasChanged();			
-			}
-			else
-			{
-				await DialogService.Alert(
-					$"Hata Oluştu. SonucKodu: {wsCvp.SonucKodu}, Data: {wsCvp.Data}"
-				);
-			}
-		}
-		catch (Exception ex)
-		{
-			ErrorMessage = $"Hata Oluştu: {ex.Message}";
-			notificationService.Notify(NotificationSeverity.Error, "Hata", ErrorMessage);
-		}
-		finally
-		{
 			isProcessing = true;
+			ErrorMessage = string.Empty;
+
+			try
+			{
+				item.DelUser = 0;
+				item.CreUser = 0;
+				item.UpdUser = 1; // güncelleyen kullanıcı ID
+
+				var wsCvp = await Task.Run(() => DataService.SetKategori(item));
+
+				if (wsCvp.SonucKodu == 0)
+				{
+					notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori güncellendi!");
+					await Task.Delay(100);
+					DialogService.Close(item);
+					StateHasChanged();
+				}
+				else
+				{
+					await DialogService.Alert($"Hata Oluştu. SonucKodu: {wsCvp.SonucKodu}, Data: {wsCvp.Data}");
+				}
+			}
+			catch (Exception ex)
+			{
+				ErrorMessage = $"Hata Oluştu: {ex.Message}";
+				notificationService.Notify(NotificationSeverity.Error, "Hata", ErrorMessage);
+			}
+			finally
+			{
+				isProcessing = false;
+			}
+		}
+		else
+		{
+			if (isProcessing) return;
+
+			isProcessing = true;
+			ErrorMessage = string.Empty;
+
+			try
+			{
+				item.DelUser = 0;
+				item.CreUser = 1; // yeni ekleyen kullanıcı ID
+				item.UpdUser = 0;
+
+				var wsCvp = await Task.Run(() => DataService.SetKategori(item));
+
+				if (wsCvp.SonucKodu == 0 && wsCvp.Data > 0)
+				{
+					item.ID = wsCvp.Data; // eklenen kategori ID'sini ata
+
+					notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Kategori eklendi!");
+					await Task.Delay(100);
+					DialogService.Close(item);
+					StateHasChanged();
+				}
+				else
+				{
+					await DialogService.Alert($"Hata Oluştu. SonucKodu: {wsCvp.SonucKodu}, Data: {wsCvp.Data}");
+				}
+			}
+			catch (Exception ex)
+			{
+				ErrorMessage = $"Hata Oluştu: {ex.Message}";
+				notificationService.Notify(NotificationSeverity.Error, "Hata", ErrorMessage);
+			}
+			finally
+			{
+				isProcessing = false;
+			}
 		}
 	}
 

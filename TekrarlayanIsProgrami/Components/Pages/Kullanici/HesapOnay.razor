@@ -14,7 +14,7 @@
     [SupplyParameterFromQuery]
     public int ok { get; set; }
 
-    //sayfa ilk açıldığında kullanıcı onay / red işlemini yapan başlangıç sürecidir.
+    // sayfa ilk açıldığında kullanıcı onay / red işlemini yapan başlangıç sürecidir
     protected override async Task OnInitializedAsync()
     {
         if (uid == 0)
@@ -30,25 +30,31 @@
             return;
         }
 
+        if (kullanici.Aktif)
+        {
+            mesaj = "Hesap onaylandı.";
+            return;
+        }
+
         if (ok == 1)
         {
             string tempPass = Guid.NewGuid().ToString("N").Substring(0, 8);
             string hashed = PasswordHelper.HashPassword(tempPass);
 
             kullanici.Aktif = true;
-            await _kullaniciRepo.UpdateAsync(kullanici);
             kullanici.Sifre = hashed;
-            await _kullaniciRepo.UpdateSifreAsync(kullanici.ID, hashed);
+            await _kullaniciRepo.UpdateAsync(kullanici);
 
+            // Şifreyi normal mesaj alanından kullanıcıya göster
+            mesaj = $"Hesap onaylandı. Geçici şifreniz: {tempPass}";
+
+            // Maili göndermek istersen bunu kullanabilirsin
             await EpostaService.SendPasswordMailAsync(kullanici.EPosta, tempPass);
-
-            mesaj = "Hesap onaylandı. Geçici şifre gönderildi.";
         }
         else
         {
             kullanici.Aktif = false;
             await _kullaniciRepo.UpdateAsync(kullanici);
-
             mesaj = "Talep reddedildi.";
         }
     }
