@@ -26,7 +26,8 @@
 		<RadzenDataGrid TItem="ItemKullaniciTip" Data="@DataList" @ref="grid"
 						AllowPaging="true" PageSize="10"
 						AllowSorting="true" AllowFiltering="true"
-						RowDoubleClick="@((_yetki != YetkiTipi.Okuma && _yetki != YetkiTipi.Gizli) ? OnRowDoubleClick : null)">
+						RowDoubleClick="@((_yetki != YetkiTipi.Okuma && _yetki != YetkiTipi.Gizli) ? OnRowDoubleClick : null)"
+						class="mobile-card-grid">
 			<Columns>
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="ID" Title="ID" Width="0px" />
 

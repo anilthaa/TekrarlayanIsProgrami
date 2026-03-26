@@ -324,6 +324,105 @@ button RadzenIcon {
 .girisButton:hover {
     background-color:  #ba76d3 !important;
 }
+
+@media (max-width: 768px) {
+    .login-container {
+        width: 92%;
+        max-width: 400px;
+        height: auto;
+        flex-direction: column;
+    }
+
+    .form {
+        width: 100%;
+        position: relative;
+        top: auto;
+        left: auto !important;
+        right: auto !important;
+        height: auto;
+        overflow: hidden;
+        transition: max-height 0.5s ease-in-out, opacity 0.4s ease, padding 0.5s ease-in-out;
+    }
+
+    .login-form {
+        order: 0;
+        border-radius: 16px 16px 0 0;
+        max-height: 600px;
+        opacity: 1;
+    }
+
+    .register-form {
+        order: 2;
+        border-radius: 0 0 16px 16px;
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .slider-panel {
+        width: 100%;
+        height: auto;
+        position: relative;
+        right: auto;
+        top: auto;
+        border-radius: 0;
+        order: 1;
+        padding: 20px;
+    }
+
+    .slide-active .login-form {
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .slide-active .register-form {
+        max-height: 800px;
+        opacity: 1;
+        padding: 30px 20px;
+    }
+
+    .slide-active .slider-panel {
+        transform: none;
+    }
+}
+
+/* Dashboard istatistik kartlari */
+.dashboard-stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.dashboard-stats-card {
+    flex: 0 0 calc(50% - 0.5rem);
+    max-width: calc(50% - 0.5rem);
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .dashboard-stats-card {
+        flex: 0 0 calc(33.333% - 0.667rem);
+        max-width: calc(33.333% - 0.667rem);
+    }
+}
+
+@media (min-width: 1024px) {
+    .dashboard-stats-row {
+        flex-wrap: nowrap;
+    }
+
+    .dashboard-stats-card {
+        flex: 1 1 0;
+        max-width: none;
+    }
+}
+
 /*Standart Tip Kartları*/
 .cards {
     display: grid;
@@ -434,16 +533,187 @@ fieldset .rz-form-field-label {
 
 /* GorevList için genişlik ayarları */
 .rz-body {
-    width: 100% !important;
-    max-width: 100% !important;
+    margin-left: 250px;
+    width: calc(100% - 250px) !important;
+    max-width: calc(100% - 250px) !important;
 }
 
 .rz-card {
     max-width: 100% !important;
 }
 
-.rz-layout .rz-sidebar {
-    grid-area:auto !important;
+/* Mobil hamburger menü butonu */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 1200;
+    width: 44px;
+    height: 36px;
+    border-radius: 6px;
+    border: none;
+    background: #4a148c;
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+}
+
+.menu-icon-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #fff;
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.mobile-menu-toggle.menu-open {
+    background: transparent;
+    box-shadow: none;
+}
+
+.mobile-menu-toggle.menu-open .menu-icon-bar:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.mobile-menu-toggle.menu-open .menu-icon-bar:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-toggle.menu-open .menu-icon-bar:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .rz-dialog-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 10px !important;
+    }
+
+    .rz-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        max-height: 90vh !important;
+        top: auto !important;
+        left: auto !important;
+        position: relative !important;
+    }
+
+    .rz-dialog-content {
+        overflow-y: auto !important;
+        max-height: 70vh !important;
+        padding: 12px !important;
+    }
+
+    .rz-dialog-content .rz-form-field {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .rz-dialog-content .btn-group {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .rz-dialog-content .btn-group .rz-button,
+    .rz-dialog-content .radzen-buttonKaydet,
+    .rz-dialog-content .radzen-buttonIptal {
+        flex: 1 1 0;
+        width: auto !important;
+        min-height: 44px;
+        justify-content: center;
+    }
+
+    .rz-dialog-content .rz-button {
+        min-height: 40px;
+    }
+
+    .calendar-container {
+        gap: 4px !important;
+    }
+    .calendar-container > div {
+        padding: 4px !important;
+        min-height: 60px !important;
+        font-size: 12px;
+        overflow: hidden;
+    }
+    .rz-dialog-content .radzen-buttonKaydet,
+    .rz-dialog-content .radzen-buttonSifreDegistir {
+        width: 100% !important;
+        min-height: 44px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 400px) {
+    .calendar-container {
+        gap: 2px !important;
+    }
+    .calendar-container > div {
+        padding: 2px !important;
+        min-height: 40px !important;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 1023px) {
+    .dashboardAnaH2
+    {
+        text-align:center;
+        font-size:30px;
+    }
+
+    .mobile-menu-toggle {
+        display: flex;
+    }
+
+    .dashboard-nav {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1100;
+        padding-top: 60px;
+    }
+
+    .app-sidebar.sidebar-open .dashboard-nav {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1050;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.overlay-visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .dashboard-content {
+        margin-left: 0;
+    }
+
+    .rz-body {
+        margin-left: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 }
 .compact-grid .rz-datatable-data tr {
     height: 27px;
@@ -529,3 +799,113 @@ fieldset .rz-form-field-label {
     .disabled-submenu:hover {
         background-color: transparent;
     }
+
+@media (max-width: 768px) {
+    .dashboardAnaH2 {
+        text-align: center;
+        font-size: 25px;
+    }
+
+    .mobile-card-grid .rz-datatable-thead,
+    .mobile-card-grid .rz-datatable-scrollable-header,
+    .mobile-card-grid .rz-datatable-filter-row {
+        display: none !important;
+    }
+
+    .mobile-card-grid colgroup {
+        display: none !important;
+    }
+
+    .mobile-card-grid .rz-datatable-scrollable-body,
+    .mobile-card-grid .rz-datatable-wrapper {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .mobile-card-grid .rz-datatable-scrollable-wrapper {
+        overflow: visible !important;
+    }
+
+    .mobile-card-grid table {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .mobile-card-grid .rz-datatable-data {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    .mobile-card-grid .rz-datatable-data tr {
+        display: block !important;
+        margin-bottom: 0.75rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        background: #fff;
+        width: 100% !important;
+    }
+
+    .mobile-card-grid .rz-datatable-data td {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 5px 0 !important;
+        border: none !important;
+        border-bottom: 1px solid #f0f0f0 !important;
+        text-align: left !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    .mobile-card-grid .rz-datatable-data td > * {
+        min-width: 0;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .mobile-card-grid .rz-datatable-data td:last-child {
+        border-bottom: none !important;
+    }
+
+    .mobile-card-grid .rz-datatable-data td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        min-width: 90px;
+        flex-shrink: 0;
+        color: #555;
+        font-size: 12px;
+        margin-right: 8px;
+    }
+
+    .mobile-card-grid .rz-datatable-data td[data-label=""],
+    .mobile-card-grid .rz-datatable-data td[data-label="ID"] {
+        display: none !important;
+    }
+
+    .mobile-card-grid .rz-datatable-data td[data-label="No"] {
+        display: none !important;
+    }
+
+    .mobile-card-grid .rz-paginator {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 400px) {
+    .mobile-card-grid .rz-datatable-data td::before {
+        min-width: 100%;
+        margin-right: 0;
+        margin-bottom: 2px;
+        font-size: 11px;
+    }
+
+    .mobile-card-grid .rz-datatable-data tr {
+        padding: 10px !important;
+    }
+}
