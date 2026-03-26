@@ -6,7 +6,7 @@
 	<div class="form login-form">
 		<EditForm Model="@loginModel" OnValidSubmit="() => OnLogin(loginModel)">
 			<h2 style="text-align:center; font-family:serif;">Giriş Yap</h2>
-			<p style="color:rebeccapurple;">Lütfen bilgilerinizi girin</p>
+			<p style="color:rebeccapurple; text-align:center;">Lütfen bilgilerinizi girin</p>
 			<RadzenFormField Text="E-posta" Style="width:100%;">
 			<RadzenTextBox @bind-Value="loginModel.E_Posta" />
 			</RadzenFormField>
@@ -38,7 +38,7 @@
 			<DataAnnotationsValidator />
 			<div class="row">
 				<h2 style="text-align:center;font-family:serif">Hesap Oluştur</h2>
-				<p style="color:rebeccapurple; margin-left:5px; margin-bottom:5px;">Lütfen bilgilerinizi girin</p>
+				<p style="color:rebeccapurple; text-align:center; margin-bottom:5px;">Lütfen bilgilerinizi girin</p>
 				<div class="col-sm-12">
 					<RadzenFormField Text="Ad" Style="width:85%; margin-left:27px;">
 						<RadzenTextBox @bind-Value="newUser.Adi"  />

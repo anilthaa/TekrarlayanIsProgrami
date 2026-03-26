@@ -2,7 +2,7 @@
 	
 	<p style="margin-bottom:15px; color:#666;">Bu tarihte <strong>@Gorevler.Count</strong> görev bulunuyor:</p>
 	<div style="overflow:visible; max-height:none;">
-		<RadzenDataGrid Data="@GorevlerGoster" TItem="ItemGorev" AllowPaging="false" RowSelect="@GorevSecildi" class="gorev-list-dialog">
+		<RadzenDataGrid Data="@GorevlerGoster" TItem="ItemGorev" AllowPaging="false" RowSelect="@GorevSecildi" class="gorev-list-dialog mobile-card-grid">
 		<Columns>
 			<RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Görev Başlığı" Width="500px"></RadzenDataGridColumn>
 			<RadzenDataGridColumn TItem="ItemGorev" Property="BitisTarihi" Title="Bitiş Tarihi" FormatString="{0:dd.MM.yyyy HH:mm}" Width="200px"></RadzenDataGridColumn>
