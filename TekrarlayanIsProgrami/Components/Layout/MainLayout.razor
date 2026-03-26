@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@implements IDisposable
 
 <RadzenComponents @rendermode="InteractiveServer" />
 <RadzenNotification />
@@ -10,31 +11,37 @@
 
     @if (!uri.Contains("/girisyap"))
     {
-        <RadzenSidebar>
+        <button class="mobile-menu-toggle @(IsSidebarOpen ? "menu-open" : "")" @onclick="ToggleSidebar">
+            <span class="menu-icon-bar"></span>
+            <span class="menu-icon-bar"></span>
+            <span class="menu-icon-bar"></span>
+        </button>
+
+        <div class="sidebar-overlay @(IsSidebarOpen ? "overlay-visible" : "")" @onclick="ToggleSidebar"></div>
+
+        <div class="app-sidebar @(IsSidebarOpen ? "sidebar-open" : "")">
             @if (IsLoading)
             {
                 <div class="nav-link" style="opacity:0.6;">
                     Menü yükleniyor...
                 </div>
             }
-           
             else
             {
                 <RadzenCard class="dashboard-nav">
                     <a href="/dashboard" style="text-decoration:none; color:white;">
-                        <h3>📊 Dashboard</h3>
+                        <h3>Dashboard</h3>
                     </a>
 
                     @foreach (var anaMenu in VisibleMenus
                                 .Where(x => (x.UstMenu_ID == 0 || x.UstMenu_ID == null) && x.IsMenu)
                                 .OrderBy(x => x.Sira))
-                       {
+                    {
                         var altMenuler = VisibleMenus
-                        .Where(x => x.UstMenu_ID == anaMenu.ID && x.IsMenu)
-                        .OrderBy(x => x.Sira)
-                        .ToList();
+                            .Where(x => x.UstMenu_ID == anaMenu.ID && x.IsMenu)
+                            .OrderBy(x => x.Sira)
+                            .ToList();
 
-                        // Ana menüye ve alt menülere yetki kontrolü
                         if (!UserHasAccessToMenu(anaMenu, altMenuler))
                             continue;
 
@@ -45,8 +52,8 @@
                                  if (!string.IsNullOrWhiteSpace(anaMenu.SayfaURL))
                                      NavigationManager.NavigateTo(GetHref(anaMenu));
                              })">
-                              @anaMenu.Adi
-                          </div>
+                            @anaMenu.Adi
+                        </div>
 
                         @if (altMenuler.Any() && AcikMenuler.Contains(anaMenu.ID))
                         {
@@ -68,7 +75,7 @@
                     </div>
                 </RadzenCard>
             }
-        </RadzenSidebar>
+        </div>
     }
 
     <RadzenBody>
@@ -79,11 +86,18 @@
 @code {
     private List<ItemForm> VisibleMenus = new();
     private bool IsLoading = true;
+    private bool IsSidebarOpen = false;
     private HashSet<int> AcikMenuler = new();
     private User? currentUser;
+
+    private void ToggleSidebar()
+    {
+        IsSidebarOpen = !IsSidebarOpen;
+    }
     //metodu, sayfa yüklenirken kullanıcı ve menü görünürlüğünü ayarlıyor.
     protected override async Task OnInitializedAsync()
     {
+        NavigationManager.LocationChanged += OnLocationChanged;
         IsLoading = true;
         currentUser = await girisSaglayici.GetCurrentUserAsync();
 
@@ -153,8 +167,20 @@
     }
 
     //Profili açmak için kullanılan bir metot
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        IsSidebarOpen = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
     async Task ProfilPopupAc()
     {
+        IsSidebarOpen = false;
         await DialogService.OpenAsync<KullaniciProfil>(
             "Profil Bilgileri",
             null,

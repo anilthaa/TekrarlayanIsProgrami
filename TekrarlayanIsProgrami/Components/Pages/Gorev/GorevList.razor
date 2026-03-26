@@ -29,7 +29,7 @@
             <div class="my-tab @(SelectedTabIndex == 3 ? "active" : "")" @onclick="() => SelectedTabIndex = 3">Süresi Dolanlar</div>
             <div class="my-tab @(SelectedTabIndex == 4 ? "active" : "")" @onclick="() => SelectedTabIndex = 4">Pasif Görevler</div>
             <div class="my-tab @(SelectedTabIndex == 6 ? "active" : "")" @onclick="() => SelectedTabIndex = 6">Bana Özel Görevler</div>
-            <div class="my-tab @(SelectedTabIndex == 7 ? "active" : "")" @onclick="() => SelectedTabIndex = 7">Tüm Görevler</div>
+            <div class="my-tab @(SelectedTabIndex == 5 ? "active" : "")" @onclick="() => SelectedTabIndex = 7">Tüm Görevler</div>
         </div>
 
         @if (!AktifListe.Any())
@@ -45,7 +45,8 @@
                             RowDoubleClick="@((_yetki == YetkiTipi.Yazma) ? OnRowDoubleClick : null)"
                             Style="width:100%; overflow-x:auto;" ColumnWidth="120px"
                             RowSelect="OnRowSelect" SelectionMode="DataGridSelectionMode.Single"
-                            SelectedItems="@SeciliGorevler" RowStyle="@GorevRowStyle">
+                            SelectedItems="@SeciliGorevler" RowStyle="@GorevRowStyle"
+                            class="mobile-card-grid">
 
                 <Columns>
                     <RadzenDataGridColumn TItem="ItemGorev" Property="ID" Title="ID" Width="0px"></RadzenDataGridColumn>
@@ -54,7 +55,7 @@
                         <Template Context="g">@((AktifListe.ToList().IndexOf(g) + 1))</Template>
                     </RadzenDataGridColumn>
 
-                    <RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Frozen="true" Width="200px">
+                    <RadzenDataGridColumn TItem="ItemGorev" Property="Baslik" Title="Başlık" Width="200px">
                         <Template Context="g">
                             <div style="@($"padding:5px; background-color:{(g.ID == gorevId ? "#d1e7dd" : "transparent")};")">
                                 @g.Baslik
