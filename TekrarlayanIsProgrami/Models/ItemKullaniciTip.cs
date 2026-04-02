@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace TekrarlayanIsProgrami.Models
 {
@@ -7,5 +7,9 @@ namespace TekrarlayanIsProgrami.Models
         [Required (ErrorMessage ="Bu Alan Zorunludur.")]
         public string Adi { get; set; }
         public bool Aktif { get; set; }
+
+        // Kullanici tipleri eklenirken bir tanesi varsayilan olarak isaretlenebilir.
+        // Kayit sirasinda kullanici tip id bos kalirsa bu tip atanir.
+        public bool Varsayilan { get; set; }
     }
 }

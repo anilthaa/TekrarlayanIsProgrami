@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using TekrarlayanIsProgrami.Models;
 using TekrarlayanIsProgrami.Repository;
 using TekrarlayanIsProgrami.Services;
@@ -17,6 +19,42 @@ namespace TekrarlayanIsProgrami.Api
         {
             _jwtService = jwtService;
             _userRepository = userRepository;
+        }
+
+        /// <summary>
+        /// Tarayıcıya auth çerezi yazar; Blazor ilk render'da HttpContext üzerinden kullanıcıyı okuyabilir (localStorage/JS gerekmez).
+        /// </summary>
+        [HttpPost("establish-session")]
+        public async Task<IActionResult> EstablishSession([FromBody] EstablishSessionRequest model)
+        {
+            if (model?.User == null || string.IsNullOrWhiteSpace(model.Token))
+                return BadRequest();
+
+            if (!_jwtService.TryValidateToken(model.Token, out var email) || email == null)
+                return Unauthorized();
+
+            if (!string.Equals(email.Trim(), model.User.EPosta?.Trim(), StringComparison.OrdinalIgnoreCase))
+                return Unauthorized();
+
+            var eposta = model.User.EPosta ?? email;
+            var identity = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, model.User.ID.ToString()),
+                new Claim(ClaimTypes.Name, (model.User.Adi ?? "") + " " + (model.User.Soyadi ?? "")),
+                new Claim(ClaimTypes.Email, eposta),
+                new Claim("KullaniciTip_ID", model.User.KullaniciTip_ID.ToString()),
+                new Claim(ClaimTypes.Role, model.User.KullaniciTip_ID == 1 ? "Admin" : "User")
+            }, "Identity.Application");
+
+            await HttpContext.SignInAsync("Identity.Application", new ClaimsPrincipal(identity));
+            return Ok();
+        }
+
+        [HttpPost("signout")]
+        public async Task<IActionResult> SignOutSession()
+        {
+            await HttpContext.SignOutAsync("Identity.Application");
+            return Ok();
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] User model)
@@ -61,6 +99,17 @@ namespace TekrarlayanIsProgrami.Api
 
             var token = _jwtService.GenerateToken(user.EPosta);
 
+            // Başarılı girişte sunucu tarafı auth cookie yazılır.
+            var identity = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
+                new Claim(ClaimTypes.Name, (user.Adi ?? "") + " " + (user.Soyadi ?? "")),
+                new Claim(ClaimTypes.Email, user.EPosta ?? ""),
+                new Claim("KullaniciTip_ID", user.KullaniciTip_ID.ToString()),
+                new Claim(ClaimTypes.Role, user.KullaniciTip_ID == 1 ? "Admin" : "User")
+            }, "Identity.Application");
+            await HttpContext.SignInAsync("Identity.Application", new ClaimsPrincipal(identity));
+
             return Ok(new AuthResult
             {
                 Basarili = true,
@@ -69,12 +118,18 @@ namespace TekrarlayanIsProgrami.Api
                 User = new User
                 {
                     ID = user.ID,
-                    Adi = user.Adi,
-                    Soyadi = user.Soyadi,
-                    EPosta = user.EPosta,
+                    Adi = user.Adi ?? "",
+                    Soyadi = user.Soyadi ?? "",
+                    EPosta = user.EPosta ?? "",
                     KullaniciTip_ID = user.KullaniciTip_ID
                 }
             });
         }
+    }
+
+    public class EstablishSessionRequest
+    {
+        public string Token { get; set; } = "";
+        public User User { get; set; } = null!;
     }
 }

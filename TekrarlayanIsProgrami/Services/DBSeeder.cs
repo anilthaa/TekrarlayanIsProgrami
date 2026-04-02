@@ -18,28 +18,90 @@ namespace TekrarlayanIsProgrami.Services
 
         public async Task AdminSeed()
         {
+            // KullaniciTip tablosuna varsayilan alanini ekle (eski veritabanlari icin uyumluluk).
+            await _db.SQLExecute(@"ALTER TABLE ""KullaniciTip"" 
+                                   ADD COLUMN IF NOT EXISTS ""Varsayilan"" boolean DEFAULT false;");
+
+            var varsayilanVarMi = await _db.SQLExecuteScalar<int>(@"
+                SELECT COUNT(*) 
+                FROM ""KullaniciTip""
+                WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                  AND COALESCE(""Varsayilan"", false) = true
+            ");
+
             var email = _config["AdminUser:Email"];
             var password = _config["AdminUser:Password"];
+            var ad = _config["AdminUser:Adi"];
+            var soyad = _config["AdminUser:Soyadi"];
+
+            // Config boş bırakılırsa da ilk admin kullanıcı garanti oluşturulsun.
+            email = string.IsNullOrWhiteSpace(email) ? "yonetici@gmail.com" : email.Trim();
+            password = string.IsNullOrWhiteSpace(password) ? "yonetici123" : password;
+            ad = string.IsNullOrWhiteSpace(ad) ? "Sistem" : ad.Trim();
+            soyad = string.IsNullOrWhiteSpace(soyad) ? "Yönetici" : soyad.Trim();
 
             var yoneticiRolKontrol = await _db.SQLExecuteScalar<int>(@"SELECT COUNT(*) FROM ""KullaniciTip"" WHERE ""Adi""=@adi", new { adi = "Yönetici" });
 
             if (yoneticiRolKontrol == 0)
             {
-                await _db.SQLExecute(@"INSERT INTO ""KullaniciTip"" (""Adi"") VALUES (@adi)", new { adi = "Yönetici" });
+                await _db.SQLExecute(@"
+                    INSERT INTO ""KullaniciTip"" (""Adi"", ""Aktif"", ""Varsayilan"")
+                    VALUES (@adi, true, @varsayilan)
+                ", new { adi = "Yönetici", varsayilan = varsayilanVarMi == 0 });
+            }
+            else
+            {
+                await _db.SQLExecute(@"UPDATE ""KullaniciTip"" SET ""Aktif"" = true WHERE ""Adi"" = @adi", new { adi = "Yönetici" });
+                // Varsayilan hic yoksa Yonetici'yi varsayilan yap.
+                if (varsayilanVarMi == 0)
+                {
+                    await _db.SQLExecute(@"UPDATE ""KullaniciTip"" SET ""Varsayilan"" = true WHERE ""Adi"" = @adi", new { adi = "Yönetici" });
+                }
             }
 
             var YoneticiRolId = await _db.SQLExecuteScalar<int>(@"SELECT ""ID"" FROM ""KullaniciTip"" WHERE ""Adi""=@adi", new { adi = "Yönetici" });
-            var yoneticiKullaniciKontrol = await _db.SQLExecuteScalar<int>(@"SELECT COUNT(*) FROM ""Kullanici"" WHERE ""EPosta""=@ePosta", new { ePosta = email });
+            var mevcutKullaniciId = await _db.SQLExecuteScalar<int>(@"
+                SELECT COALESCE(MAX(""ID""), 0)
+                FROM ""Kullanici""
+                WHERE lower(""EPosta"") = lower(@ePosta)
+            ", new { ePosta = email });
 
-            if (yoneticiKullaniciKontrol == 0)
+            if (mevcutKullaniciId == 0)
             {
-                await _db.SQLExecute(@"INSERT INTO ""Kullanici"" (""EPosta"", ""Sifre"", ""KullaniciTip_ID"") VALUES (@ePosta, @sifre, @kullaniciTip_Id)",
+                await _db.SQLExecute(@"INSERT INTO ""Kullanici"" (""Adi"", ""Soyadi"", ""EPosta"", ""Sifre"", ""KullaniciTip_ID"", ""Aktif"", ""CreUser"", ""CreDate"")
+                                       VALUES (@adi, @soyadi, @ePosta, @sifre, @kullaniciTip_Id, true, 0, now())",
                     new
                     {
+                        adi = ad,
+                        soyadi = soyad,
                         ePosta = email,
-                        sifre = BCrypt.Net.BCrypt.HashPassword(password),
+                        sifre = PasswordHelper.HashPassword(password),
                         kullaniciTip_Id = YoneticiRolId
                     });
+            }
+            else
+            {
+                // Yönetici kullanıcısı varsa da config değerleriyle güncel tut.
+                await _db.SQLExecute(@"
+                    UPDATE ""Kullanici""
+                    SET ""Adi"" = @adi,
+                        ""Soyadi"" = @soyadi,
+                        ""Sifre"" = @sifre,
+                        ""KullaniciTip_ID"" = @kullaniciTip_Id,
+                        ""Aktif"" = true,
+                        ""DelUser"" = 0,
+                        ""DelDate"" = NULL,
+                        ""UpdUser"" = 0,
+                        ""UpdDate"" = now()
+                    WHERE ""ID"" = @id
+                ", new
+                {
+                    id = mevcutKullaniciId,
+                    adi = ad,
+                    soyadi = soyad,
+                    sifre = PasswordHelper.HashPassword(password),
+                    kullaniciTip_Id = YoneticiRolId
+                });
             }
 
             //Yönetici tipi için tüm yetkileri verir

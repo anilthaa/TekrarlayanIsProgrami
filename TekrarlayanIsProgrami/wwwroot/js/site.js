@@ -2,6 +2,43 @@ window.setInputType = (element, type) => {
     if (element) element.type = type;
 };
 
+// Login istegi tarayicidan giderse Set-Cookie dogrudan browser'a yazilir.
+window.authLogin = async function (email, password) {
+    const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: email, password: password })
+    });
+
+    const raw = await response.text();
+    return {
+        ok: response.ok,
+        status: response.status,
+        raw: raw
+    };
+};
+
+/** Girişten sonra sunucu oturum çerezini yazar; doğrudan URL ile sayfa açılışında yetki için gerekli. */
+window.authEstablishSession = async function (token, userJson) {
+    await fetch('/api/auth/establish-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+            token: token,
+            user: typeof userJson === 'string' ? JSON.parse(userJson) : userJson
+        })
+    });
+};
+
+window.authSignOut = async function () {
+    await fetch('/api/auth/signout', {
+        method: 'POST',
+        credentials: 'include'
+    });
+};
+
 (function () {
     let timeout;
     function applyMobileCardLabels() {

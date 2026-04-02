@@ -546,7 +546,8 @@
 		// dashboard'da da görev verileri gösterilir. Yetki kontrolü yapılmaz.
 		await YukleGorevler();
 
-		_yetki = await DataService.GetUserFormYetkiAsync(currentUserId.Value, kullaniciTip.ID, 8);
+			// Form_ID sabitlerine (8 gibi) bagimli kalmamak icin rota bazli yetki kontrolu.
+			_yetki = await PermissionService.GetCurrentUserYetkiAsync("/gorevler");
 
 		if (_yetki == YetkiTipi.Yazma)
 		{

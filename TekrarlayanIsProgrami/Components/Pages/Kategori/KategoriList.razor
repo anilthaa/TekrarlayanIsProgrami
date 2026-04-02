@@ -84,11 +84,11 @@
 	//Sayfa açıldığında kullanıcının kategori ekleme/düzenleme yetkisini kontrol eder ve gerekli verileri yükler.
 	protected override async Task OnInitializedAsync()
 	{
-	 _yetki = await PermissionService.GetCurrentUserYetkiAsync(7);
+	 _yetki = await PermissionService.GetCurrentUserYetkiAsync("/Kategori");
         if (_yetki == YetkiTipi.Gizli)
         {
-            NavigationManager.NavigateTo("/yetkisiz");
-            notificationService.Notify(NotificationSeverity.Warning,"Uyarı","Bu Sayfaya ERişme Yetkiniz Yok");
+            NavigationManager.NavigateTo("/dashboard");
+            notificationService.Notify(NotificationSeverity.Warning,"Uyarı","Bu Sayfaya Erişme Yetkiniz Yok");
             return;
         }
 		await YukleDataAsync();

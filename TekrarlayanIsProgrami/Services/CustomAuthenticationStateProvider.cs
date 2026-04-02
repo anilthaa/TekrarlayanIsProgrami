@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.JSInterop;
 using Npgsql;
 using Radzen;
@@ -23,18 +24,26 @@ namespace TekrarlayanIsProgrami.Services
         private readonly UserRepository _kullaniciRepo;
         private readonly HttpClient _http;
         private readonly NavigationManager _nav;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CustomAuthenticationStateProvider(UserRepository dbContext, IJSRuntime Js, HttpClient http,NavigationManager nav)
+        public CustomAuthenticationStateProvider(UserRepository dbContext, IJSRuntime Js, HttpClient http, NavigationManager nav, IHttpContextAccessor httpContextAccessor)
         {
             _kullaniciRepo = dbContext;
             _Js = Js;
             _http = http;
-            _nav=nav;
+            _nav = nav;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         //Blazor’da mevcut kullanıcıyı doğrulamak ve AuthenticationState oluşturmak için kullanılır.
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            var http = _httpContextAccessor.HttpContext;
+            if (http?.User?.Identity?.IsAuthenticated == true)
+            {
+                return new AuthenticationState(http.User);
+            }
+
             if (_currentUser == null)
             {
                 try
@@ -85,20 +94,64 @@ namespace TekrarlayanIsProgrami.Services
         public async Task MarkUserAsLoggedOut()
         {
             _currentUser = null;
+            try
+            {
+                await _Js.InvokeVoidAsync("authSignOut");
+            }
+            catch
+            {
+            }
+
             await _Js.InvokeVoidAsync("localStorage.removeItem", "_currentUser");
             await _Js.InvokeVoidAsync("localStorage.removeItem", "jwtToken");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
+        private async Task EstablishBrowserSessionCookieAsync(string? token, User user)
+        {
+            if (string.IsNullOrEmpty(token))
+                return;
+
+            try
+            {
+                var userJson = JsonSerializer.Serialize(user);
+                await _Js.InvokeVoidAsync("authEstablishSession", token, userJson);
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// OnAfterRenderAsync içinde çağrılır; ilk render'da JS ile localStorage okunamadığı için
+        /// korumalı sayfayı açmadan önce kullanıcıyı bellekte yükler.
+        /// </summary>
+        public async Task HydrateFromStorageAsync()
+        {
+            if (_currentUser != null)
+                return;
+
+            try
+            {
+                var userJson = await _Js.InvokeAsync<string>("localStorage.getItem", "_currentUser");
+                if (!string.IsNullOrEmpty(userJson))
+                    _currentUser = JsonSerializer.Deserialize<User>(userJson);
+            }
+            catch
+            {
+            }
+
+            if (_currentUser != null)
+                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+        }
+
         //kullanıcının giriş (login) işlemini gerçekleştirir ve sonucu döndürür.
         public async Task<AuthResult> GirisYapAsync(string EPosta, string Sifre)
         {
-            var response = await _http.PostAsJsonAsync("api/auth/login",
-            new { Email = EPosta, Password = Sifre });
+            var loginResponse = await _Js.InvokeAsync<JsLoginResponse>("authLogin", EPosta, Sifre);
+            var raw = loginResponse?.Raw;
 
-            var raw = await response.Content.ReadAsStringAsync();
-
-            if (!response.IsSuccessStatusCode)
+            if (loginResponse == null || !loginResponse.Ok || string.IsNullOrWhiteSpace(raw))
             {
                 return new AuthResult { Basarili = false, Mesaj = "E-posta veya Şifre Hatalı." };
             }
@@ -136,6 +189,7 @@ namespace TekrarlayanIsProgrami.Services
             if (result.User != null)
             {
                 await MarkUserAsAuthenticated(result.User);
+                await EstablishBrowserSessionCookieAsync(result.Token, result.User);
                 return new AuthResult { Basarili = true, Mesaj = $"Hoşgeldiniz {result.User.Adi}!", User = result.User, Token = result.Token };
             }
             else
@@ -230,6 +284,13 @@ namespace TekrarlayanIsProgrami.Services
 
             var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
             return idClaim == null ? 0 : int.Parse(idClaim.Value);
+        }
+
+        private class JsLoginResponse
+        {
+            public bool Ok { get; set; }
+            public int Status { get; set; }
+            public string? Raw { get; set; }
         }
     }
 }

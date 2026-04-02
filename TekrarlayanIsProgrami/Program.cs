@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
@@ -25,7 +25,9 @@ builder.Services.AddAuthentication("Identity.Application")
     .AddCookie("Identity.Application", options =>
     {
         options.LoginPath = "/GirisYap";
-        options.AccessDeniedPath = "/AccessDenied";
+        options.AccessDeniedPath = "/dashboard";
+        options.ExpireTimeSpan = TimeSpan.FromHours(16);
+        options.SlidingExpiration = true;
         options.Events.OnRedirectToLogin = context =>
         {
             if (context.Request.Path.StartsWithSegments("/api"))
@@ -57,6 +59,7 @@ builder.Services.AddScoped(sp =>
 
 
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<DialogService>();
