@@ -1,3 +1,4 @@
+using System.Linq;
 using Dapper;
 using Microsoft.AspNetCore.Components.Authorization;
 using Npgsql;
@@ -255,6 +256,19 @@ ORDER BY COALESCE(""Sira"", 0), ""ID"";
                 WHERE ""KullaniciTip_ID"" = @KullaniciTipId AND (""DelUser"" IS NULL OR ""DelUser"" = 0);
             ";
             return (await SQLQueryAsync<ItemKullaniciTipDetay>(sql, new { KullaniciTipId = kullaniciTipId })).ToArray();
+        }
+
+        // Her kullanıcı tipi için silinmemiş KullaniciTipDetay kayıt sayısını döndürür (yetki atanmış form sayısı).
+        public async Task<Dictionary<int, int>> GetKullaniciTipFormYetkiSayilariAsync()
+        {
+            const string sql = @"
+                SELECT ""KullaniciTip_ID"" AS TipId, COUNT(*)::int AS Cnt
+                FROM ""KullaniciTipDetay""
+                WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                GROUP BY ""KullaniciTip_ID"";
+            ";
+            var rows = await SQLQueryAsync<KullaniciTipYetkiSayimSatir>(sql);
+            return rows.ToDictionary(r => r.TipId, r => r.Cnt);
         }
 
         // Kullanıcı tipi form yetkisini ekler, günceller veya soft-delete eder.
@@ -601,6 +615,12 @@ LIMIT 1;
             });
 
             return (YetkiTipi)(result ?? 0);
+        }
+
+        private sealed class KullaniciTipYetkiSayimSatir
+        {
+            public int TipId { get; set; }
+            public int Cnt { get; set; }
         }
     }
 }

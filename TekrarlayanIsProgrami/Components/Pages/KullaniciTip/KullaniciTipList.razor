@@ -37,6 +37,19 @@
 					</Template>
 				</RadzenDataGridColumn>
 
+				<RadzenDataGridColumn TItem="ItemKullaniciTip" Title="" Width="44px" Sortable="false" Filterable="false"
+									  TextAlign="TextAlign.Center">
+					<Template Context="item">
+						@if (TipIcinYetkiKaydiYok(item.ID))
+						{
+							<span title="Bu tip için henüz sayfa yetkisi tanımlanmamış. İşlemler sütunundaki güvenlik (tip sayfa yetkileri) düğmesinden yetki atayınız."
+								  style="cursor:help;">
+								<RadzenIcon Icon="warning" Style="color:#e67e22; font-size:20px; vertical-align:middle;" />
+							</span>
+						}
+					</Template>
+				</RadzenDataGridColumn>
+
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
 
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
@@ -73,6 +86,10 @@
 	    private bool isLoading = true;
 	    private int? currentUserId;
 		private YetkiTipi _yetki;
+		private Dictionary<int, int> _tipYetkiSayilari = new();
+
+		private bool TipIcinYetkiKaydiYok(int tipId) =>
+			!_tipYetkiSayilari.TryGetValue(tipId, out var n) || n == 0;
 
 		//sayfa yüklendiğinde başlangıç işlemlerini yapar.
         protected override async Task OnInitializedAsync()
@@ -111,6 +128,7 @@
 				isLoading = true;
 				StateHasChanged();
 				DataList = (await DataService.GetKullaniciTipleri()).ToList();
+				await YukleTipYetkiSayilariAsync();
 			}
 			catch (Exception ex)
 			{
@@ -121,6 +139,18 @@
 			{
 				isLoading = false;
 				StateHasChanged();
+			}
+		}
+
+		private async Task YukleTipYetkiSayilariAsync()
+		{
+			try
+			{
+				_tipYetkiSayilari = await DataService.GetKullaniciTipFormYetkiSayilariAsync();
+			}
+			catch
+			{
+				_tipYetkiSayilari = new();
 			}
 		}
 
@@ -144,6 +174,7 @@
 			if (result is ItemKullaniciTip eklenen && eklenen.ID > 0)
 			{
 				DataList.Insert(0, eklenen);
+				await YukleTipYetkiSayilariAsync();
 				if (grid != null)
 				{
 					await grid.Reload();
@@ -161,6 +192,8 @@
 				new Dictionary<string, object> { { "KullaniciTipId", item.ID } },
 				new DialogOptions { Width = "800px", Height = "auto" }
 			);
+			await YukleTipYetkiSayilariAsync();
+			StateHasChanged();
 		}
 
 		//Mevcut olan tipinin düzenleme işllemini yapmak için kullanılır.
@@ -171,6 +204,7 @@
 				ID = item.ID,
 				Adi = item.Adi,
 				Aktif = item.Aktif,
+				Varsayilan = item.Varsayilan,
 				CreUser = item.CreUser,
 				CreDate = item.CreDate,
 				UpdUser = currentUserId ?? 1,
@@ -248,6 +282,7 @@
 				if (response.Data > 0)
 				{
 					DataList.Remove(item);
+					await YukleTipYetkiSayilariAsync();
 					if (grid != null)
 					{
 						await grid.Reload();
