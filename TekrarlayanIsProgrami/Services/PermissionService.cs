@@ -281,6 +281,31 @@ namespace TekrarlayanIsProgrami.Services
             );
             return await _dataService.GetUserFormYetkiAsync(userId, tipId, formId);
         }
+
+        // Form ID sabitlerine bağımlılığı kaldırmak için rota/ad bazlı mevcut kullanıcı yetkisini döndürür.
+        public async Task<YetkiTipi> GetCurrentUserYetkiAsync(string? routeOrName)
+        {
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+                return YetkiTipi.Gizli;
+
+            if (user.IsInRole("Admin"))
+                return YetkiTipi.Yazma;
+
+            var form = await FindFormAsync(routeOrName);
+            if (form is null)
+                return YetkiTipi.Gizli;
+
+            var yetki = GetCachedPermission(form.ID);
+            return yetki switch
+            {
+                >= 2 => YetkiTipi.Yazma,
+                1 => YetkiTipi.Okuma,
+                _ => YetkiTipi.Gizli
+            };
+        }
     }
 }
 

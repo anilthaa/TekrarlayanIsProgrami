@@ -278,11 +278,11 @@
 	//görevler sayfası ilk açıldığında URL parametrelerini okuyup gerekli verileri yükleyen başlangıç sürecidir.
 	protected override async Task OnInitializedAsync()
 	{
-		_yetki = await PermissionService.GetCurrentUserYetkiAsync(8);
+		_yetki = await PermissionService.GetCurrentUserYetkiAsync("/gorevler");
 		if (_yetki == YetkiTipi.Gizli)
 		{
-			NavigationManager.NavigateTo("/yetkisiz");
-			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya ERişme Yetkiniz Yok");
+			NavigationManager.NavigateTo("/dashboard");
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya Erişme Yetkiniz Yok");
 			return;
 		}
 		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
@@ -374,7 +374,21 @@
 		if (result is ItemGorev g && g.ID > 0)
 		{
 			await YukleGorevler();
-			await GrdGorev.Reload();
+			var existing = GorevListt.FirstOrDefault(x => x.ID == g.ID);
+			if (existing != null)
+			{
+				var index = GorevListt.IndexOf(existing);
+				GorevListt[index] = g;
+			}
+			else
+			{
+				GorevListt.Insert(0, g);
+			}
+			StateHasChanged();
+			if (GrdGorev != null)
+			{
+				await GrdGorev.Reload();
+			}
 		}
 	}
 
@@ -524,7 +538,17 @@
 			else
 			{
 				await YukleGorevler();
-				await GrdGorev?.Reload();
+				var existing = GorevListt.FirstOrDefault(x => x.ID == guncellendi.ID);
+				if (existing != null)
+				{
+					var index = GorevListt.IndexOf(existing);
+					GorevListt[index] = guncellendi;
+				}
+				StateHasChanged();
+				if (GrdGorev != null)
+				{
+					await GrdGorev.Reload();
+				}
 				notificationService.Notify(NotificationSeverity.Success, "Başarılı", "Görev güncellendi!");
 			}
 		}
@@ -612,6 +636,7 @@
 				notificationService.Notify(NotificationSeverity.Success, "Durum Güncellendi", item.Aktif ? "Görev aktif hale getirildi." : "Görev pasif hale getirildi.");
 
 				GorevListt = (await DataService.GetGorevler()).ToList();
+				StateHasChanged();
 				if (GrdGorev != null)
 				{
 					await GrdGorev.Reload();
@@ -672,6 +697,7 @@
 					SelectedTabIndex = 0;
 				}
 
+				StateHasChanged();
 				if (GrdGorev != null)
 				{
 					await GrdGorev.Reload();

@@ -1,0 +1,58 @@
+@* Yetkili sayfalar: [Authorize] ilk render'da localStorage okunamadan önce çalışır; önce oturum hydrate edilir. *@
+@if (!_ready)
+{
+    <div class="rz-p-4 rz-text-align-center">Yükleniyor…</div>
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool _ready;
+
+    private static readonly HashSet<string> PublicRoutes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "",
+        "girisyap",
+        "kayitol",
+        "sifremiunuttum",
+        "sifresifirla",
+        "dashboard",
+        "gorevler",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var q = relative.IndexOf('?');
+        if (q >= 0) relative = relative[..q];
+        var segment = relative.TrimStart('/').ToLowerInvariant();
+        if (string.IsNullOrEmpty(segment) || PublicRoutes.Contains(segment))
+        {
+            _ready = true;
+            return;
+        }
+
+        var state = await girisSaglayici.GetAuthenticationStateAsync();
+        if (state.User?.Identity?.IsAuthenticated == true)
+        {
+            _ready = true;
+            return;
+        }
+
+        _ready = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _ready)
+            return;
+
+        await girisSaglayici.HydrateFromStorageAsync();
+        _ready = true;
+        StateHasChanged();
+    }
+}

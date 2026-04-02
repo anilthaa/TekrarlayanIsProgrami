@@ -123,11 +123,11 @@
     //sayfa ilk açıldığında kullanıcı yönetimi ekranını hazırlayan başlangıç işlemlerini yapar.
     protected override async Task OnInitializedAsync()
     {
-        _yetki = await PermissionService.GetCurrentUserYetkiAsync(6);
+        _yetki = await PermissionService.GetCurrentUserYetkiAsync("/kullanicilar");
         if (_yetki == YetkiTipi.Gizli)
         {
-            NavigationManager.NavigateTo("/yetkisiz");
-            notificationService.Notify(NotificationSeverity.Warning,"Uyarı","Bu Sayfaya ERişme Yetkiniz Yok");
+            NavigationManager.NavigateTo("/dashboard");
+            notificationService.Notify(NotificationSeverity.Warning,"Uyarı","Bu Sayfaya Erişme Yetkiniz Yok");
             return;
         }
 

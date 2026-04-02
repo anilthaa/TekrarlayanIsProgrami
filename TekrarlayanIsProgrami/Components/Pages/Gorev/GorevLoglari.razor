@@ -131,11 +131,11 @@
     //sayfa ilk yüklendiğinde log (kayıt) verilerini getirmek için kullanılır.
     protected override async Task OnInitializedAsync()
     {
-        _yetki = await PermissionService.GetCurrentUserYetkiAsync(12);
+        _yetki = await PermissionService.GetCurrentUserYetkiAsync("/admin/gorev-loglari");
         if (_yetki == YetkiTipi.Gizli)
         {
-            NavigationManager.NavigateTo("/yetkisiz");
-            notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya ERişme Yetkiniz Yok");
+            NavigationManager.NavigateTo("/dashboard");
+            notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya Erişme Yetkiniz Yok");
             return;
         }
         var currentUser = await girisSaglayici.GetCurrentUserAsync();
