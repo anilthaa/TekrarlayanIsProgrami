@@ -1,7 +1,32 @@
-﻿@code {
-    //sayfa başlatıldığında otomatik olarak /GirisYap sayfasına yönlendirir.
-    protected override void OnInitialized()
+@code {
+    private bool _handled;
+
+    // İlk anda NotAuthorized tetiklense bile önce storage'dan auth hydrate denenir.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        NavigationManager.NavigateTo("/GirisYap", false);
+        if (!firstRender || _handled)
+        {
+            return;
+        }
+
+        _handled = true;
+
+        try
+        {
+            await girisSaglayici.HydrateFromStorageAsync();
+            var authState = await girisSaglayici.GetAuthenticationStateAsync();
+
+            if (authState.User?.Identity?.IsAuthenticated == true)
+            {
+                NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: false);
+                return;
+            }
+        }
+        catch
+        {
+        }
+
+        var returnUrl = Uri.EscapeDataString(NavigationManager.Uri);
+        NavigationManager.NavigateTo($"/GirisYap?returnUrl={returnUrl}", forceLoad: false);
     }
 }

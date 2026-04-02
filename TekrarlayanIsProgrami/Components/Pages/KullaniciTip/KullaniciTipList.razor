@@ -77,11 +77,11 @@
 		//sayfa yüklendiğinde başlangıç işlemlerini yapar.
         protected override async Task OnInitializedAsync()
 	    {
-		_yetki = await PermissionService.GetCurrentUserYetkiAsync(9);
+		_yetki = await PermissionService.GetCurrentUserYetkiAsync("/Admin/KullaniciTipleri");
 		if (_yetki == YetkiTipi.Gizli)
 		{
-			NavigationManager.NavigateTo("/yetkisiz");
-			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya ERişme Yetkiniz Yok");
+			NavigationManager.NavigateTo("/dashboard");
+			notificationService.Notify(NotificationSeverity.Warning, "Uyarı", "Bu Sayfaya Erişme Yetkiniz Yok");
 			return;
 		}
 		   await YukleKullaniciAsync();

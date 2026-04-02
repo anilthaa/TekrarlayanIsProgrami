@@ -145,17 +145,36 @@ namespace TekrarlayanIsProgrami.Repository
         {
             using var conn = GetConnection();
             user.Sifre = PasswordHelper.HashPassword(user.Sifre);
-            int Tip_ID;
+            if (user.KullaniciTip_ID == 0)
+            {
+                // KullaniciTip eklenince bir tanesi varsayilan olarak isaretlenebilir.
+                // KullaniciTip_ID bos gelirse varsayilan tip otomatik atanir.
+                var defaultTipId = await conn.ExecuteScalarAsync<int?>(@"
+                    SELECT ""ID""
+                    FROM ""KullaniciTip""
+                    WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                      AND COALESCE(""Varsayilan"", false) = true
+                    ORDER BY ""ID""
+                    LIMIT 1
+                ");
+                if (!defaultTipId.HasValue || defaultTipId.Value == 0)
+                {
+                    // Varsayilan isaretlenmemisse, aktif ilk tipi al (eski DB'ler icin fallback).
+                    var firstActiveTipId = await conn.ExecuteScalarAsync<int?>(@"
+                        SELECT ""ID""
+                        FROM ""KullaniciTip""
+                        WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)
+                        ORDER BY ""ID""
+                        LIMIT 1
+                    ");
 
-            if (user.KullaniciTip_ID == null || user.KullaniciTip_ID == 0)
-            {
-                Tip_ID = 2;
+                    user.KullaniciTip_ID = firstActiveTipId.GetValueOrDefault(2);
+                }
+                else
+                {
+                    user.KullaniciTip_ID = defaultTipId.Value;
+                }
             }
-            else
-            {
-                Tip_ID = user.KullaniciTip_ID;
-            }
-            user.KullaniciTip_ID = Tip_ID;
             user.ID = await conn.ExecuteScalarAsync<int>(@"INSERT INTO ""Kullanici"" 
  (""Adi"", ""Soyadi"", ""KullaniciTip_ID"", ""EPosta"", ""Sifre"", ""Aktif"", ""CreUser"", ""CreDate"", ""ResetToken"") 
  VALUES (@Adi, @Soyadi, @KullaniciTip_ID, @EPosta, @Sifre, @Aktif, @CreUser, Now(), @ResetToken)

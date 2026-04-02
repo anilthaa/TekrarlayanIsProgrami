@@ -115,7 +115,8 @@ namespace TekrarlayanIsProgrami.Services
         public async Task<ItemKullaniciTip[]> GetKullaniciTipleri(int ID = 0)
         {
             return (await SQLQueryAsync<ItemKullaniciTip>($@"
-                select ""ID"", ""Adi"", ""Aktif"", ""CreUser"", ""CreDate"", ""UpdUser"", ""UpdDate"", ""DelUser"", ""DelDate""
+                select ""ID"", ""Adi"", ""Aktif"", COALESCE(""Varsayilan"", false) as ""Varsayilan"",
+                       ""CreUser"", ""CreDate"", ""UpdUser"", ""UpdDate"", ""DelUser"", ""DelDate""
                 from ""KullaniciTip""
                 where ""DelUser"" is null
                 {(ID > 0 ? $@"and ""ID"" = {ID}" : "")}
@@ -128,14 +129,34 @@ namespace TekrarlayanIsProgrami.Services
         {
             if (item.ID.Equals(0) && item.DelUser.Equals(0))
             {
-                item.ID = await SQLExecuteScalar<int>(@"INSERT INTO ""KullaniciTip"" (""Adi"", ""Aktif"", ""CreUser"", ""CreDate"")
-                    VALUES (@Adi, @Aktif, @CreUser, now()) RETURNING ""ID""", item);
+                if (item.Varsayilan)
+                {
+                    // Tek varsayilan kalsin: once tumlerini false yap.
+                    await SQLExecute(@"
+                        UPDATE ""KullaniciTip""
+                        SET ""Varsayilan"" = false
+                        WHERE (""DelUser"" IS NULL OR ""DelUser"" = 0)", null);
+                }
+
+                item.ID = await SQLExecuteScalar<int>(@"INSERT INTO ""KullaniciTip"" (""Adi"", ""Aktif"", ""Varsayilan"", ""CreUser"", ""CreDate"")
+                    VALUES (@Adi, @Aktif, @Varsayilan, @CreUser, now()) RETURNING ""ID""", item);
             }
             else if (!item.ID.Equals(0) && item.DelUser.Equals(0))
             {
+                if (item.Varsayilan)
+                {
+                    // Tek varsayilan kalsin: once digerlerini false yap.
+                    await SQLExecute(@"
+                        UPDATE ""KullaniciTip""
+                        SET ""Varsayilan"" = false
+                        WHERE ""ID"" <> @ID
+                          AND (""DelUser"" IS NULL OR ""DelUser"" = 0)", item);
+                }
+
                 await SQLExecute(@"UPDATE ""KullaniciTip""
                         SET ""Adi"" = @Adi,
                             ""Aktif"" = @Aktif,
+                            ""Varsayilan"" = @Varsayilan,
                             ""UpdUser"" = @UpdUser,
                             ""UpdDate"" = now()
                         WHERE ""ID"" = @ID", item);

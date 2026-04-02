@@ -1,8 +1,12 @@
-﻿<CascadingAuthenticationState>
+<CascadingAuthenticationState>
+    <AuthHydration>
     <PermissionGuard />
     <Router AppAssembly="@typeof(Program).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@GetLayoutType()">
+                <Authorizing>
+                    <div class="rz-p-3">Yükleniyor...</div>
+                </Authorizing>
                 <NotAuthorized>
                 <RedirectToLogin ></RedirectToLogin>
                 </NotAuthorized>
@@ -14,6 +18,7 @@
             </LayoutView>
         </NotFound>
     </Router>
+    </AuthHydration>
 </CascadingAuthenticationState>
 @code {
     //Layout tipini getittrimek için kullanılır.
