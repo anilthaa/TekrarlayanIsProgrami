@@ -81,13 +81,11 @@ namespace TekrarlayanIsProgrami.Services
             }
             else
             {
-                // Yönetici kullanıcısı varsa da config değerleriyle güncel tut.
+                // Mevcut yöneticiyi rol/aktiflik ile senkronize et; ad, soyad, şifre güncelleme —
+                // profilden değişen alanlar her açılışta config’e dönmesin.
                 await _db.SQLExecute(@"
                     UPDATE ""Kullanici""
-                    SET ""Adi"" = @adi,
-                        ""Soyadi"" = @soyadi,
-                        ""Sifre"" = @sifre,
-                        ""KullaniciTip_ID"" = @kullaniciTip_Id,
+                    SET ""KullaniciTip_ID"" = @kullaniciTip_Id,
                         ""Aktif"" = true,
                         ""DelUser"" = 0,
                         ""DelDate"" = NULL,
@@ -97,9 +95,6 @@ namespace TekrarlayanIsProgrami.Services
                 ", new
                 {
                     id = mevcutKullaniciId,
-                    adi = ad,
-                    soyadi = soyad,
-                    sifre = PasswordHelper.HashPassword(password),
                     kullaniciTip_Id = YoneticiRolId
                 });
             }
