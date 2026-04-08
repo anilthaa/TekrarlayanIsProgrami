@@ -50,7 +50,18 @@
 					</Template>
 				</RadzenDataGridColumn>
 
-				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px" />
+				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Adi" Title="Adı" Width="100px">
+				 <Template Context="item">
+                           <span>@item.Adi</span>
+
+                           @if (item.Varsayilan)  
+                          {
+                             <span style="margin-left:8px; padding:2px 6px; background:#2ecc71; color:white; border-radius:6px; font-size:12px;">
+                                Varsayılan Tip
+                            </span>
+                          }
+                 </Template>
+				</RadzenDataGridColumn>/>
 
 				<RadzenDataGridColumn TItem="ItemKullaniciTip" Property="Aktif" Title="Aktif" Width="100px">
 					<Template Context="item">
