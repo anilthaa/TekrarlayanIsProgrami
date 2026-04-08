@@ -120,7 +120,7 @@
     private RadzenDataGrid<ItemGorevLoglari>? logGrid;
     private bool isLoading = true;
     private int? currentUserId = null;
-    private bool isAdmin = false;
+    private bool canWriteGorevler = false;
     private List<ItemGorev> gorevList = new();
     private Dictionary<int, string> kullaniciAdlari = new();
     private Dictionary<int, string> gorevBasliklari = new();
@@ -145,7 +145,7 @@
             var dbUser = await _kullaniciRepo.GetByIDAsync(currentUser.ID);
 
             currentUserId = dbUser.ID;
-            isAdmin = await PermissionService.CanWriteAsync("/gorevler");
+            canWriteGorevler = await PermissionService.CanWriteAsync("/gorevler");
         }
         await YukleLoglarAsync();
     }
@@ -263,7 +263,7 @@
     { 
         if (!g.Aktif)
         {
-            if (isAdmin)
+            if (canWriteGorevler)
                 return 4;
 
             if (g.Kullanici_ID == currentUserId)
@@ -272,7 +272,7 @@
             return -1;   
         }
 
-        if (isAdmin)
+        if (canWriteGorevler)
         {
             if (g.BitisTarihi < DateTime.Now && !g.Tamamlandi)
                 return 3;
