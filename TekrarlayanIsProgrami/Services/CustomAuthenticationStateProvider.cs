@@ -69,7 +69,7 @@ namespace TekrarlayanIsProgrami.Services
                     new Claim(ClaimTypes.Name, _currentUser.Adi + " " + _currentUser.Soyadi),
                     new Claim(ClaimTypes.Email, _currentUser.EPosta),
                     new Claim("KullaniciTip_ID", _currentUser.KullaniciTip_ID.ToString()),
-                    new Claim(ClaimTypes.Role, _currentUser.KullaniciTip_ID==1 ? "Admin" : "User")
+                    new Claim(ClaimTypes.Role, "User")
                 }, "apiauth_type");
             }
             else

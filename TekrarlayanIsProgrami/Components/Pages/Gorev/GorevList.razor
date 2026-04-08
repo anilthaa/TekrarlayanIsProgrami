@@ -374,16 +374,6 @@
 		if (result is ItemGorev g && g.ID > 0)
 		{
 			await YukleGorevler();
-			var existing = GorevListt.FirstOrDefault(x => x.ID == g.ID);
-			if (existing != null)
-			{
-				var index = GorevListt.IndexOf(existing);
-				GorevListt[index] = g;
-			}
-			else
-			{
-				GorevListt.Insert(0, g);
-			}
 			StateHasChanged();
 			if (GrdGorev != null)
 			{
@@ -538,12 +528,6 @@
 			else
 			{
 				await YukleGorevler();
-				var existing = GorevListt.FirstOrDefault(x => x.ID == guncellendi.ID);
-				if (existing != null)
-				{
-					var index = GorevListt.IndexOf(existing);
-					GorevListt[index] = guncellendi;
-				}
 				StateHasChanged();
 				if (GrdGorev != null)
 				{

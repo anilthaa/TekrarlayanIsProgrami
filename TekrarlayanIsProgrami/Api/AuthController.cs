@@ -43,7 +43,7 @@ namespace TekrarlayanIsProgrami.Api
                 new Claim(ClaimTypes.Name, (model.User.Adi ?? "") + " " + (model.User.Soyadi ?? "")),
                 new Claim(ClaimTypes.Email, eposta),
                 new Claim("KullaniciTip_ID", model.User.KullaniciTip_ID.ToString()),
-                new Claim(ClaimTypes.Role, model.User.KullaniciTip_ID == 1 ? "Admin" : "User")
+                new Claim(ClaimTypes.Role, "User")
             }, "Identity.Application");
 
             await HttpContext.SignInAsync("Identity.Application", new ClaimsPrincipal(identity));
@@ -106,7 +106,7 @@ namespace TekrarlayanIsProgrami.Api
                 new Claim(ClaimTypes.Name, (user.Adi ?? "") + " " + (user.Soyadi ?? "")),
                 new Claim(ClaimTypes.Email, user.EPosta ?? ""),
                 new Claim("KullaniciTip_ID", user.KullaniciTip_ID.ToString()),
-                new Claim(ClaimTypes.Role, user.KullaniciTip_ID == 1 ? "Admin" : "User")
+                new Claim(ClaimTypes.Role, "User")
             }, "Identity.Application");
             await HttpContext.SignInAsync("Identity.Application", new ClaimsPrincipal(identity));
 

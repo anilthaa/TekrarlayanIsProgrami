@@ -19,9 +19,19 @@
                 <span class="rz-ml-2">Aktif</span>
             </div>
 
-            <div style="display:flex; align-items:center; margin-top:10px;">
-                <RadzenCheckBox @bind-Value="ItemData.Varsayilan" TValue="bool" />
-                <span class="rz-ml-2">Varsayılan kullanıcı tipi</span>
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:10px;">
+                <div style="display:flex; align-items:center;">
+                    <RadzenCheckBox @bind-Value="ItemData.Varsayilan"
+                                    TValue="bool"
+                                    Disabled="@(!VarsayilanSecilebilirMi)" />
+                    <span class="rz-ml-2">Varsayılan kullanıcı tipi</span>
+                </div>
+                @if (!VarsayilanSecilebilirMi)
+                {
+                    <span style="font-size:12px; color:#666;">
+                        Varsayılan zaten başka bir kullanıcı tipinde tanımlı. Varsayılanı bu tipe taşımak için önce varsayılan olan tipteki işareti kaldırıp kaydedin.
+                    </span>
+                }
             </div>
 
             <div class="btn-group" style="margin-top:15px;">
@@ -46,6 +56,11 @@
 @code {
     [Parameter] public ItemKullaniciTip ItemData { get; set; } = new();
     [Parameter] public int CurrentUserId { get; set; } = 1;
+    /// <summary>Şu an varsayılan olan tipin ID'si (yoksa null). Başka tipte varsayılan varken bu tipte kutu kilitlenir.</summary>
+    [Parameter] public int? VarsayilanOlanTipId { get; set; }
+
+    private bool VarsayilanSecilebilirMi =>
+        !VarsayilanOlanTipId.HasValue || VarsayilanOlanTipId.Value == ItemData.ID;
     private ItemKullaniciTip kullaniciTip = new ItemKullaniciTip();
     private ItemKullaniciTip originalTip;
     private bool isSaving;
@@ -85,6 +100,9 @@
                 ItemData.UpdUser = CurrentUserId;
                 ItemData.DelUser = 0;
             }
+
+            if (!VarsayilanSecilebilirMi)
+                ItemData.Varsayilan = false;
 
             var response = await DataService.SetKullaniciTip(ItemData);
             var yeniId = response.Data;

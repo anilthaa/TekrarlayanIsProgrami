@@ -91,6 +91,10 @@
 		private bool TipIcinYetkiKaydiYok(int tipId) =>
 			!_tipYetkiSayilari.TryGetValue(tipId, out var n) || n == 0;
 
+		/// <summary>Veritabanında varsayılan olarak işaretli tek tip (varsa).</summary>
+		private int? VarsayilanOlanTipId =>
+			DataList.FirstOrDefault(x => x.Varsayilan)?.ID;
+
 		//sayfa yüklendiğinde başlangıç işlemlerini yapar.
         protected override async Task OnInitializedAsync()
 	    {
@@ -168,7 +172,12 @@
 			};
 
 			var result = await DialogService.OpenAsync<KullaniciTipTnm>(" ",
-			new Dictionary<string, object> { { "ItemData", yeniItem }, { "CurrentUserId", currentUserId ?? 1 } },
+			new Dictionary<string, object>
+			{
+				{ "ItemData", yeniItem },
+				{ "CurrentUserId", currentUserId ?? 1 },
+				{ "VarsayilanOlanTipId", VarsayilanOlanTipId }
+			},
 			new DialogOptions { Width = "480px", Height = "auto" });
 
 			if (result is ItemKullaniciTip eklenen && eklenen.ID > 0)
@@ -214,7 +223,12 @@
 			};
 
 			var result = await DialogService.OpenAsync<KullaniciTipTnm>(" ",
-			new Dictionary<string, object> { { "ItemData", payload }, { "CurrentUserId", currentUserId ?? 1 } },
+			new Dictionary<string, object>
+			{
+				{ "ItemData", payload },
+				{ "CurrentUserId", currentUserId ?? 1 },
+				{ "VarsayilanOlanTipId", VarsayilanOlanTipId }
+			},
 			new DialogOptions { Width = "480px", Height = "auto" });
 
 			if (result is ItemKullaniciTip guncellenen && guncellenen.ID > 0)
