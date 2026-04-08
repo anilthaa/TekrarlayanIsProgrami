@@ -58,10 +58,9 @@ namespace TekrarlayanIsProgrami.Services
         public async Task<IReadOnlyList<ItemForm>> GetMenuAsync(bool forceRefresh = false)
         {
             var forms = await GetFormsForCurrentUserAsync(forceRefresh);
-            var isAdmin = await IsAdminAsync();
 
             return forms
-                .Where(form => form.IsMenu && (isAdmin || GetCachedPermission(form.ID) > 0))
+                .Where(form => form.IsMenu && GetCachedPermission(form.ID) > 0)
                 .OrderBy(form => form.Sira)
                 .ThenBy(form => form.Adi)
                 .ToList();
@@ -144,11 +143,6 @@ namespace TekrarlayanIsProgrami.Services
         public async Task<bool> HasPermissionAsync(string? routeOrName, int minimumYetki)
         {
             if (minimumYetki <= 0)
-            {
-                return true;
-            }
-
-            if (await IsAdminAsync())
             {
                 return true;
             }
@@ -257,13 +251,6 @@ namespace TekrarlayanIsProgrami.Services
             return routeCandidate;
         }
 
-        //güncel kullanıcının admin olup olmadığını kontrol eder.
-        private async Task<bool> IsAdminAsync()
-        {
-            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-            return user?.Identity?.IsAuthenticated == true && user.IsInRole("Admin");
-        }
         public async Task<YetkiTipi> GetCurrentUserYetkiAsync(int formId)
         {
             var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
@@ -290,9 +277,6 @@ namespace TekrarlayanIsProgrami.Services
 
             if (!user.Identity?.IsAuthenticated ?? true)
                 return YetkiTipi.Gizli;
-
-            if (user.IsInRole("Admin"))
-                return YetkiTipi.Yazma;
 
             var form = await FindFormAsync(routeOrName);
             if (form is null)
