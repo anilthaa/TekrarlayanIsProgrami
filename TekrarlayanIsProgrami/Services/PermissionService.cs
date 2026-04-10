@@ -156,7 +156,7 @@ namespace TekrarlayanIsProgrami.Services
             return GetCachedPermission(form.ID) >= minimumYetki;
         }
 
-        //orm ve yetki önbelleğini temizler / sıfırlar.
+        //Form ve yetki önbelleğini temizler / sıfırlar.
         public async Task RefreshAsync()
         {
             await _cacheLock.WaitAsync();
