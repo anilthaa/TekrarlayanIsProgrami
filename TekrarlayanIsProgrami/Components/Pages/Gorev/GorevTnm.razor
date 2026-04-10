@@ -287,9 +287,25 @@
         }
         else
         {
-            if (Gorev.Kilitli && Gorev.Kullanici_ID > 0)
+            if (Gorev.Kilitli)
             {
-                seciliKullaniciIdler = new List<int> { Gorev.Kullanici_ID };
+                var tumGorevler = (await DataService.GetGorevler()).ToList();
+                seciliKullaniciIdler = tumGorevler
+                    .Where(g =>
+                        g.Kilitli &&
+                        g.DelUser == 0 &&
+                        g.Baslik == Gorev.Baslik &&
+                        g.Kategori_ID == Gorev.Kategori_ID &&
+                        g.BaslangicTarihi == Gorev.BaslangicTarihi &&
+                        g.BitisTarihi == Gorev.BitisTarihi)
+                    .Select(g => g.Kullanici_ID)
+                    .Distinct()
+                    .ToList();
+
+                if (!seciliKullaniciIdler.Any() && Gorev.Kullanici_ID > 0)
+                {
+                    seciliKullaniciIdler = new List<int> { Gorev.Kullanici_ID };
+                }
             }
         }
 
@@ -739,6 +755,115 @@
                 return;
             }
 
+            // Düzenleme senaryosunda kilitli göreve yeni kullanıcılar eklenirse
+            // ilgili kullanıcılar için ayrı görev kayıtları oluştur.
+            if (!yeniKayıt && Gorev.Kilitli && aktifKullanicilar.Count > 0)
+            {
+                var tumGorevler = (await DataService.GetGorevler()).ToList();
+                var mevcutAtamalar = tumGorevler
+                    .Where(g =>
+                        g.Kilitli &&
+                        g.DelUser == 0 &&
+                        g.Baslik == originalGorev.Baslik &&
+                        g.Kategori_ID == originalGorev.Kategori_ID &&
+                        g.BaslangicTarihi == originalGorev.BaslangicTarihi &&
+                        g.BitisTarihi == originalGorev.BitisTarihi)
+                    .ToList();
+
+                var mevcutAtanmisKullaniciIdleri = mevcutAtamalar
+                    .Select(g => g.Kullanici_ID)
+                    .Distinct()
+                    .ToHashSet();
+
+                var yeniAtanacakKullanicilar = aktifKullanicilar
+                    .Where(k => !mevcutAtanmisKullaniciIdleri.Contains(k.ID))
+                    .ToList();
+
+                var seciliKullaniciIdSet = aktifKullanicilar
+                    .Select(k => k.ID)
+                    .ToHashSet();
+
+                // Seçimden çıkarılan kullanıcıların görevlerini pasife al/sil.
+                // Düzenlenen mevcut kaydı (Gorev.ID) koruyoruz; o kayıt aşağıda
+                // seçili ilk kullanıcıya güncellenecek.
+                var kaldirilacakAtamalar = mevcutAtamalar
+                    .Where(g => g.ID != Gorev.ID && !seciliKullaniciIdSet.Contains(g.Kullanici_ID))
+                    .ToList();
+
+                int currentUserId = await girisSaglayici.GetUserIdAsync();
+                foreach (var kaldirilacak in kaldirilacakAtamalar)
+                {
+                    kaldirilacak.DelUser = currentUserId;
+                    var silmeSonuc = await DataService.SetGorev(kaldirilacak);
+                    if (silmeSonuc.SonucKodu != 0)
+                    {
+                        notificationService.Notify(NotificationSeverity.Error, "Hata", "Kullanıcıdan görev kaldırılırken hata oluştu.");
+                        return;
+                    }
+
+                    var kaldirilanKullanici = kullanicilar.FirstOrDefault(k => k.ID == kaldirilacak.Kullanici_ID);
+                    var kaldirilanAdSoyad = kaldirilanKullanici != null
+                        ? $"{kaldirilanKullanici.Adi} {kaldirilanKullanici.Soyadi}".Trim()
+                        : $"Kullanıcı ID: {kaldirilacak.Kullanici_ID}";
+
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "AtananKisiler",
+                        EskiDeger = $"Atanan: {kaldirilanAdSoyad}",
+                        YeniDeger = "Atamadan çıkarıldı",
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+                }
+
+                foreach (var kullanici in yeniAtanacakKullanicilar)
+                {
+                    var eklenecekGorev = new ItemGorev
+                    {
+                        Kullanici_ID = kullanici.ID,
+                        Baslik = Gorev.Baslik,
+                        Kategori_ID = Gorev.Kategori_ID,
+                        OnemDerecesi = Gorev.OnemDerecesi,
+                        BaslangicTarihi = Gorev.BaslangicTarihi,
+                        BitisTarihi = Gorev.BitisTarihi,
+                        TekrarlamaTipi = Gorev.TekrarlamaTipi,
+                        Aktif = Gorev.Aktif,
+                        Kilitli = true,
+                        TekrarAraligi = Gorev.TekrarAraligi,
+                        HaftaninGunu = Gorev.HaftaninGunu,
+                        AyinGunu = Gorev.AyinGunu,
+                        SonrakiCalismaTarihi = Gorev.SonrakiCalismaTarihi,
+                        Tamamlandi = false,
+                        CreUser = Gorev.CreUser,
+                        AtayanKisiID = Gorev.AtayanKisiID
+                    };
+
+                    HesaplaSonrakiCalismaTarihi(eklenecekGorev);
+
+                    var eklemeSonuc = await DataService.SetGorev(eklenecekGorev);
+                    if (eklemeSonuc.SonucKodu != 0)
+                    {
+                        notificationService.Notify(NotificationSeverity.Error, "Hata", $"{kullanici.Adi} {kullanici.Soyadi} için görev atanamadı.");
+                        return;
+                    }
+
+                    await DataService.SetGorevLog(new ItemGorevLoglari
+                    {
+                        Gorev_ID = eklemeSonuc.Data > 0 ? eklemeSonuc.Data : Gorev.ID,
+                        IslemTipi = "Güncellendi",
+                        AlanAdi = "AtananKisiler",
+                        EskiDeger = "Atama yok",
+                        YeniDeger = $"Atanan: {kullanici.Adi} {kullanici.Soyadi}",
+                        IslemKullanici_ID = currentUserId,
+                        IslemTarih = DateTime.Now
+                    });
+
+                    await Js.InvokeVoidAsync("localStorage.removeItem", $"yeniGorevBildirimiGoruldu_{kullanici.ID}");
+                }
+            }
+
             // ---------------- TEKLİ ATAMA ----------------
 
             if (Gorev.Kilitli && aktifKullanicilar.Any())
@@ -1047,6 +1172,8 @@
                         IslemKullanici_ID = currentUserId,
                         IslemTarih = DateTime.Now
                     };
+
+                    await DataService.SetGorevLog(log);
                 }
             }
         }
