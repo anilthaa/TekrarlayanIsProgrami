@@ -80,7 +80,7 @@
                                       Size="ButtonSize.Small"
                                       ButtonStyle="ButtonStyle.Primary"
                                       Disabled="@(_yetki == YetkiTipi.Okuma || user.Aktif)"
-                                      Click="@(() => IzinMailiGonder(user.ID))" />
+                                      Click="@(() => ConfirmIzinMaili(user.ID,user))" />
 
                         <RadzenButton ButtonStyle="ButtonStyle.Success"
                                       Icon="edit"
@@ -221,7 +221,7 @@
             var mesaj = gorevSayisi == 1 
                 ? "Bu kullanıcıya atanmış 1 aktif görev bulunmaktadır. Lütfen önce bu görevi silin veya pasif hale getirin."
                 : $"Bu kullanıcıya atanmış {gorevSayisi} aktif görev bulunmaktadır. Lütfen önce bu görevleri silin veya pasif hale getirin.";
-            
+
             notificationService.Notify(NotificationSeverity.Warning, "Uyarı", mesaj);
             return;
         }
@@ -286,17 +286,35 @@
         return tip?.Adi ?? "—";
     }
 
+
     //Yetkiler popup unu açmak için kullanılır.
     private async Task  NavigateToYetki(int Id)
     {
-       await DialogService.OpenAsync<KullaniciYetkileri>(
-         "Kullanıcı Sayfa Yetkileri",
-             new Dictionary<string, object>() { { "KullaniciId", Id } },
-             new DialogOptions() { Width = "800px", Height = "auto" }
-        );
+        await DialogService.OpenAsync<KullaniciYetkileri>(
+          "Kullanıcı Sayfa Yetkileri",
+              new Dictionary<string, object>() { { "KullaniciId", Id } },
+              new DialogOptions() { Width = "800px", Height = "auto" }
+         );
     }
 
-    //Mesaj gönderme buttonu için izin maili göndermek için kullanılır.
+    private async Task ConfirmIzinMaili(int userId, User user)
+    {
+        bool? result = await DialogService.Confirm(
+            $"{user.EPosta} adresine hesap etkinleştirme e-postası gönderilsin mi?",
+            "Onay",
+            new ConfirmOptions { OkButtonText = "Evet", CancelButtonText = "Hayır" }
+        );
+        if (result == true)
+        {
+            await IzinMailiGonder(userId);
+        }
+        else
+        {
+            notificationService.Notify(NotificationSeverity.Info, "Bilgi", "E-posta gönderimi iptal edildi.");
+        }
+    }
+
+    //Hesap etkinleştirme daveti e-postasını gönderir; başarı veya hata için kullanıcıya geri bildirim verir.
     private async Task IzinMailiGonder(int userId)
     {
         if (_yetki != YetkiTipi.Yazma)
@@ -307,7 +325,17 @@
         var linkEvet = $"https://localhost:7014/onay?uid={userId}&ok=1";
         var linkHayir = $"https://localhost:7014/onay?uid={userId}&ok=0";
 
-        await EpostaService.SendInviteMailAsync(u.EPosta, linkEvet, linkHayir);
+        try
+        {
+            await EpostaService.SendInviteMailAsync(u.EPosta, linkEvet, linkHayir);
+            await DialogService.Alert(
+                "Hesap etkinleştirme e-postası başarıyla gönderildi.",
+                "Bilgi");
+        }
+        catch (Exception ex)
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", $"E-posta gönderilemedi: {ex.Message}");
+        }
     }
 
     //Göreve çift tıklanıldığında düzenleme popup unu açar.

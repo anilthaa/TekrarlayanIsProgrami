@@ -546,35 +546,51 @@
 
 		if (onay == true)
 		{
-			if (currentUserId.HasValue)
-			{
-				gorev.DelUser = currentUserId.Value;
-			}
-			var wsCvp = await DataService.SetGorev(gorev);
+			var silinecekGorevler = (gorev.Kilitli
+				? GorevListt.Where(g =>
+					g.Kilitli &&
+					g.DelUser == 0 &&
+					g.Baslik == gorev.Baslik &&
+					g.Kategori_ID == gorev.Kategori_ID &&
+					g.BaslangicTarihi == gorev.BaslangicTarihi &&
+					g.BitisTarihi == gorev.BitisTarihi).ToList()
+				: new List<ItemGorev> { gorev });
 
-			if (wsCvp.SonucKodu == 0)
+			foreach (var silinecek in silinecekGorevler)
 			{
+				if (currentUserId.HasValue)
+				{
+					silinecek.DelUser = currentUserId.Value;
+				}
+
+				var wsCvp = await DataService.SetGorev(silinecek);
+				if (wsCvp.SonucKodu != 0)
+				{
+					notificationService.Notify(NotificationSeverity.Error, "Hata", "Silme başarısız.");
+					return;
+				}
+
 				if (currentUserId.HasValue)
 				{
 					await DataService.SetGorevLog(new ItemGorevLoglari
 					{
-						Gorev_ID = gorev.ID,
+						Gorev_ID = silinecek.ID,
 						IslemTipi = "Silindi",
 						AlanAdi = "Tümü",
-						EskiDeger = $"Görev: {gorev.Baslik}",
+						EskiDeger = $"Görev: {silinecek.Baslik}",
 						YeniDeger = "",
 						IslemKullanici_ID = currentUserId.Value,
 						IslemTarih = DateTime.Now
 					});
 				}
-				GorevListt.Remove(gorev);
-				await GrdGorev!.Reload();
-				notificationService.Notify(NotificationSeverity.Success, "Silindi", "Görev silindi!");
 			}
-			else
-			{
-				notificationService.Notify(NotificationSeverity.Error, "Hata", "Silme başarısız.");
-			}
+
+			GorevListt.RemoveAll(g => silinecekGorevler.Any(s => s.ID == g.ID));
+			await GrdGorev!.Reload();
+			notificationService.Notify(
+				NotificationSeverity.Success,
+				"Silindi",
+				silinecekGorevler.Count > 1 ? "Görev ve tüm atamaları silindi!" : "Görev silindi!");
 		}
 	}
 

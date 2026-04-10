@@ -30,7 +30,7 @@
             {
                 <RadzenCard class="dashboard-nav">
                     <a href="/dashboard" style="text-decoration:none; color:white;">
-                        <h3>Dashboard</h3>
+                        <h3> <i class="fa-solid fa-square-poll-vertical" style="color: rgb(177, 151, 252);"></i> Dashboard</h3>
                     </a>
 
                     @foreach (var anaMenu in VisibleMenus
@@ -52,6 +52,10 @@
                                  if (!string.IsNullOrWhiteSpace(anaMenu.SayfaURL))
                                      NavigationManager.NavigateTo(GetHref(anaMenu));
                              })">
+                            @if (!string.IsNullOrWhiteSpace(anaMenu.Icon))
+                            {
+                                <i class="@anaMenu.Icon" style="margin-right:0.5rem; opacity:0.9;" aria-hidden="true"></i>
+                            }
                             @anaMenu.Adi
                         </div>
 
@@ -62,6 +66,10 @@
                                 {
                                     <div class="nav-link"
                                          @onclick="@(() => NavigationManager.NavigateTo(GetHref(alt)))">
+                                        @if (!string.IsNullOrWhiteSpace(alt.Icon))
+                                        {
+                                            <i class="@alt.Icon" style="margin-right:0.5rem; opacity:0.9;" aria-hidden="true"></i>
+                                        }
                                         @alt.Adi
                                     </div>
                                 }
