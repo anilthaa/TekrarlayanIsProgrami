@@ -30,6 +30,11 @@
             </RadzenFormField>
             <ValidationMessage For="@(()=>user.Soyadi)"></ValidationMessage>
 
+            <RadzenFormField Text="E-posta" Style="width:48%">
+                <RadzenTextBox @bind-Value="user.EPosta" />
+            </RadzenFormField>
+            <ValidationMessage For="@(()=>user.EPosta)"></ValidationMessage>
+
             <div class="btn-group">
                 <RadzenButton Text="Kaydet"
                               ButtonType="ButtonType.Submit"
@@ -48,7 +53,7 @@
 
     <hr />
 
-    <RadzenButton Text="Şifreyi Değiştir"
+    <RadzenButton Text="ŞİFREYİ DEĞİŞTİR"
                   ButtonStyle="ButtonStyle.Warning"
                   Disabled="@editMode"
                   Click="@(() => sifreFormAcik = true)"
@@ -129,17 +134,18 @@
     {
         if (sifreFormAcik) return;
 
+        if (!EpostaGecerliMi(u.EPosta))
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "E-posta Yalnızca gmail.com veya hotmail.com Olmalıdır.");
+            return;
+        }
         u.ID = currentUserId;
         await _kullaniciRepo.UpdateUserProfile(u);
 
         backup = Clone(u);
         editMode = false;
 
-        notificationService.Notify(
-            NotificationSeverity.Success,
-            "Profil",
-            "Profil güncellendi"
-        );
+        notificationService.Notify(NotificationSeverity.Success,"Profil","Profil güncellendi");
     }
 
     //Düzenleme işleminin iptal edilmesi için kullanılır.
@@ -163,11 +169,12 @@
 
         if (yeniSifre != yeniSifreTekrar)
         {
-            notificationService.Notify(
-                NotificationSeverity.Error,
-                "Hata",
-                "Şifreler uyuşmuyor"
-            );
+            notificationService.Notify( NotificationSeverity.Error,"Hata","Şifreler uyuşmuyor");
+            return;
+        }
+        if (yeniSifre.Length<8)
+        {
+            notificationService.Notify(NotificationSeverity.Error, "Hata", "Şifre En Az 8 Karakter olmak zorunda!");
             return;
         }
 
@@ -175,24 +182,13 @@
 
         if (dbUser == null || !PasswordHelper.VerifyPassword(eskiSifre!, dbUser.Sifre!))
         {
-            notificationService.Notify(
-                NotificationSeverity.Error,
-                "Hata",
-                "Eski şifre yanlış"
-            );
+            notificationService.Notify(NotificationSeverity.Error,"Hata","Eski şifre yanlış");
             return;
         }
 
-        await _kullaniciRepo.UpdateSifreAsync(
-            currentUserId,
-            PasswordHelper.HashPassword(yeniSifre!)
-        );
+        await _kullaniciRepo.UpdateSifreAsync(currentUserId,PasswordHelper.HashPassword(yeniSifre!));
 
-        notificationService.Notify(
-            NotificationSeverity.Success,
-            "Şifre",
-            "Şifre değiştirildi"
-        );
+        notificationService.Notify(NotificationSeverity.Success,"Şifre","Şifre değiştirildi");
 
         eskiSifre = yeniSifre = yeniSifreTekrar = null;
         sifreFormAcik = false;
@@ -235,5 +231,14 @@
             InputType2 = "password";
             Icon2 = "visibility_off";
         }
+    }
+
+    private bool EpostaGecerliMi(string eposta)
+    {
+        if (string.IsNullOrWhiteSpace(eposta))
+            return false;
+
+        var desen = @"^[\w\.-]+@(gmail\.com|hotmail\.com)$";
+        return Regex.IsMatch(eposta, desen, RegexOptions.IgnoreCase);
     }
 }
